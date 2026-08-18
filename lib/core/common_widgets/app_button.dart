@@ -1,0 +1,146 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../constants/app_colors.dart';
+
+/// Primary pill-shaped gradient button.
+/// Internally this is where a premium_ui_kit component would be integrated.
+///
+/// Usage:
+/// ```dart
+/// AppPrimaryButton(text: 'Continue', onPressed: () {})
+/// ```
+class AppPrimaryButton extends StatelessWidget {
+  final String text;
+  final VoidCallback? onPressed;
+  final IconData? icon;
+  final bool isLoading;
+  final double? width;
+
+  const AppPrimaryButton({
+    super.key,
+    required this.text,
+    this.onPressed,
+    this.icon,
+    this.isLoading = false,
+    this.width,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: width ?? double.infinity,
+      height: 52,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: onPressed == null
+              ? LinearGradient(
+                  colors: [Colors.grey.shade300, Colors.grey.shade400])
+              : AppColors.primaryGradient,
+          borderRadius: BorderRadius.circular(50),
+          boxShadow: onPressed == null
+              ? []
+              : [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.35),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+        ),
+        child: MaterialButton(
+          onPressed: (isLoading || onPressed == null) ? null : onPressed,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
+          splashColor: Colors.white.withValues(alpha: 0.15),
+          child: isLoading
+              ? const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2.5, color: Colors.white),
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (icon != null) ...[
+                      Icon(icon, color: Colors.white, size: 18),
+                      const SizedBox(width: 8),
+                    ],
+                    Text(
+                      text,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Outlined secondary button — purple border, transparent fill.
+class AppSecondaryButton extends StatelessWidget {
+  final String text;
+  final VoidCallback? onPressed;
+  final IconData? icon;
+  final bool isLoading;
+  final double? width;
+
+  const AppSecondaryButton({
+    super.key,
+    required this.text,
+    this.onPressed,
+    this.icon,
+    this.isLoading = false,
+    this.width,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: width ?? double.infinity,
+      height: 52,
+      child: OutlinedButton(
+        onPressed: (isLoading || onPressed == null) ? null : onPressed,
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(
+            color: onPressed == null
+                ? Colors.grey.shade300
+                : AppColors.primary,
+            width: 1.8,
+          ),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(50)),
+          foregroundColor: AppColors.primary,
+        ),
+        child: isLoading
+            ? SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2.5, color: AppColors.primary),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (icon != null) ...[
+                    Icon(icon, size: 18),
+                    const SizedBox(width: 8),
+                  ],
+                  Text(
+                    text,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+}
