@@ -2,8 +2,7 @@
 /// All API endpoints and backend host URLs are defined here in one single place.
 class ApiConstants {
   // ── 🌐 Centralized Base URL Configuration ──────────────────────────────────
-  // Edit this host and port to connect to your backend team's LAN server:
-  static const String serverHost = 'localhost';     // Localhost (or 10.0.2.2 for Android emulator)
+  static const String serverHost = 'localhost';
   static const String serverPort = '3001';          // Backend Port
   static const String apiPrefix  = '';              // Live backend routes mount directly at root
 

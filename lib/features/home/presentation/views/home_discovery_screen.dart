@@ -104,7 +104,7 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
                                 size: 14, color: AppColors.primary),
                             const SizedBox(width: 4),
                             Text(
-                              selectedCity,
+                              selectedCity == 'All' ? 'All Cities' : selectedCity,
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,

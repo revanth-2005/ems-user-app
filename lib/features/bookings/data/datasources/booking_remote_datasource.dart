@@ -73,6 +73,75 @@ class BookingRemoteDataSource {
     }
   }
 
+  Future<Map<String, dynamic>> processCheckout({
+    String? couponCode,
+    String? notes,
+  }) async {
+    try {
+      final res = await _dio.post(
+        ApiConstants.checkout,
+        data: {
+          if (couponCode != null && couponCode.isNotEmpty) 'couponCode': couponCode,
+          'notes': notes ?? 'Booked via EMS Mobile App',
+        },
+      );
+      if ((res.statusCode == 200 || res.statusCode == 201) && res.data is Map<String, dynamic>) {
+        return res.data as Map<String, dynamic>;
+      }
+      throw Exception('Checkout failed with status ${res.statusCode}');
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> createPaymentOrder({
+    required String orderId,
+    required int amountInPaise,
+    String paymentType = 'DEPOSIT',
+    String currency = 'INR',
+  }) async {
+    try {
+      final res = await _dio.post(
+        ApiConstants.createPaymentOrder,
+        data: {
+          'orderId': orderId,
+          'amountInPaise': amountInPaise,
+          'paymentType': paymentType,
+          'currency': currency,
+        },
+      );
+      if ((res.statusCode == 200 || res.statusCode == 201) && res.data is Map<String, dynamic>) {
+        return res.data as Map<String, dynamic>;
+      }
+      throw Exception('Create payment order failed');
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> verifyPayment({
+    required String gatewayOrderId,
+    required String gatewayPaymentId,
+    required String gatewaySignature,
+  }) async {
+    try {
+      final res = await _dio.post(
+        ApiConstants.verifyPayment,
+        data: {
+          'gatewayOrderId': gatewayOrderId,
+          'gatewayPaymentId': gatewayPaymentId,
+          'gatewaySignature': gatewaySignature,
+        },
+      );
+      if ((res.statusCode == 200 || res.statusCode == 201) && res.data is Map<String, dynamic>) {
+        return res.data as Map<String, dynamic>;
+      }
+      throw Exception('Payment verification failed');
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
   Future<bool> checkoutCart(CartState cart) async {
     try {
       final res = await _dio.post(
@@ -83,6 +152,56 @@ class BookingRemoteDataSource {
         },
       );
       return res.statusCode == 200 || res.statusCode == 201;
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  // ── Remote Cart Operations ──────────────────────────────────────────────────
+
+  Future<Map<String, dynamic>?> addToCartRemote({
+    String? packageId,
+    String? serviceId,
+    required String eventDate,
+    String? startTime,
+    String? endTime,
+    int quantity = 1,
+  }) async {
+    try {
+      final payload = <String, dynamic>{
+        if (packageId != null) 'packageId': packageId,
+        if (serviceId != null) 'serviceId': serviceId,
+        'eventDate': eventDate,
+        if (startTime != null) 'startTime': startTime,
+        if (endTime != null) 'endTime': endTime,
+        'quantity': quantity,
+      };
+      final res = await _dio.post(ApiConstants.cartItems, data: payload);
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        return res.data is Map<String, dynamic> ? res.data as Map<String, dynamic> : null;
+      }
+      return null;
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>?> getCartRemote() async {
+    try {
+      final res = await _dio.get(ApiConstants.cart);
+      if (res.statusCode == 200 && res.data is Map<String, dynamic>) {
+        return res.data as Map<String, dynamic>;
+      }
+      return null;
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  Future<bool> removeCartItemRemote(String itemId) async {
+    try {
+      final res = await _dio.delete('${ApiConstants.cartItems}/$itemId');
+      return res.statusCode == 200 || res.statusCode == 204;
     } on DioException catch (e) {
       throw NetworkException.fromDioError(e);
     }

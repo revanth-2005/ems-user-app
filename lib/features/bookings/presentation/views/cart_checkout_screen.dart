@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import '../../../../app/app_router.dart';
 import '../../../../core/common_widgets/app_button.dart';
 import '../../../../core/common_widgets/app_error_view.dart';
 import '../../../../core/common_widgets/app_network_image.dart';
@@ -13,6 +12,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../providers/booking_providers.dart';
+import '../widgets/payment_gateway_modal.dart';
 
 class CartCheckoutScreen extends HookConsumerWidget {
   const CartCheckoutScreen({super.key});
@@ -24,20 +24,14 @@ class CartCheckoutScreen extends HookConsumerWidget {
     final isProcessing = useState(false);
 
     Future<void> handleCheckout() async {
-      isProcessing.value = true;
-      await Future.delayed(const Duration(milliseconds: 900));
-      isProcessing.value = false;
-
-      ref.read(cartProvider.notifier).clearCart();
-
-      if (context.mounted) {
-        AppSnackbar.show(
-          context,
-          message: 'Booking request sent to vendor with SLA guarantee!',
-          type: SnackbarType.success,
-        );
-        context.go(AppRoutes.bookings);
-      }
+      if (cart.items.isEmpty) return;
+      showPaymentGatewayModal(
+        context: context,
+        ref: ref,
+        depositAmountPaise: cart.finalPayablePaise,
+        totalAmountPaise: cart.subtotalPaise,
+        couponCode: cart.appliedCoupon,
+      );
     }
 
     return Scaffold(

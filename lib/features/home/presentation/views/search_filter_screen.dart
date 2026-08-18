@@ -112,7 +112,7 @@ class SearchFilterScreen extends HookConsumerWidget {
                         size: 16, color: AppColors.accentRose),
                     const SizedBox(width: 4),
                     Text(
-                      selectedCity,
+                      selectedCity == 'All' ? 'All Cities' : selectedCity,
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,

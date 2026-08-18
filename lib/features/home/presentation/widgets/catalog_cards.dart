@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../app/app_router.dart';
 import '../../../../core/common_widgets/app_network_image.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/currency_formatter.dart';
@@ -477,7 +478,9 @@ class OrganizerCard extends StatelessWidget {
     final cityName = organizer.city?.isNotEmpty == true ? organizer.city! : 'India';
 
     return GestureDetector(
-      onTap: onTap,
+      onTap: onTap ??
+          () => context.push(
+              AppRoutes.organizerProfile.replaceAll(':id', organizer.id)),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(

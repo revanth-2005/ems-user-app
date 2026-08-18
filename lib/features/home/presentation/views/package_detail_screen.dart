@@ -14,7 +14,10 @@ import '../../../../core/common_widgets/app_status_badge.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
+import '../../../bookings/presentation/providers/booking_providers.dart';
+import '../../../bookings/presentation/widgets/add_to_cart_dialog.dart';
 import '../providers/catalog_providers.dart';
+import '../widgets/full_package_specs_sheet.dart';
 
 class PackageDetailScreen extends HookConsumerWidget {
   final String packageId;
@@ -139,12 +142,24 @@ class PackageDetailScreen extends HookConsumerWidget {
                       ),
                       const SizedBox(height: 6),
 
-                      Text(
-                        'Organized by ${pkg.organizer.businessName}',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
+                      GestureDetector(
+                        onTap: () => context.push(
+                            AppRoutes.organizerProfile.replaceAll(':id', pkg.organizer.id)),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Organized by ${pkg.organizer.businessName}',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(Icons.arrow_forward_ios_rounded,
+                                size: 12, color: AppColors.primary),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -210,6 +225,44 @@ class PackageDetailScreen extends HookConsumerWidget {
                                   color: AppColors.primary,
                                 ),
                               ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // View Full Package Specs Button Card
+                      GestureDetector(
+                        onTap: () => showFullPackageSpecs(context, pkg),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 14),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                                color: AppColors.primary.withValues(alpha: 0.2)),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.assignment_outlined,
+                                      color: AppColors.primary, size: 20),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    'View Full Package Specs >',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const Icon(Icons.chevron_right_rounded,
+                                  color: AppColors.primary, size: 20),
                             ],
                           ),
                         ),
@@ -331,14 +384,29 @@ class PackageDetailScreen extends HookConsumerWidget {
                     const SizedBox(width: 20),
                     Expanded(
                       child: AppPrimaryButton(
-                        text: 'Book & Customize',
+                        text: 'Add to Cart',
                         onPressed: () {
-                          AppSnackbar.show(
-                            context,
-                            message: 'Package added to Cart!',
-                            type: SnackbarType.success,
+                          final currentPkg = packageAsync.valueOrNull;
+                          if (currentPkg == null) return;
+                          showAddToCartDialog(
+                            context: context,
+                            title: currentPkg.name,
+                            leadTimeDays: 7,
+                            onConfirm: (eventDateStr, startTime, endTime) {
+                              final date =
+                                  DateTime.tryParse(eventDateStr) ?? selectedDate.value;
+                              ref
+                                  .read(cartProvider.notifier)
+                                  .addPackage(currentPkg, date);
+                              AppSnackbar.show(
+                                context,
+                                message:
+                                    '✓ Added to Cart for $eventDateStr!',
+                                type: SnackbarType.success,
+                              );
+                              context.push(AppRoutes.cart);
+                            },
                           );
-                          context.push(AppRoutes.cart);
                         },
                       ),
                     ),

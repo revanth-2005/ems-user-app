@@ -12,6 +12,7 @@ import '../../../../core/common_widgets/app_snackbar.dart';
 import '../../../../core/common_widgets/app_status_badge.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/currency_formatter.dart';
+import '../../../bookings/presentation/providers/booking_providers.dart';
 import '../providers/catalog_providers.dart';
 
 class ServiceDetailScreen extends HookConsumerWidget {
@@ -106,12 +107,24 @@ class ServiceDetailScreen extends HookConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: 6),
-                      Text(
-                        'Provided by ${srv.organizer.businessName}',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
+                      GestureDetector(
+                        onTap: () => context.push(
+                            AppRoutes.organizerProfile.replaceAll(':id', srv.organizer.id)),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Provided by ${srv.organizer.businessName}',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(Icons.arrow_forward_ios_rounded,
+                                size: 12, color: AppColors.primary),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -535,10 +548,11 @@ class ServiceDetailScreen extends HookConsumerWidget {
               AppPrimaryButton(
                 text: 'Add to Cart & Checkout',
                 onPressed: () {
-                  Navigator.pop(ctx);
+                  final eventDate = DateTime.now().add(Duration(days: srv.leadTimeDays > 0 ? srv.leadTimeDays : 1));
+                  ref.read(cartProvider.notifier).addService(srv, eventDate);
                   AppSnackbar.show(
                     context,
-                    message: '${srv.name} scheduled & added to cart!',
+                    message: '✓ ${srv.name} scheduled & added to cart!',
                     type: SnackbarType.success,
                   );
                   context.push(AppRoutes.cart);

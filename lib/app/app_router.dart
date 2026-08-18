@@ -11,6 +11,7 @@ import '../features/home/presentation/views/search_filter_screen.dart';
 import '../features/home/presentation/views/event_detail_screen.dart';
 import '../features/home/presentation/views/package_detail_screen.dart';
 import '../features/home/presentation/views/service_detail_screen.dart';
+import '../features/home/presentation/views/organizer_profile_screen.dart';
 import '../features/bookings/presentation/views/my_bookings_tickets_screen.dart';
 import '../features/bookings/presentation/views/cart_checkout_screen.dart';
 import '../features/organizer/presentation/views/organizer_dashboard_screen.dart';
@@ -45,6 +46,7 @@ abstract class AppRoutes {
   static const eventDetail = '/detail/event/:id';
   static const packageDetail = '/detail/package/:id';
   static const serviceDetail = '/detail/service/:id';
+  static const organizerProfile = '/organizer-profile/:id';
 
   // Cart
   static const cart = '/cart';
@@ -157,6 +159,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.serviceDetail,
         builder: (_, state) =>
             ServiceDetailScreen(serviceId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: AppRoutes.organizerProfile,
+        builder: (_, state) =>
+            OrganizerProfileScreen(organizerId: state.pathParameters['id']!),
       ),
 
       // ── Cart ──────────────────────────────────────────────────────────────

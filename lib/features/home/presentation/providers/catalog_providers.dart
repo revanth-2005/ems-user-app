@@ -20,7 +20,7 @@ final catalogRepositoryProvider = Provider<CatalogRepository>((ref) {
 
 // ── State Filters ─────────────────────────────────────────────────────────
 
-final selectedCityProvider = StateProvider<String>((_) => 'Mumbai');
+final selectedCityProvider = StateProvider<String>((_) => 'All');
 
 final selectedCategoryFilterProvider = StateProvider<String?>((_) => null);
 
@@ -50,7 +50,8 @@ final categoriesProvider = FutureProvider<List<Category>>((ref) async {
 
 final packagesProvider = FutureProvider<List<EventPackage>>((ref) async {
   final repo = ref.watch(catalogRepositoryProvider);
-  final city = ref.watch(selectedCityProvider);
+  final rawCity = ref.watch(selectedCityProvider);
+  final city = (rawCity.isEmpty || rawCity == 'All') ? null : rawCity;
   final categoryId = ref.watch(selectedCategoryFilterProvider);
   final subCategoryId = ref.watch(selectedSubCategoryFilterProvider);
   final search = ref.watch(catalogSearchQueryProvider);
@@ -71,7 +72,8 @@ final packagesProvider = FutureProvider<List<EventPackage>>((ref) async {
 
 final servicesProvider = FutureProvider<List<StandaloneService>>((ref) async {
   final repo = ref.watch(catalogRepositoryProvider);
-  final city = ref.watch(selectedCityProvider);
+  final rawCity = ref.watch(selectedCityProvider);
+  final city = (rawCity.isEmpty || rawCity == 'All') ? null : rawCity;
   final categoryId = ref.watch(selectedCategoryFilterProvider);
   final subCategoryId = ref.watch(selectedSubCategoryFilterProvider);
   final pricingUnit = ref.watch(selectedPricingUnitFilterProvider);
@@ -94,7 +96,8 @@ final servicesProvider = FutureProvider<List<StandaloneService>>((ref) async {
 
 final organizersProvider = FutureProvider<List<OrganizerSummary>>((ref) async {
   final repo = ref.watch(catalogRepositoryProvider);
-  final city = ref.watch(selectedCityProvider);
+  final rawCity = ref.watch(selectedCityProvider);
+  final city = (rawCity.isEmpty || rawCity == 'All') ? null : rawCity;
   final search = ref.watch(catalogSearchQueryProvider);
 
   return repo.getOrganizers(
@@ -105,7 +108,8 @@ final organizersProvider = FutureProvider<List<OrganizerSummary>>((ref) async {
 
 final eventsProvider = FutureProvider<List<PublicEvent>>((ref) async {
   final repo = ref.watch(catalogRepositoryProvider);
-  final city = ref.watch(selectedCityProvider);
+  final rawCity = ref.watch(selectedCityProvider);
+  final city = (rawCity.isEmpty || rawCity == 'All') ? null : rawCity;
   final categoryId = ref.watch(selectedCategoryFilterProvider);
   final search = ref.watch(catalogSearchQueryProvider);
 
