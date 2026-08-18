@@ -1,10 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import '../constants/api_constants.dart';
 import '../errors/network_exception.dart';
 import '../services/secure_storage_service.dart';
 import 'interceptors/auth_interceptor.dart';
+import 'interceptors/colored_dio_logger.dart';
 import 'interceptors/refresh_token_interceptor.dart';
 
 /// Singleton Dio client. Use [DioClient.instance.dio] throughout the app.
@@ -20,9 +20,9 @@ class DioClient {
     _dio = Dio(
       BaseOptions(
         baseUrl: ApiConstants.baseUrl,
-        connectTimeout: const Duration(seconds: 2),
-        receiveTimeout: const Duration(seconds: 3),
-        sendTimeout: const Duration(seconds: 3),
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 15),
+        sendTimeout: const Duration(seconds: 15),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -37,18 +37,9 @@ class DioClient {
     // Refresh token interceptor — retries 401 responses
     _dio.interceptors.add(RefreshTokenInterceptor(dio: _dio, secureStorage: secureStorage));
 
-    // Logging — only in debug
+    // Colored terminal logging for Requests, Responses, and Errors
     if (kDebugMode) {
-      _dio.interceptors.add(
-        PrettyDioLogger(
-          requestHeader: false,
-          requestBody: true,
-          responseBody: true,
-          responseHeader: false,
-          error: true,
-          compact: true,
-        ),
-      );
+      _dio.interceptors.add(ColoredDioLogger());
     }
   }
 

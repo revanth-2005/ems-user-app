@@ -27,6 +27,39 @@ class HostEventItem {
     this.ticketTiers = const [],
   });
 
+  factory HostEventItem.fromJson(Map<String, dynamic> json) {
+    return HostEventItem(
+      id: json['id']?.toString() ?? '',
+      title: json['title'] ?? json['name'] ?? 'Live Event',
+      eventDate: json['eventDate'] != null ? DateTime.tryParse(json['eventDate'].toString()) ?? DateTime.now() : DateTime.now(),
+      venue: json['venue'] ?? json['venueName'] ?? 'Auditorium Hall',
+      totalRegistrations: (json['totalRegistrations'] ?? json['total_registrations'] ?? 0) as int,
+      checkedInCount: (json['checkedInCount'] ?? json['checked_in_count'] ?? 0) as int,
+      totalCapacity: (json['totalCapacity'] ?? json['total_capacity'] ?? 500) as int,
+      revenueInPaise: (json['revenueInPaise'] ?? json['revenue_in_paise'] ?? 0) as int,
+      isLive: json['isLive'] ?? json['is_live'] ?? true,
+      coverImageUrl: json['coverImageUrl'] ?? json['cover_image_url'],
+      ticketTiers: (json['ticketTiers'] as List<dynamic>?)
+              ?.map((e) => TicketType.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'title': title,
+        'eventDate': eventDate.toIso8601String(),
+        'venue': venue,
+        'totalRegistrations': totalRegistrations,
+        'checkedInCount': checkedInCount,
+        'totalCapacity': totalCapacity,
+        'revenueInPaise': revenueInPaise,
+        'isLive': isLive,
+        'coverImageUrl': coverImageUrl,
+        'ticketTiers': ticketTiers.map((e) => e.toJson()).toList(),
+      };
+
   HostEventItem copyWith({
     String? id,
     String? title,
@@ -74,6 +107,18 @@ class AttendeeRecord {
     this.isCheckedIn = false,
     this.checkedInAt,
   });
+
+  factory AttendeeRecord.fromJson(Map<String, dynamic> json) {
+    return AttendeeRecord(
+      id: json['id']?.toString() ?? '',
+      attendeeName: json['attendeeName'] ?? json['name'] ?? 'Attendee',
+      attendeeEmail: json['attendeeEmail'] ?? json['email'] ?? '',
+      ticketType: json['ticketType'] ?? json['ticket_type'] ?? 'General',
+      qrCode: json['qrCode'] ?? json['qr_code'] ?? '',
+      isCheckedIn: json['isCheckedIn'] ?? json['is_checked_in'] ?? false,
+      checkedInAt: json['checkedInAt'] != null ? DateTime.tryParse(json['checkedInAt'].toString()) : null,
+    );
+  }
 
   AttendeeRecord copyWith({
     String? id,

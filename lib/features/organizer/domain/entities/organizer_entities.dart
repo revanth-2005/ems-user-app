@@ -23,6 +23,40 @@ class OrganizerProfile {
     this.activeListings = 6,
   });
 
+  factory OrganizerProfile.fromJson(Map<String, dynamic> json) {
+    SubscriptionPlan parsePlan(String? val) {
+      if (val == null) return SubscriptionPlan.PRO;
+      for (final p in SubscriptionPlan.values) {
+        if (p.name.toUpperCase() == val.toUpperCase()) return p;
+      }
+      return SubscriptionPlan.PRO;
+    }
+
+    return OrganizerProfile(
+      id: json['id']?.toString() ?? '',
+      businessName: json['businessName'] ?? json['business_name'] ?? json['name'] ?? 'Organizer Studio',
+      businessType: json['businessType'] ?? json['business_type'] ?? 'Event Planner',
+      city: json['city'] ?? 'Coimbatore',
+      plan: parsePlan(json['plan']?.toString()),
+      isKycApproved: json['isKycApproved'] ?? json['is_kyc_approved'] ?? true,
+      rating: (json['rating'] as num?)?.toDouble() ?? 4.9,
+      totalBookings: (json['totalBookings'] ?? json['total_bookings'] ?? 0) as int,
+      activeListings: (json['activeListings'] ?? json['active_listings'] ?? 0) as int,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'businessName': businessName,
+        'businessType': businessType,
+        'city': city,
+        'plan': plan.name,
+        'isKycApproved': isKycApproved,
+        'rating': rating,
+        'totalBookings': totalBookings,
+        'activeListings': activeListings,
+      };
+
   OrganizerProfile copyWith({
     String? id,
     String? businessName,
@@ -60,6 +94,18 @@ class PayoutLedger {
     required this.availableBalancePaise,
     this.transactions = const [],
   });
+
+  factory PayoutLedger.fromJson(Map<String, dynamic> json) {
+    return PayoutLedger(
+      totalEarningsPaise: (json['totalEarningsPaise'] ?? json['total_earnings_paise'] ?? 0) as int,
+      pendingPayoutPaise: (json['pendingPayoutPaise'] ?? json['pending_payout_paise'] ?? 0) as int,
+      availableBalancePaise: (json['availableBalancePaise'] ?? json['available_balance_paise'] ?? 0) as int,
+      transactions: (json['transactions'] as List<dynamic>?)
+              ?.map((e) => PayoutTransaction.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
+    );
+  }
 }
 
 class PayoutTransaction {
@@ -76,6 +122,16 @@ class PayoutTransaction {
     required this.amountPaise,
     this.isCredit = true,
   });
+
+  factory PayoutTransaction.fromJson(Map<String, dynamic> json) {
+    return PayoutTransaction(
+      id: json['id']?.toString() ?? '',
+      title: json['title'] ?? 'Payout Settlement',
+      date: json['date'] != null ? DateTime.tryParse(json['date'].toString()) ?? DateTime.now() : DateTime.now(),
+      amountPaise: (json['amountPaise'] ?? json['amount_paise'] ?? 0) as int,
+      isCredit: json['isCredit'] ?? json['is_credit'] ?? true,
+    );
+  }
 }
 
 class AvailabilitySlot {
@@ -88,6 +144,14 @@ class AvailabilitySlot {
     this.isBlocked = false,
     this.reason,
   });
+
+  factory AvailabilitySlot.fromJson(Map<String, dynamic> json) {
+    return AvailabilitySlot(
+      date: json['date'] != null ? DateTime.tryParse(json['date'].toString()) ?? DateTime.now() : DateTime.now(),
+      isBlocked: json['isBlocked'] ?? json['is_blocked'] ?? false,
+      reason: json['reason'],
+    );
+  }
 
   AvailabilitySlot copyWith({
     DateTime? date,
@@ -118,6 +182,17 @@ class CatalogItem {
     this.isActive = true,
     this.coverImageUrl,
   });
+
+  factory CatalogItem.fromJson(Map<String, dynamic> json) {
+    return CatalogItem(
+      id: json['id']?.toString() ?? '',
+      name: json['name'] ?? json['title'] ?? 'Item',
+      type: json['type'] ?? 'PACKAGE',
+      priceInPaise: (json['priceInPaise'] ?? json['price_in_paise'] ?? 0) as int,
+      isActive: json['isActive'] ?? json['is_active'] ?? true,
+      coverImageUrl: json['coverImageUrl'] ?? json['cover_image_url'],
+    );
+  }
 
   CatalogItem copyWith({
     String? id,

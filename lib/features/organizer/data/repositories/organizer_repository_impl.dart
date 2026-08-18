@@ -1,71 +1,62 @@
 import '../../../bookings/domain/entities/booking_entities.dart';
 import '../../domain/entities/organizer_entities.dart';
 import '../../domain/repositories/organizer_repository.dart';
-import '../datasources/organizer_local_datasource.dart';
+import '../datasources/organizer_remote_datasource.dart';
 
 class OrganizerRepositoryImpl implements OrganizerRepository {
-  final OrganizerLocalDataSource _local;
+  final OrganizerRemoteDataSource _remote;
 
-  OrganizerRepositoryImpl(this._local);
+  OrganizerRepositoryImpl(this._remote);
 
   @override
   Future<OrganizerProfile> getProfile() async {
-    return _local.getProfile();
+    return _remote.getProfile();
   }
 
   @override
   Future<List<VendorBooking>> getBookingInbox() async {
-    return _local.getInbox();
+    return _remote.getInbox();
   }
 
   @override
   Future<bool> acceptBooking(String bookingId) async {
-    return _local.acceptBooking(bookingId);
+    return _remote.acceptBooking(bookingId);
   }
 
   @override
   Future<bool> rejectBooking(String bookingId) async {
-    return _local.rejectBooking(bookingId);
+    return _remote.rejectBooking(bookingId);
   }
 
   @override
   Future<bool> proposeReschedule(
       String bookingId, DateTime newDate, String note) async {
-    return _local.proposeReschedule(bookingId, newDate, note);
+    return _remote.proposeReschedule(bookingId, newDate, note);
   }
 
   @override
   Future<List<CatalogItem>> getCatalogItems() async {
-    return _local.getCatalog();
+    return _remote.getCatalog();
   }
 
   @override
   Future<bool> toggleItemStatus(String itemId) async {
-    return _local.toggleItemStatus(itemId);
+    return _remote.toggleItemStatus(itemId);
   }
 
   @override
   Future<List<AvailabilitySlot>> getAvailability(DateTime month) async {
-    final daysInMonth = DateTime(month.year, month.month + 1, 0).day;
-    return List.generate(daysInMonth, (index) {
-      final date = DateTime(month.year, month.month, index + 1);
-      final isBlocked = index == 4 || index == 18;
-      return AvailabilitySlot(
-        date: date,
-        isBlocked: isBlocked,
-        reason: isBlocked ? 'Booked for wedding' : null,
-      );
-    });
+    return _remote.getAvailability(month);
   }
 
   @override
   Future<bool> toggleDateBlocked(DateTime date, {String? reason}) async {
-    return true;
+    return _remote.toggleDateBlocked(date, reason: reason);
   }
 
   @override
   Future<PayoutLedger> getPayoutLedger() async {
-    return _local.getPayoutLedger();
+    return _remote.getPayoutLedger();
   }
 
   @override
@@ -75,6 +66,11 @@ class OrganizerRepositoryImpl implements OrganizerRepository {
     required String bankAccount,
     required String ifsc,
   }) async {
-    return _local.submitKyc(businessName, panGst, bankAccount, ifsc);
+    return _remote.submitKyc(
+      businessName: businessName,
+      panGst: panGst,
+      bankAccount: bankAccount,
+      ifsc: ifsc,
+    );
   }
 }

@@ -5,9 +5,9 @@ class ApiConstants {
   // Edit this host and port to connect to your backend team's LAN server:
   static const String serverHost = '192.168.0.112'; // Backend team IP
   static const String serverPort = '3001';          // Backend team Port
-  static const String apiPrefix  = '/api/v1';
+  static const String apiPrefix  = '';              // Live backend routes mount directly at root
 
-  /// Active Base URL used throughout the app: http://192.168.0.112:3001/api/v1
+  /// Active Base URL: http://192.168.0.112:3001
   static String get baseUrl => 'http://$serverHost:$serverPort$apiPrefix';
 
   // ── 🔐 Auth Endpoints ──────────────────────────────────────────────────────

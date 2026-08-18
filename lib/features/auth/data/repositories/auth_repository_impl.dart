@@ -24,24 +24,14 @@ class AuthRepositoryImpl implements AuthRepository {
     required String email,
     required String password,
   }) async {
-    try {
-      final result = await _remote.loginWithEmail(
-          email: email, password: password);
-      await _local.saveSession(
-        userDto: result.user,
-        accessToken: result.accessToken,
-        refreshToken: result.refreshToken,
-      );
-      return result.user.toEntity();
-    } catch (_) {
-      // Demo mode fallback
-      final demoUser = _local.demoUser(email: email);
-      await _local.saveSession(
-        userDto: _entityToDto(demoUser),
-        accessToken: 'demo_token',
-      );
-      return demoUser;
-    }
+    final result = await _remote.loginWithEmail(
+        email: email, password: password);
+    await _local.saveSession(
+      userDto: result.user,
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+    );
+    return result.user.toEntity();
   }
 
   @override
@@ -51,22 +41,14 @@ class AuthRepositoryImpl implements AuthRepository {
     required String name,
     required String city,
   }) async {
-    try {
-      await _remote.signupWithEmail(
-          email: email, password: password, name: name, city: city);
-    } catch (_) {
-      // Demo mode — treat as success
-    }
+    await _remote.signupWithEmail(
+        email: email, password: password, name: name, city: city);
     return loginWithEmail(email: email, password: password);
   }
 
   @override
   Future<void> requestPhoneOtp(String phone) async {
-    try {
-      await _remote.requestPhoneOtp(phone);
-    } catch (_) {
-      // Demo mode — silently succeed
-    }
+    await _remote.requestPhoneOtp(phone);
   }
 
   @override
@@ -74,22 +56,13 @@ class AuthRepositoryImpl implements AuthRepository {
     required String phone,
     required String otp,
   }) async {
-    try {
-      final result = await _remote.verifyPhoneOtp(phone: phone, otp: otp);
-      await _local.saveSession(
-        userDto: result.user,
-        accessToken: result.accessToken,
-        refreshToken: result.refreshToken,
-      );
-      return result.user.toEntity();
-    } catch (_) {
-      final demoUser = _local.demoUser();
-      await _local.saveSession(
-        userDto: _entityToDto(demoUser),
-        accessToken: 'demo_token',
-      );
-      return demoUser;
-    }
+    final result = await _remote.verifyPhoneOtp(phone: phone, otp: otp);
+    await _local.saveSession(
+      userDto: result.user,
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+    );
+    return result.user.toEntity();
   }
 
   @override

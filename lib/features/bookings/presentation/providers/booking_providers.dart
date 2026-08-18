@@ -1,18 +1,19 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import '../../../../core/network/dio_client.dart';
 import '../../../home/domain/entities/catalog_entities.dart';
-import '../../data/datasources/booking_local_datasource.dart';
+import '../../data/datasources/booking_remote_datasource.dart';
 import '../../data/repositories/booking_repository_impl.dart';
 import '../../domain/entities/booking_entities.dart';
 import '../../domain/repositories/booking_repository.dart';
 
 // ── Repository Provider ───────────────────────────────────────────────────
 
-final bookingLocalDataSourceProvider = Provider<BookingLocalDataSource>((_) {
-  return BookingLocalDataSource();
+final bookingRemoteDataSourceProvider = Provider<BookingRemoteDataSource>((_) {
+  return BookingRemoteDataSource(DioClient.instance.dio);
 });
 
 final bookingRepositoryProvider = Provider<BookingRepository>((ref) {
-  return BookingRepositoryImpl(ref.watch(bookingLocalDataSourceProvider));
+  return BookingRepositoryImpl(ref.watch(bookingRemoteDataSourceProvider));
 });
 
 // ── My Bookings Notifier ──────────────────────────────────────────────────

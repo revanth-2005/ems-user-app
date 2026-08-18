@@ -1,52 +1,32 @@
 import '../../domain/entities/catalog_entities.dart';
 import '../../domain/repositories/catalog_repository.dart';
-import '../datasources/catalog_local_datasource.dart';
 import '../datasources/catalog_remote_datasource.dart';
 
 class CatalogRepositoryImpl implements CatalogRepository {
   final CatalogRemoteDataSource _remote;
-  final CatalogLocalDataSource _local;
 
   CatalogRepositoryImpl({
     required CatalogRemoteDataSource remote,
-    required CatalogLocalDataSource local,
-  })  : _remote = remote,
-        _local = local;
+  }) : _remote = remote;
 
   @override
   Future<List<Category>> getCategories() async {
-    try {
-      final res = await _remote.getCategories();
-      if (res.isNotEmpty) return res;
-    } catch (_) {}
-    return _local.getCategories();
+    return _remote.getCategories();
   }
 
   @override
   Future<List<EventPackage>> getPackages({String city = 'Mumbai'}) async {
-    try {
-      final res = await _remote.getPackages(city: city);
-      if (res.isNotEmpty) return res;
-    } catch (_) {}
-    return _local.getPackages();
+    return _remote.getPackages(city: city);
   }
 
   @override
   Future<List<StandaloneService>> getServices({String city = 'Mumbai'}) async {
-    try {
-      final res = await _remote.getServices(city: city);
-      if (res.isNotEmpty) return res;
-    } catch (_) {}
-    return _local.getServices();
+    return _remote.getServices(city: city);
   }
 
   @override
   Future<List<PublicEvent>> getEvents() async {
-    try {
-      final res = await _remote.getEvents();
-      if (res.isNotEmpty) return res;
-    } catch (_) {}
-    return _local.getEvents();
+    return _remote.getEvents();
   }
 
   @override
@@ -55,7 +35,7 @@ class CatalogRepositoryImpl implements CatalogRepository {
     try {
       return pkgs.firstWhere((p) => p.id == id);
     } catch (_) {
-      return pkgs.isNotEmpty ? pkgs.first : null;
+      return null;
     }
   }
 
@@ -65,7 +45,7 @@ class CatalogRepositoryImpl implements CatalogRepository {
     try {
       return evts.firstWhere((e) => e.id == id);
     } catch (_) {
-      return evts.isNotEmpty ? evts.first : null;
+      return null;
     }
   }
 
@@ -75,7 +55,7 @@ class CatalogRepositoryImpl implements CatalogRepository {
     try {
       return srvs.firstWhere((s) => s.id == id);
     } catch (_) {
-      return srvs.isNotEmpty ? srvs.first : null;
+      return null;
     }
   }
 }

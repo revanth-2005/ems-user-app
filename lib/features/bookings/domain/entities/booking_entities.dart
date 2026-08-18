@@ -100,6 +100,59 @@ class VendorBooking {
       customerEmail: customerEmail ?? this.customerEmail,
     );
   }
+
+  factory VendorBooking.fromJson(Map<String, dynamic> json) {
+    BookingStatus parseStatus(String? val) {
+      if (val == null) return BookingStatus.REQUESTED;
+      for (final s in BookingStatus.values) {
+        if (s.name.toUpperCase() == val.toUpperCase()) return s;
+      }
+      return BookingStatus.REQUESTED;
+    }
+
+    return VendorBooking(
+      id: json['id']?.toString() ?? '',
+      orderId: json['orderId']?.toString() ?? json['order_id']?.toString() ?? 'ORD',
+      organizerProfileId: json['organizerProfileId']?.toString() ?? json['organizer_profile_id']?.toString() ?? 'org',
+      packageId: json['packageId']?.toString() ?? json['package_id']?.toString(),
+      serviceId: json['serviceId']?.toString() ?? json['service_id']?.toString(),
+      title: json['title'] ?? json['itemName'] ?? json['name'] ?? 'Vendor Service',
+      eventDate: json['eventDate'] != null ? DateTime.tryParse(json['eventDate'].toString()) ?? DateTime.now() : DateTime.now(),
+      startTime: json['startTime'] ?? '18:00',
+      endTime: json['endTime'] ?? '23:00',
+      status: parseStatus(json['status']?.toString()),
+      slaDeadline: json['slaDeadline'] != null ? DateTime.tryParse(json['slaDeadline'].toString()) ?? DateTime.now().add(const Duration(hours: 24)) : DateTime.now().add(const Duration(hours: 24)),
+      agreedPriceInPaise: (json['agreedPriceInPaise'] ?? json['priceInPaise'] ?? json['price_in_paise'] ?? 0) as int,
+      depositPaidPaise: (json['depositPaidPaise'] ?? json['depositRequiredPaise'] ?? json['deposit_paid_paise'] ?? 0) as int,
+      balanceDuePaise: (json['balanceDuePaise'] ?? json['balance_due_paise'] ?? 0) as int,
+      organizer: json['organizer'] != null
+          ? OrganizerSummary.fromJson(json['organizer'] as Map<String, dynamic>)
+          : const OrganizerSummary(id: 'org_1', businessName: 'Premier Vendor'),
+      proposedDate: json['proposedDate'] != null ? DateTime.tryParse(json['proposedDate'].toString()) : null,
+      rescheduleNote: json['rescheduleNote'],
+      customerName: json['customerName'] ?? json['customer_name'],
+      customerPhone: json['customerPhone'] ?? json['customer_phone'],
+      customerEmail: json['customerEmail'] ?? json['customer_email'],
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'orderId': orderId,
+        'organizerProfileId': organizerProfileId,
+        'packageId': packageId,
+        'serviceId': serviceId,
+        'title': title,
+        'eventDate': eventDate.toIso8601String(),
+        'startTime': startTime,
+        'endTime': endTime,
+        'status': status.name,
+        'slaDeadline': slaDeadline.toIso8601String(),
+        'agreedPriceInPaise': agreedPriceInPaise,
+        'depositPaidPaise': depositPaidPaise,
+        'balanceDuePaise': balanceDuePaise,
+        'organizer': organizer.toJson(),
+      };
 }
 
 class EventTicketPass {
@@ -126,6 +179,34 @@ class EventTicketPass {
     required this.attendeeName,
     this.isCheckedIn = false,
   });
+
+  factory EventTicketPass.fromJson(Map<String, dynamic> json) {
+    return EventTicketPass(
+      id: json['id']?.toString() ?? '',
+      eventId: json['eventId']?.toString() ?? json['event_id']?.toString() ?? '',
+      eventTitle: json['eventTitle'] ?? json['event_title'] ?? json['title'] ?? 'Event Pass',
+      eventDate: json['eventDate'] != null ? DateTime.tryParse(json['eventDate'].toString()) ?? DateTime.now() : DateTime.now(),
+      venueName: json['venueName'] ?? json['venue_name'] ?? json['venue'] ?? 'City Arena',
+      ticketTypeName: json['ticketTypeName'] ?? json['ticket_type'] ?? 'General Access',
+      pricePaidPaise: (json['pricePaidPaise'] ?? json['price_paid_paise'] ?? json['priceInPaise'] ?? 0) as int,
+      qrCodeData: json['qrCodeData'] ?? json['qrCode'] ?? json['qr_code'] ?? 'EMS-PASS-${json['id']}',
+      attendeeName: json['attendeeName'] ?? json['attendee_name'] ?? 'Attendee',
+      isCheckedIn: json['isCheckedIn'] ?? json['is_checked_in'] ?? false,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'eventId': eventId,
+        'eventTitle': eventTitle,
+        'eventDate': eventDate.toIso8601String(),
+        'venueName': venueName,
+        'ticketTypeName': ticketTypeName,
+        'pricePaidPaise': pricePaidPaise,
+        'qrCodeData': qrCodeData,
+        'attendeeName': attendeeName,
+        'isCheckedIn': isCheckedIn,
+      };
 }
 
 class CartItem {

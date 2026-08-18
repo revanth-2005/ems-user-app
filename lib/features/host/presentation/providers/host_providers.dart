@@ -1,17 +1,18 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import '../../data/datasources/host_local_datasource.dart';
+import '../../../../core/network/dio_client.dart';
+import '../../data/datasources/host_remote_datasource.dart';
 import '../../data/repositories/host_repository_impl.dart';
 import '../../domain/entities/host_entities.dart';
 import '../../domain/repositories/host_repository.dart';
 
 // ── Repository Providers ──────────────────────────────────────────────────
 
-final hostLocalDataSourceProvider = Provider<HostLocalDataSource>((_) {
-  return HostLocalDataSource();
+final hostRemoteDataSourceProvider = Provider<HostRemoteDataSource>((_) {
+  return HostRemoteDataSource(DioClient.instance.dio);
 });
 
 final hostRepositoryProvider = Provider<HostRepository>((ref) {
-  return HostRepositoryImpl(ref.watch(hostLocalDataSourceProvider));
+  return HostRepositoryImpl(ref.watch(hostRemoteDataSourceProvider));
 });
 
 // ── Hosted Events Notifier ────────────────────────────────────────────────

@@ -1,6 +1,5 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../app/app_providers.dart';
-import '../../data/datasources/catalog_local_datasource.dart';
 import '../../data/datasources/catalog_remote_datasource.dart';
 import '../../data/repositories/catalog_repository_impl.dart';
 import '../../domain/entities/catalog_entities.dart';
@@ -13,14 +12,9 @@ final catalogRemoteDataSourceProvider = Provider<CatalogRemoteDataSource>((ref) 
   return CatalogRemoteDataSource(dio);
 });
 
-final catalogLocalDataSourceProvider = Provider<CatalogLocalDataSource>((_) {
-  return CatalogLocalDataSource();
-});
-
 final catalogRepositoryProvider = Provider<CatalogRepository>((ref) {
   return CatalogRepositoryImpl(
     remote: ref.watch(catalogRemoteDataSourceProvider),
-    local: ref.watch(catalogLocalDataSourceProvider),
   );
 });
 

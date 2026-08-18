@@ -7,11 +7,25 @@ class CatalogRemoteDataSource {
   final Dio _dio;
   CatalogRemoteDataSource(this._dio);
 
+  List<dynamic> _extractList(dynamic data, List<String> possibleKeys) {
+    if (data is List) return data;
+    if (data is Map<String, dynamic>) {
+      for (final key in possibleKeys) {
+        if (data[key] is List) return data[key] as List;
+      }
+      if (data['data'] is List) return data['data'] as List;
+      if (data['items'] is List) return data['items'] as List;
+      if (data['results'] is List) return data['results'] as List;
+    }
+    return const [];
+  }
+
   Future<List<Category>> getCategories() async {
     try {
       final res = await _dio.get(ApiConstants.masterCategories);
-      if (res.statusCode == 200 && res.data is List) {
-        return (res.data as List)
+      if (res.statusCode == 200) {
+        final list = _extractList(res.data, ['categories', 'data', 'items']);
+        return list
             .map((e) => Category.fromJson(e as Map<String, dynamic>))
             .toList();
       }
@@ -27,8 +41,9 @@ class CatalogRemoteDataSource {
         ApiConstants.catalogPackages,
         queryParameters: {'city': city},
       );
-      if (res.statusCode == 200 && res.data['data'] != null) {
-        return (res.data['data'] as List)
+      if (res.statusCode == 200) {
+        final list = _extractList(res.data, ['packages', 'data', 'items']);
+        return list
             .map((e) => EventPackage.fromJson(e as Map<String, dynamic>))
             .toList();
       }
@@ -44,8 +59,9 @@ class CatalogRemoteDataSource {
         ApiConstants.catalogServices,
         queryParameters: {'city': city},
       );
-      if (res.statusCode == 200 && res.data['data'] != null) {
-        return (res.data['data'] as List)
+      if (res.statusCode == 200) {
+        final list = _extractList(res.data, ['services', 'data', 'items']);
+        return list
             .map((e) => StandaloneService.fromJson(e as Map<String, dynamic>))
             .toList();
       }
@@ -58,8 +74,9 @@ class CatalogRemoteDataSource {
   Future<List<PublicEvent>> getEvents() async {
     try {
       final res = await _dio.get(ApiConstants.catalogEvents);
-      if (res.statusCode == 200 && res.data['data'] != null) {
-        return (res.data['data'] as List)
+      if (res.statusCode == 200) {
+        final list = _extractList(res.data, ['events', 'data', 'items']);
+        return list
             .map((e) => PublicEvent.fromJson(e as Map<String, dynamic>))
             .toList();
       }

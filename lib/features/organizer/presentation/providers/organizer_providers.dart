@@ -1,19 +1,20 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import '../../../../core/network/dio_client.dart';
 import '../../../bookings/domain/entities/booking_entities.dart';
-import '../../data/datasources/organizer_local_datasource.dart';
+import '../../data/datasources/organizer_remote_datasource.dart';
 import '../../data/repositories/organizer_repository_impl.dart';
 import '../../domain/entities/organizer_entities.dart';
 import '../../domain/repositories/organizer_repository.dart';
 
 // ── Repository Provider ───────────────────────────────────────────────────
 
-final organizerLocalDataSourceProvider =
-    Provider<OrganizerLocalDataSource>((_) {
-  return OrganizerLocalDataSource();
+final organizerRemoteDataSourceProvider =
+    Provider<OrganizerRemoteDataSource>((_) {
+  return OrganizerRemoteDataSource(DioClient.instance.dio);
 });
 
 final organizerRepositoryProvider = Provider<OrganizerRepository>((ref) {
-  return OrganizerRepositoryImpl(ref.watch(organizerLocalDataSourceProvider));
+  return OrganizerRepositoryImpl(ref.watch(organizerRemoteDataSourceProvider));
 });
 
 // ── Profile Provider ──────────────────────────────────────────────────────
