@@ -87,6 +87,8 @@ class EventDetailScreen extends HookConsumerWidget {
                     children: [
                       AppNetworkImage(
                         url: event.coverImageUrl,
+                        categoryHint: event.category?.name ?? 'Live Event',
+                        titleHint: event.title,
                         fit: BoxFit.cover,
                       ),
                       DecoratedBox(

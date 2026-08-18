@@ -45,7 +45,7 @@ export class ApiClient {
     this.baseUrl =
       config.baseUrl ||
       globalProcess?.env?.NEXT_PUBLIC_API_URL ||
-      (isProd ? 'https://api.yourapp.com' : 'http://192.168.0.112:3001');
+      (isProd ? 'https://api.yourapp.com' : 'http://localhost:3001');
 
     this.timeoutMs = config.timeoutMs ?? 15000;
     this.onUnauthorized = config.onUnauthorized;

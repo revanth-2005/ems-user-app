@@ -49,20 +49,26 @@ class AuthRemoteDataSource {
   }
 
   Future<({UserDto user, String accessToken, String? refreshToken})>
-      verifyPhoneOtp({
-    required String phone,
+      verifyOtp({
+    required String target,
     required String otp,
   }) async {
     try {
       final response = await _dio.post(
         ApiConstants.verifyOtp,
-        data: {'phone': phone, 'otp': otp},
+        data: {'target': target, 'otp': otp},
       );
       return _parseAuthResponse(response.data);
     } on DioException catch (e) {
       throw NetworkException.fromDioError(e);
     }
   }
+
+  Future<({UserDto user, String accessToken, String? refreshToken})>
+      verifyPhoneOtp({
+    required String phone,
+    required String otp,
+  }) => verifyOtp(target: phone, otp: otp);
 
   ({UserDto user, String accessToken, String? refreshToken}) _parseAuthResponse(
       dynamic data) {

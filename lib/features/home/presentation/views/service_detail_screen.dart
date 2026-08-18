@@ -60,6 +60,8 @@ class ServiceDetailScreen extends HookConsumerWidget {
                     children: [
                       AppNetworkImage(
                         url: srv.coverImageUrl,
+                        categoryHint: srv.categoryName,
+                        titleHint: srv.name,
                         fit: BoxFit.cover,
                       ),
                       DecoratedBox(

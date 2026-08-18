@@ -10,52 +10,109 @@ class CatalogRepositoryImpl implements CatalogRepository {
   }) : _remote = remote;
 
   @override
-  Future<List<Category>> getCategories() async {
-    return _remote.getCategories();
-  }
+  Future<List<Category>> getCategories() => _remote.getCategories();
 
   @override
-  Future<List<EventPackage>> getPackages({String city = 'Mumbai'}) async {
-    return _remote.getPackages(city: city);
-  }
+  Future<List<EventPackage>> getPackages({
+    String? search,
+    String? city,
+    String? categoryId,
+    String? subCategoryId,
+    int? minPrice,
+    int? maxPrice,
+    String? sortBy,
+    int page = 1,
+    int limit = 20,
+  }) =>
+      _remote.getPackages(
+        search: search,
+        city: city,
+        categoryId: categoryId,
+        subCategoryId: subCategoryId,
+        minPrice: minPrice,
+        maxPrice: maxPrice,
+        sortBy: sortBy,
+        page: page,
+        limit: limit,
+      );
 
   @override
-  Future<List<StandaloneService>> getServices({String city = 'Mumbai'}) async {
-    return _remote.getServices(city: city);
-  }
+  Future<EventPackage?> getPackageById(String idOrSlug) =>
+      _remote.getPackageDetails(idOrSlug);
 
   @override
-  Future<List<PublicEvent>> getEvents() async {
-    return _remote.getEvents();
-  }
+  Future<List<StandaloneService>> getServices({
+    String? search,
+    String? city,
+    String? categoryId,
+    String? subCategoryId,
+    String? pricingUnit,
+    int? minPrice,
+    int? maxPrice,
+    String? sortBy,
+    int page = 1,
+    int limit = 20,
+  }) =>
+      _remote.getServices(
+        search: search,
+        city: city,
+        categoryId: categoryId,
+        subCategoryId: subCategoryId,
+        pricingUnit: pricingUnit,
+        minPrice: minPrice,
+        maxPrice: maxPrice,
+        sortBy: sortBy,
+        page: page,
+        limit: limit,
+      );
 
   @override
-  Future<EventPackage?> getPackageById(String id) async {
-    final pkgs = await getPackages();
-    try {
-      return pkgs.firstWhere((p) => p.id == id);
-    } catch (_) {
-      return null;
-    }
-  }
+  Future<StandaloneService?> getServiceById(String idOrSlug) =>
+      _remote.getServiceDetails(idOrSlug);
 
   @override
-  Future<PublicEvent?> getEventById(String id) async {
-    final evts = await getEvents();
-    try {
-      return evts.firstWhere((e) => e.id == id);
-    } catch (_) {
-      return null;
-    }
-  }
+  Future<List<OrganizerSummary>> getOrganizers({
+    String? search,
+    String? city,
+    int page = 1,
+    int limit = 20,
+  }) =>
+      _remote.getOrganizers(
+        search: search,
+        city: city,
+        page: page,
+        limit: limit,
+      );
 
   @override
-  Future<StandaloneService?> getServiceById(String id) async {
-    final srvs = await getServices();
-    try {
-      return srvs.firstWhere((s) => s.id == id);
-    } catch (_) {
-      return null;
-    }
-  }
+  Future<OrganizerSummary?> getOrganizerById(String id) =>
+      _remote.getOrganizerDetails(id);
+
+  @override
+  Future<Map<String, dynamic>> getOrganizerAvailability(
+    String id, {
+    String? startDate,
+    String? endDate,
+  }) =>
+      _remote.getOrganizerAvailability(id, startDate: startDate, endDate: endDate);
+
+  @override
+  Future<List<PublicEvent>> getEvents({
+    String? search,
+    String? city,
+    String? categoryId,
+    int page = 1,
+    int limit = 20,
+  }) =>
+      _remote.getEvents(
+        search: search,
+        city: city,
+        categoryId: categoryId,
+        page: page,
+        limit: limit,
+      );
+
+  @override
+  Future<PublicEvent?> getEventById(String idOrSlug) =>
+      _remote.getEventDetails(idOrSlug);
 }

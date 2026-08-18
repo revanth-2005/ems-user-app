@@ -3,11 +3,11 @@
 class ApiConstants {
   // ── 🌐 Centralized Base URL Configuration ──────────────────────────────────
   // Edit this host and port to connect to your backend team's LAN server:
-  static const String serverHost = '192.168.0.112'; // Backend team IP
-  static const String serverPort = '3001';          // Backend team Port
+  static const String serverHost = 'localhost';     // Localhost (or 10.0.2.2 for Android emulator)
+  static const String serverPort = '3001';          // Backend Port
   static const String apiPrefix  = '';              // Live backend routes mount directly at root
 
-  /// Active Base URL: http://192.168.0.112:3001
+  /// Active Base URL: http://localhost:3001
   static String get baseUrl => 'http://$serverHost:$serverPort$apiPrefix';
 
   // ── 🔐 Auth Endpoints ──────────────────────────────────────────────────────

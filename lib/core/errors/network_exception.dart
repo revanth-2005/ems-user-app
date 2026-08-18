@@ -82,11 +82,16 @@ class NetworkException implements Exception {
 
   static String? _extractMessage(dynamic data) {
     if (data is Map<String, dynamic>) {
-      return (data['message'] ?? data['error'] ?? data['detail'])?.toString();
+      final msg = data['message'] ?? data['error'] ?? data['detail'];
+      if (msg is List) {
+        return msg.join(', ');
+      }
+      return msg?.toString();
     }
+    if (data is String) return data;
     return null;
   }
 
   @override
-  String toString() => 'NetworkException($statusCode): $message';
+  String toString() => message;
 }

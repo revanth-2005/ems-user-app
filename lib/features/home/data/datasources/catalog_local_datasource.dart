@@ -151,7 +151,7 @@ class CatalogLocalDataSource {
         coverImageUrl:
             'https://images.unsplash.com/photo-1537633552985-df8429e8048b?w=800&auto=format&fit=crop',
         priceInPaise: 4500000,
-        depositRequiredPaise: 1500000,
+        advanceDepositFlat: 1500000,
         pricingUnit: PricingUnit.FIXED,
         organizer: OrganizerSummary(
           id: 'org_lens',
@@ -168,7 +168,7 @@ class CatalogLocalDataSource {
         coverImageUrl:
             'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop',
         priceInPaise: 85000,
-        depositRequiredPaise: 20000,
+        advanceDepositFlat: 20000,
         pricingUnit: PricingUnit.PER_HEAD,
         organizer: OrganizerSummary(
           id: 'org_gusto',
@@ -185,7 +185,7 @@ class CatalogLocalDataSource {
         coverImageUrl:
             'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop',
         priceInPaise: 2500000,
-        depositRequiredPaise: 800000,
+        advanceDepositFlat: 800000,
         pricingUnit: PricingUnit.FIXED,
         organizer: OrganizerSummary(
           id: 'org_sonic',

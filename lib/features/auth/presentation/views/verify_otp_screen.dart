@@ -11,9 +11,14 @@ import '../../../../core/constants/app_colors.dart';
 import '../providers/auth_providers.dart';
 
 class VerifyOtpScreen extends HookConsumerWidget {
-  final String phone;
+  final String target;
+  final bool isSignup;
 
-  const VerifyOtpScreen({super.key, required this.phone});
+  const VerifyOtpScreen({
+    super.key,
+    required this.target,
+    this.isSignup = false,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -24,6 +29,9 @@ class VerifyOtpScreen extends HookConsumerWidget {
       () => List.generate(6, (_) => FocusNode()),
     );
     final secondsRemaining = useState(300);
+    final otpError = useState<String?>(null);
+    final authState = ref.watch(authStateProvider);
+    final isLoading = authState.isLoading;
 
     useEffect(() {
       final timer = Stream.periodic(
@@ -46,9 +54,6 @@ class VerifyOtpScreen extends HookConsumerWidget {
       };
     }, const []);
 
-    final authState = ref.watch(authStateProvider);
-    final isLoading = authState.isLoading;
-
     String getEnteredOtp() => controllers.map((c) => c.text).join();
 
     String formatTimer(int totalSecs) {
@@ -68,17 +73,44 @@ class VerifyOtpScreen extends HookConsumerWidget {
         return;
       }
 
-      await ref.read(authStateProvider.notifier).verifyPhoneOtp(phone, otp);
+      otpError.value = null;
+      final error = await ref
+          .read(authStateProvider.notifier)
+          .verifyOtp(target, otp);
 
-      if (context.mounted && ref.read(authStateProvider).hasValue) {
+      if (!context.mounted) return;
+
+      if (error != null) {
+        otpError.value = error;
         AppSnackbar.show(
           context,
-          message: 'Phone verified successfully!',
-          type: SnackbarType.success,
+          message: error,
+          type: SnackbarType.error,
         );
-        context.go(AppRoutes.home);
+      } else {
+        if (isSignup) {
+          // Log out temporary session so user logs in cleanly with email/password
+          await ref.read(authStateProvider.notifier).logout();
+          if (context.mounted) {
+            AppSnackbar.show(
+              context,
+              message: 'Account verified successfully! Please sign in with your credentials.',
+              type: SnackbarType.success,
+            );
+            context.go(AppRoutes.login);
+          }
+        } else {
+          AppSnackbar.show(
+            context,
+            message: 'Verified successfully! Welcome back.',
+            type: SnackbarType.success,
+          );
+          context.go(AppRoutes.home);
+        }
       }
     }
+
+    final isEmail = target.contains('@');
 
     return Scaffold(
       backgroundColor: AppColors.lightBg,
@@ -91,7 +123,7 @@ class VerifyOtpScreen extends HookConsumerWidget {
           onPressed: () => context.pop(),
         ),
         title: Text(
-          'Verify OTP',
+          isEmail ? 'Verify Email' : 'Verify Phone',
           style: GoogleFonts.plusJakartaSans(
             fontSize: 18,
             fontWeight: FontWeight.w800,
@@ -107,7 +139,7 @@ class VerifyOtpScreen extends HookConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Enter Verification Code 📲',
+                isEmail ? 'Verify Your Email ✉️' : 'Enter Verification Code 📲',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
@@ -116,7 +148,9 @@ class VerifyOtpScreen extends HookConsumerWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'We sent a 6-digit one-time passcode to $phone',
+                isEmail
+                    ? 'We sent a 6-digit verification code to $target. Enter it below to activate your account.'
+                    : 'We sent a 6-digit one-time passcode to $target',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 13,
                   color: AppColors.textSecondary,
@@ -179,7 +213,37 @@ class VerifyOtpScreen extends HookConsumerWidget {
                 }),
               ),
 
-              const SizedBox(height: 36),
+              if (otpError.value != null) ...[
+                const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF2F2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFFCA5A5), width: 1.2),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline_rounded,
+                          color: AppColors.accentRose, size: 20),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          otpError.value!,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.accentRose,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: 32),
 
               AppPrimaryButton(
                 text: isLoading ? 'Verifying…' : 'Verify & Continue',
@@ -195,19 +259,21 @@ class VerifyOtpScreen extends HookConsumerWidget {
                       ? null
                       : () {
                           secondsRemaining.value = 300;
-                          ref
-                              .read(authStateProvider.notifier)
-                              .requestPhoneOtp(phone);
+                          if (!isEmail) {
+                            ref
+                                .read(authStateProvider.notifier)
+                                .requestPhoneOtp(target);
+                          }
                           AppSnackbar.show(
                             context,
-                            message: 'A new code has been sent to $phone',
+                            message: 'A new verification code has been requested for $target',
                             type: SnackbarType.info,
                           );
                         },
                   child: Text(
                     secondsRemaining.value > 0
-                        ? 'Resend OTP in ${formatTimer(secondsRemaining.value)}'
-                        : 'Resend OTP Code',
+                        ? 'Resend Code in ${formatTimer(secondsRemaining.value)}'
+                        : 'Resend Verification Code',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,

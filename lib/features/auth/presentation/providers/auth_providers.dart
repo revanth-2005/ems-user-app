@@ -50,26 +50,35 @@ class AuthNotifier extends AsyncNotifier<UserEntity?> {
     return repo.getSession();
   }
 
-  Future<void> loginWithEmail(String email, String password) async {
-    state = const AsyncLoading();
-    final repo = await ref.read(authRepositoryProvider.future);
-    state = await AsyncValue.guard(
-      () => repo.loginWithEmail(email: email, password: password),
-    );
+  Future<String?> loginWithEmail(String email, String password) async {
+    try {
+      state = const AsyncLoading();
+      final repo = await ref.read(authRepositoryProvider.future);
+      final user = await repo.loginWithEmail(email: email, password: password);
+      state = AsyncData(user);
+      return null;
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      final msg = e.toString().replaceAll('Exception: ', '').trim();
+      return msg.isNotEmpty ? msg : 'Invalid email or password';
+    }
   }
 
-  Future<void> signupWithEmail({
+  Future<String?> signupWithEmail({
     required String email,
     required String password,
     required String name,
     required String city,
   }) async {
-    state = const AsyncLoading();
-    final repo = await ref.read(authRepositoryProvider.future);
-    state = await AsyncValue.guard(
-      () => repo.signupWithEmail(
-          email: email, password: password, name: name, city: city),
-    );
+    try {
+      final repo = await ref.read(authRepositoryProvider.future);
+      await repo.signupWithEmail(
+          email: email, password: password, name: name, city: city);
+      return null;
+    } catch (e) {
+      final msg = e.toString().replaceAll('Exception: ', '').trim();
+      return msg.isNotEmpty ? msg : 'Failed to create account';
+    }
   }
 
   Future<bool> requestPhoneOtp(String phone) async {
@@ -82,12 +91,22 @@ class AuthNotifier extends AsyncNotifier<UserEntity?> {
     }
   }
 
+  Future<String?> verifyOtp(String target, String otp) async {
+    try {
+      state = const AsyncLoading();
+      final repo = await ref.read(authRepositoryProvider.future);
+      final user = await repo.verifyOtp(target: target, otp: otp);
+      state = AsyncData(user);
+      return null;
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      final msg = e.toString().replaceAll('Exception: ', '').trim();
+      return msg.isNotEmpty ? msg : 'Invalid verification code';
+    }
+  }
+
   Future<void> verifyPhoneOtp(String phone, String otp) async {
-    state = const AsyncLoading();
-    final repo = await ref.read(authRepositoryProvider.future);
-    state = await AsyncValue.guard(
-      () => repo.verifyPhoneOtp(phone: phone, otp: otp),
-    );
+    await verifyOtp(phone, otp);
   }
 
   void switchPortal(ActivePortal portal) {

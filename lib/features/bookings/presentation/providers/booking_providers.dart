@@ -76,14 +76,15 @@ class CartNotifier extends Notifier<CartState> {
   }
 
   void addService(StandaloneService srv, DateTime eventDate) {
+    final deposit = srv.depositRequiredPaise > 0 ? srv.depositRequiredPaise : srv.priceInPaise;
     final item = CartItem(
       id: 'cart_${DateTime.now().millisecondsSinceEpoch}',
       serviceId: srv.id,
       itemName: srv.name,
       coverImageUrl: srv.coverImageUrl,
       priceInPaise: srv.priceInPaise,
-      depositRequiredPaise: srv.depositRequiredPaise,
-      balanceDuePaise: srv.priceInPaise - srv.depositRequiredPaise,
+      depositRequiredPaise: deposit,
+      balanceDuePaise: srv.priceInPaise - deposit,
       eventDate: eventDate,
       organizer: srv.organizer,
     );

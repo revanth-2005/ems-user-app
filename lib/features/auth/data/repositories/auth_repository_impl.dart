@@ -35,7 +35,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<UserEntity> signupWithEmail({
+  Future<void> signupWithEmail({
     required String email,
     required String password,
     required String name,
@@ -43,7 +43,6 @@ class AuthRepositoryImpl implements AuthRepository {
   }) async {
     await _remote.signupWithEmail(
         email: email, password: password, name: name, city: city);
-    return loginWithEmail(email: email, password: password);
   }
 
   @override
@@ -52,11 +51,11 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<UserEntity> verifyPhoneOtp({
-    required String phone,
+  Future<UserEntity> verifyOtp({
+    required String target,
     required String otp,
   }) async {
-    final result = await _remote.verifyPhoneOtp(phone: phone, otp: otp);
+    final result = await _remote.verifyOtp(target: target, otp: otp);
     await _local.saveSession(
       userDto: result.user,
       accessToken: result.accessToken,
@@ -64,6 +63,12 @@ class AuthRepositoryImpl implements AuthRepository {
     );
     return result.user.toEntity();
   }
+
+  @override
+  Future<UserEntity> verifyPhoneOtp({
+    required String phone,
+    required String otp,
+  }) => verifyOtp(target: phone, otp: otp);
 
   @override
   Future<void> logout() => _local.clearSession();

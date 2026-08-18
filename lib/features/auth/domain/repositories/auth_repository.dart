@@ -11,7 +11,7 @@ abstract class AuthRepository {
     required String password,
   });
 
-  Future<UserEntity> signupWithEmail({
+  Future<void> signupWithEmail({
     required String email,
     required String password,
     required String name,
@@ -19,6 +19,11 @@ abstract class AuthRepository {
   });
 
   Future<void> requestPhoneOtp(String phone);
+
+  Future<UserEntity> verifyOtp({
+    required String target,
+    required String otp,
+  });
 
   Future<UserEntity> verifyPhoneOtp({
     required String phone,

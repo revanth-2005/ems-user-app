@@ -89,6 +89,8 @@ class PackageDetailScreen extends HookConsumerWidget {
                     children: [
                       AppNetworkImage(
                         url: pkg.coverImageUrl,
+                        categoryHint: pkg.categoryName,
+                        titleHint: pkg.name,
                         fit: BoxFit.cover,
                       ),
                       DecoratedBox(

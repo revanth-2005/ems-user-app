@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -64,29 +65,43 @@ abstract class AppRoutes {
   static const onboardingWizard = '/organizer/onboarding';
 }
 
-// ── Router Provider ────────────────────────────────────────────────────────
+// ── Router Notifier (State-aware refreshListenable) ───────────────────────
+
+class RouterNotifier extends ChangeNotifier {
+  final Ref _ref;
+
+  RouterNotifier(this._ref) {
+    _ref.listen(authStateProvider, (_, __) => notifyListeners());
+  }
+
+  String? redirect(BuildContext context, GoRouterState state) {
+    final authState = _ref.read(authStateProvider);
+    final isLoggedIn = authState.valueOrNull != null;
+    final isAuthRoute = state.matchedLocation.startsWith('/auth');
+
+    if (!isLoggedIn && !isAuthRoute) {
+      return AppRoutes.login;
+    }
+    if (isLoggedIn && isAuthRoute) {
+      return AppRoutes.home;
+    }
+    return null;
+  }
+}
+
+final routerNotifierProvider = Provider<RouterNotifier>((ref) {
+  return RouterNotifier(ref);
+});
 
 /// GoRouter provider — kept alive for the app's lifetime.
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
+  final notifier = ref.watch(routerNotifierProvider);
 
   return GoRouter(
     initialLocation: AppRoutes.home,
+    refreshListenable: notifier,
+    redirect: notifier.redirect,
     debugLogDiagnostics: false,
-
-    // Auth guard redirect
-    redirect: (context, state) {
-      final isLoggedIn = authState.valueOrNull != null;
-      final isAuthRoute = state.matchedLocation.startsWith('/auth');
-
-      if (!isLoggedIn && !isAuthRoute) {
-        return AppRoutes.login;
-      }
-      if (isLoggedIn && isAuthRoute) {
-        return AppRoutes.home;
-      }
-      return null;
-    },
 
     routes: [
       // ── Auth ──────────────────────────────────────────────────────────────
@@ -95,7 +110,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.otp,
         builder: (_, state) => VerifyOtpScreen(
-          phone: state.uri.queryParameters['phone'] ?? '',
+          target: state.uri.queryParameters['target'] ?? state.uri.queryParameters['phone'] ?? '',
+          isSignup: state.uri.queryParameters['type'] == 'signup',
         ),
       ),
 

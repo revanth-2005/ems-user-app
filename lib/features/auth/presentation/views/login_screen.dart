@@ -16,31 +16,30 @@ class LoginScreen extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final emailController =
-        useTextEditingController(text: 'rohith.kumar@example.com');
-    final passwordController =
-        useTextEditingController(text: 'password123');
+    final emailController = useTextEditingController();
+    final passwordController = useTextEditingController();
     final formKey = useMemoized(() => GlobalKey<FormState>());
+    final loginError = useState<String?>(null);
     final authState = ref.watch(authStateProvider);
     final isLoading = authState.isLoading;
 
-    ref.listen(authStateProvider, (prev, next) {
-      if (next.hasError && !next.isLoading) {
-        AppSnackbar.show(
-          context,
-          message: next.error.toString(),
-          type: SnackbarType.error,
-        );
-      }
-    });
-
     Future<void> handleLogin() async {
       if (!formKey.currentState!.validate()) return;
-      await ref.read(authStateProvider.notifier).loginWithEmail(
+      loginError.value = null;
+      final error = await ref.read(authStateProvider.notifier).loginWithEmail(
             emailController.text.trim(),
             passwordController.text.trim(),
           );
-      if (context.mounted && ref.read(authStateProvider).hasValue) {
+      if (!context.mounted) return;
+
+      if (error != null) {
+        loginError.value = error;
+        AppSnackbar.show(
+          context,
+          message: error,
+          type: SnackbarType.error,
+        );
+      } else {
         if (context.canPop()) {
           context.pop();
         } else {
@@ -214,7 +213,38 @@ class LoginScreen extends HookConsumerWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 12),
+
+                      if (loginError.value != null) ...[
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFEF2F2),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFFCA5A5), width: 1.2),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.error_outline_rounded,
+                                  color: AppColors.accentRose, size: 20),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  loginError.value!,
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.accentRose,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+
+                      const SizedBox(height: 16),
 
                       AppPrimaryButton(
                         text: isLoading ? 'Signing in…' : 'Login',

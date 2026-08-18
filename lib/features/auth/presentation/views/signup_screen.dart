@@ -21,28 +21,107 @@ class SignupScreen extends HookConsumerWidget {
     final passwordController = useTextEditingController();
     final cityController = useTextEditingController(text: 'Mumbai');
     final formKey = useMemoized(() => GlobalKey<FormState>());
-    final authState = ref.watch(authStateProvider);
-    final isLoading = authState.isLoading;
+    final errorMessage = useState<String?>(null);
+    final isSubmitting = useState(false);
 
     Future<void> handleSignup() async {
       if (!formKey.currentState!.validate()) return;
-      await ref.read(authStateProvider.notifier).signupWithEmail(
-            email: emailController.text.trim(),
-            password: passwordController.text.trim(),
-            name: nameController.text.trim(),
-            city: cityController.text.trim(),
+      errorMessage.value = null;
+      isSubmitting.value = true;
+      final email = emailController.text.trim();
+
+      try {
+        final error = await ref.read(authStateProvider.notifier).signupWithEmail(
+              email: email,
+              password: passwordController.text.trim(),
+              name: nameController.text.trim(),
+              city: cityController.text.trim(),
+            );
+        if (!context.mounted) return;
+
+        if (error != null) {
+          errorMessage.value = error;
+          
+          AppSnackbar.show(
+            context,
+            message: error,
+            type: SnackbarType.error,
           );
-      if (context.mounted && ref.read(authStateProvider).hasValue) {
-        AppSnackbar.show(
-          context,
-          message: 'Account created successfully! Welcome to EventSphere.',
-          type: SnackbarType.success,
-        );
-        if (context.canPop()) {
-          context.pop();
+
+          final isConflict = error.toLowerCase().contains('already exists');
+
+          showDialog(
+            context: context,
+            builder: (dialogCtx) => AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              backgroundColor: AppColors.lightSurface,
+              icon: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFEF2F2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.error_outline_rounded,
+                    color: AppColors.accentRose, size: 36),
+              ),
+              title: Text(
+                isConflict ? 'Account Already Exists' : 'Sign Up Failed',
+                style: GoogleFonts.plusJakartaSans(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 18,
+                  color: AppColors.textPrimary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              content: Text(
+                error,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              actionsAlignment: MainAxisAlignment.center,
+              actions: [
+                if (isConflict)
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(dialogCtx);
+                      context.go(AppRoutes.login);
+                    },
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      textStyle: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+                    ),
+                    child: const Text('Go to Sign In'),
+                  ),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(dialogCtx),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    isConflict ? 'Use Another Email' : 'OK',
+                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ],
+            ),
+          );
         } else {
-          context.go(AppRoutes.home);
+          AppSnackbar.show(
+            context,
+            message: 'Verification code sent to $email',
+            type: SnackbarType.info,
+          );
+          context.push('${AppRoutes.otp}?target=${Uri.encodeComponent(email)}&type=signup');
         }
+      } finally {
+        isSubmitting.value = false;
       }
     }
 
@@ -135,22 +214,52 @@ class SignupScreen extends HookConsumerWidget {
                       const SizedBox(height: 16),
                       AppPasswordField(
                         label: 'Password',
-                        hint: 'Create strong password',
+                        hint: 'Create strong password (min 8 chars)',
                         controller: passwordController,
-                        validator: (v) => (v == null || v.length < 6)
-                            ? 'Password must be at least 6 characters'
+                        validator: (v) => (v == null || v.length < 8)
+                            ? 'Password must be at least 8 characters'
                             : null,
                       ),
                     ],
                   ),
                 ),
 
-                const SizedBox(height: 28),
+                if (errorMessage.value != null) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF2F2),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFFCA5A5), width: 1.2),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline_rounded,
+                            color: AppColors.accentRose, size: 20),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            errorMessage.value!,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.accentRose,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+
+                const SizedBox(height: 24),
 
                 AppPrimaryButton(
-                  text: isLoading ? 'Creating account…' : 'Sign Up',
-                  isLoading: isLoading,
-                  onPressed: isLoading ? null : handleSignup,
+                  text: isSubmitting.value ? 'Creating account…' : 'Sign Up',
+                  isLoading: isSubmitting.value,
+                  onPressed: isSubmitting.value ? null : handleSignup,
                 ),
 
                 const SizedBox(height: 20),
