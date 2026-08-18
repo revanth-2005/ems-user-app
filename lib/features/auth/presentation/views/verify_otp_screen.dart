@@ -23,9 +23,20 @@ class VerifyOtpScreen extends HookConsumerWidget {
     final focusNodes = useMemoized(
       () => List.generate(6, (_) => FocusNode()),
     );
+    final secondsRemaining = useState(300);
 
     useEffect(() {
+      final timer = Stream.periodic(
+        const Duration(seconds: 1),
+        (i) => i,
+      ).listen((_) {
+        if (secondsRemaining.value > 0) {
+          secondsRemaining.value--;
+        }
+      });
+
       return () {
+        timer.cancel();
         for (var c in controllers) {
           c.dispose();
         }
@@ -39,6 +50,12 @@ class VerifyOtpScreen extends HookConsumerWidget {
     final isLoading = authState.isLoading;
 
     String getEnteredOtp() => controllers.map((c) => c.text).join();
+
+    String formatTimer(int totalSecs) {
+      final mins = (totalSecs ~/ 60).toString().padLeft(2, '0');
+      final secs = (totalSecs % 60).toString().padLeft(2, '0');
+      return '$mins:$secs';
+    }
 
     Future<void> verifyOtp() async {
       final otp = getEnteredOtp();
@@ -174,20 +191,29 @@ class VerifyOtpScreen extends HookConsumerWidget {
 
               Center(
                 child: TextButton(
-                  onPressed: () {
-                    ref.read(authStateProvider.notifier).requestPhoneOtp(phone);
-                    AppSnackbar.show(
-                      context,
-                      message: 'A new code has been sent to $phone',
-                      type: SnackbarType.info,
-                    );
-                  },
+                  onPressed: secondsRemaining.value > 0
+                      ? null
+                      : () {
+                          secondsRemaining.value = 300;
+                          ref
+                              .read(authStateProvider.notifier)
+                              .requestPhoneOtp(phone);
+                          AppSnackbar.show(
+                            context,
+                            message: 'A new code has been sent to $phone',
+                            type: SnackbarType.info,
+                          );
+                        },
                   child: Text(
-                    'Resend OTP Code',
+                    secondsRemaining.value > 0
+                        ? 'Resend OTP in ${formatTimer(secondsRemaining.value)}'
+                        : 'Resend OTP Code',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.primary,
+                      color: secondsRemaining.value > 0
+                          ? AppColors.textMuted
+                          : AppColors.primary,
                     ),
                   ),
                 ),

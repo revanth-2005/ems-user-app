@@ -57,6 +57,10 @@ class AppColors {
   static const Color darkTextMuted      = textMuted;
 
   // ── Accents ───────────────────────────────────────────────────────────────
+  static const Color accent         = Color(0xFFF43F5E); // rose accent
+  static const Color success        = Color(0xFF10B981); // emerald green
+  static const Color warning        = Color(0xFFF59E0B); // amber
+  static const Color error          = Color(0xFFEF4444); // red
   static const Color accentEmerald  = Color(0xFF10B981);
   static const Color accentAmber    = Color(0xFFF59E0B);
   static const Color accentRose     = Color(0xFFF43F5E);

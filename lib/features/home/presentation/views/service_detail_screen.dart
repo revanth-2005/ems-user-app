@@ -113,6 +113,113 @@ class ServiceDetailScreen extends HookConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: 20),
+
+                      // ── Price & Deposit Breakdown Card ───────────────────
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.lightCardAlt,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AppColors.lightBorder),
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Total Service Fee',
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 12,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                    Text(
+                                      CurrencyFormatter.formatPaise(srv.priceInPaise),
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w900,
+                                        color: AppColors.primary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    srv.pricingUnit.name.replaceAll('_', ' '),
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const Divider(height: 24, color: AppColors.lightBorder),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Advance Deposit Required (20%):',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                                Text(
+                                  CurrencyFormatter.formatPaise((srv.priceInPaise * 0.2).round()),
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // ── Lead Time Warning ────────────────────────────────
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: AppColors.warning.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.schedule_rounded, size: 18, color: AppColors.warning),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Booking Notice: Requires minimum 3 days advance lead time.',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+
                       if (srv.description != null) ...[
                         Text(
                           'Service Details',
@@ -131,7 +238,120 @@ class ServiceDetailScreen extends HookConsumerWidget {
                             height: 1.5,
                           ),
                         ),
+                        const SizedBox(height: 20),
                       ],
+
+                      // ── Cancellation Policy ──────────────────────────────
+                      Text(
+                        'Cancellation Policy',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: AppColors.lightSurface,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: AppColors.lightBorder),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.verified_user_outlined, size: 16, color: AppColors.success),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Free Cancellation up to 48 Hours Before Event',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'Full refund of advance deposit if cancelled 48 hours prior to start time. 50% refund between 24-48 hours.',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 11,
+                                color: AppColors.textSecondary,
+                                height: 1.4,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // ── Organizer Summary Card ───────────────────────────
+                      Text(
+                        'Verified Provider',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: AppColors.lightSurface,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: AppColors.lightBorder),
+                        ),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 22,
+                              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                              child: const Icon(Icons.business_rounded, color: AppColors.primary),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    srv.organizer.businessName,
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.star_rounded, size: 14, color: AppColors.warning),
+                                      const SizedBox(width: 2),
+                                      Text(
+                                        '${srv.organizer.rating} • ${srv.organizer.city}',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 11,
+                                          color: AppColors.textSecondary,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const AppStatusBadge(
+                              label: 'KYC Verified',
+                              status: BadgeStatus.accepted,
+                            ),
+                          ],
+                        ),
+                      ),
+
                       const SizedBox(height: 80),
                     ],
                   ),
@@ -145,7 +365,7 @@ class ServiceDetailScreen extends HookConsumerWidget {
           ? null
           : Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: AppColors.lightSurface,
                 border: Border(
                   top: BorderSide(color: AppColors.lightBorder),
@@ -179,14 +399,9 @@ class ServiceDetailScreen extends HookConsumerWidget {
                     const SizedBox(width: 20),
                     Expanded(
                       child: AppPrimaryButton(
-                        text: 'Book Service',
+                        text: 'Schedule & Book',
                         onPressed: () {
-                          AppSnackbar.show(
-                            context,
-                            message: 'Service added to your request cart!',
-                            type: SnackbarType.success,
-                          );
-                          context.push(AppRoutes.cart);
+                          _showSlotPickerSheet(context, ref, serviceAsync.valueOrNull!);
                         },
                       ),
                     ),
@@ -194,6 +409,143 @@ class ServiceDetailScreen extends HookConsumerWidget {
                 ),
               ),
             ),
+    );
+  }
+
+  void _showSlotPickerSheet(BuildContext context, WidgetRef ref, dynamic srv) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.lightSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(ctx).viewInsets.bottom + 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.lightBorder,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Schedule Service Date & Time',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Select your event date and preferred operational hours.',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Date Selector
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppColors.lightCardAlt,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.lightBorder),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.calendar_month_rounded, color: AppColors.primary),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Event Date', style: GoogleFonts.plusJakartaSans(fontSize: 11, color: AppColors.textSecondary)),
+                          Text('Saturday, 28 Nov 2026', style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                        ],
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {},
+                      child: const Text('Change'),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Time Window
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.lightCardAlt,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: AppColors.lightBorder),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Start Time', style: GoogleFonts.plusJakartaSans(fontSize: 11, color: AppColors.textSecondary)),
+                          Text('18:00 (24h)', style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.lightCardAlt,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: AppColors.lightBorder),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('End Time', style: GoogleFonts.plusJakartaSans(fontSize: 11, color: AppColors.textSecondary)),
+                          Text('23:00 (24h)', style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 24),
+
+              AppPrimaryButton(
+                text: 'Add to Cart & Checkout',
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  AppSnackbar.show(
+                    context,
+                    message: '${srv.name} scheduled & added to cart!',
+                    type: SnackbarType.success,
+                  );
+                  context.push(AppRoutes.cart);
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -219,7 +219,110 @@ class CartCheckoutScreen extends HookConsumerWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
+
+                  // ── Venue / Event Address Selector ────────────────────────
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.lightSurface,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: AppColors.lightBorder),
+                      boxShadow: AppColors.cardShadow,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Venue / Delivery Address',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            Text(
+                              'Change',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            const Icon(Icons.location_on_rounded,
+                                color: AppColors.primary, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Grand Palace Hall, 42 Residency Road, Coimbatore, Tamil Nadu - 641018',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // ── Event Notes & Instructions ─────────────────────────────
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.lightSurface,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: AppColors.lightBorder),
+                      boxShadow: AppColors.cardShadow,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Special Instructions / Notes',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          maxLines: 2,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12,
+                            color: AppColors.textPrimary,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'Add dietary requirements, entry gate info, or timing notes…',
+                            hintStyle: GoogleFonts.plusJakartaSans(
+                              fontSize: 12,
+                              color: AppColors.textMuted,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: AppColors.lightBorder),
+                            ),
+                            contentPadding: const EdgeInsets.all(12),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
 
                   // Price Breakdown
                   Container(
@@ -249,9 +352,16 @@ class CartCheckoutScreen extends HookConsumerWidget {
                         ),
                         const SizedBox(height: 8),
                         _PriceRow(
-                          label: 'Advance Deposit Required',
+                          label: 'Advance Deposit Required Today',
                           value: CurrencyFormatter.formatPaise(
                               cart.totalDepositPaise),
+                        ),
+                        const SizedBox(height: 8),
+                        _PriceRow(
+                          label: 'Remaining Balance Due Later',
+                          value: CurrencyFormatter.formatPaise(
+                              cart.subtotalPaise - cart.totalDepositPaise),
+                          valueColor: AppColors.textSecondary,
                         ),
                         if (cart.discountPaise > 0) ...[
                           const SizedBox(height: 8),
@@ -273,7 +383,7 @@ class CartCheckoutScreen extends HookConsumerWidget {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          'Remaining balance payable after vendor completes event setup.',
+                          'Remaining balance is payable after vendor completes event setup.',
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 11,
                             color: AppColors.textMuted,

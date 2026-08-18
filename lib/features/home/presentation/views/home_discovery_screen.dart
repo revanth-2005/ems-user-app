@@ -13,6 +13,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../bookings/presentation/providers/booking_providers.dart';
 import '../providers/catalog_providers.dart';
 
 class HomeDiscoveryScreen extends HookConsumerWidget {
@@ -25,6 +26,8 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
     final userName = user?.name.split(' ').first ?? 'there';
     final selectedCity = ref.watch(selectedCityProvider);
     final homeFeedAsync = ref.watch(homeFeedProvider);
+    final cartState = ref.watch(cartProvider);
+    final cartCount = cartState.items.length;
 
     final hour = DateTime.now().hour;
     final greeting = hour < 12
@@ -118,8 +121,10 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
                         ),
                       ),
                       itemBuilder: (_) => const [
-                        PopupMenuItem(value: 'Mumbai', child: Text('Mumbai')),
+                        PopupMenuItem(value: 'Coimbatore', child: Text('Coimbatore')),
+                        PopupMenuItem(value: 'Chennai', child: Text('Chennai')),
                         PopupMenuItem(value: 'Bengaluru', child: Text('Bengaluru')),
+                        PopupMenuItem(value: 'Mumbai', child: Text('Mumbai')),
                         PopupMenuItem(value: 'Delhi NCR', child: Text('Delhi NCR')),
                         PopupMenuItem(value: 'Hyderabad', child: Text('Hyderabad')),
                         PopupMenuItem(value: 'Goa', child: Text('Goa')),
@@ -127,19 +132,52 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
                     ),
                     const SizedBox(width: 8),
 
-                    // Notification bell
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: AppColors.lightCardAlt,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.lightBorder),
-                      ),
-                      child: const Icon(
-                        Icons.notifications_none_rounded,
-                        color: AppColors.textPrimary,
-                        size: 20,
+                    // Cart Badge Button
+                    GestureDetector(
+                      onTap: () => context.push(AppRoutes.cart),
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: AppColors.lightCardAlt,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.lightBorder),
+                            ),
+                            child: const Icon(
+                              Icons.shopping_bag_outlined,
+                              color: AppColors.textPrimary,
+                              size: 20,
+                            ),
+                          ),
+                          if (cartCount > 0)
+                            Positioned(
+                              top: -4,
+                              right: -4,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: AppColors.accent,
+                                  shape: BoxShape.circle,
+                                ),
+                                constraints: const BoxConstraints(
+                                  minWidth: 18,
+                                  minHeight: 18,
+                                ),
+                                child: Text(
+                                  '$cartCount',
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ],
@@ -181,6 +219,165 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
                         ],
                       ),
                     ),
+                  ),
+                ),
+              ),
+
+              // ── 3 Core Pillars Navigation Cards ──────────────────────────
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+                  child: Row(
+                    children: [
+                      // 1. Services Pillar
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            ref.read(activeCatalogTabProvider.notifier).state =
+                                CatalogTab.SERVICES;
+                            context.go(AppRoutes.search);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 14, horizontal: 8),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  AppColors.primary.withValues(alpha: 0.08),
+                                  AppColors.primary.withValues(alpha: 0.02),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                  color: AppColors.primary.withValues(alpha: 0.2)),
+                            ),
+                            child: Column(
+                              children: [
+                                const Text('🛠️', style: TextStyle(fontSize: 22)),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Services',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                                Text(
+                                  'Solo Vendors',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 10,
+                                    color: AppColors.textMuted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+
+                      // 2. Packages Pillar
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            ref.read(activeCatalogTabProvider.notifier).state =
+                                CatalogTab.PACKAGES;
+                            context.go(AppRoutes.search);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 14, horizontal: 8),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  AppColors.accent.withValues(alpha: 0.08),
+                                  AppColors.accent.withValues(alpha: 0.02),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                  color: AppColors.accent.withValues(alpha: 0.25)),
+                            ),
+                            child: Column(
+                              children: [
+                                const Text('🎁', style: TextStyle(fontSize: 22)),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Packages',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                                Text(
+                                  'Bundled Deals',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 10,
+                                    color: AppColors.textMuted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+
+                      // 3. Organizers Pillar
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            ref.read(activeCatalogTabProvider.notifier).state =
+                                CatalogTab.EVENTS;
+                            context.go(AppRoutes.search);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 14, horizontal: 8),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  AppColors.success.withValues(alpha: 0.08),
+                                  AppColors.success.withValues(alpha: 0.02),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                  color: AppColors.success.withValues(alpha: 0.25)),
+                            ),
+                            child: Column(
+                              children: [
+                                const Text('🏢', style: TextStyle(fontSize: 22)),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Organizers',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                                Text(
+                                  'KYC Verified',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 10,
+                                    color: AppColors.textMuted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

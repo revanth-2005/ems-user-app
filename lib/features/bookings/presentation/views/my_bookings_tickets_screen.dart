@@ -94,14 +94,17 @@ class MyBookingsTicketsScreen extends HookConsumerWidget {
                   );
                 }
 
-                return ListView.separated(
-                  padding: const EdgeInsets.all(20),
-                  itemCount: bookings.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 16),
-                  itemBuilder: (context, index) {
-                    final b = bookings[index];
-                    return _VendorBookingCard(booking: b);
-                  },
+                return RefreshIndicator(
+                  onRefresh: () async => ref.refresh(myBookingsProvider.future),
+                  child: ListView.separated(
+                    padding: const EdgeInsets.all(20),
+                    itemCount: bookings.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 16),
+                    itemBuilder: (context, index) {
+                      final b = bookings[index];
+                      return _VendorBookingCard(booking: b);
+                    },
+                  ),
                 );
               },
             )
@@ -120,14 +123,17 @@ class MyBookingsTicketsScreen extends HookConsumerWidget {
                   );
                 }
 
-                return ListView.separated(
-                  padding: const EdgeInsets.all(20),
-                  itemCount: tickets.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 16),
-                  itemBuilder: (context, index) {
-                    final t = tickets[index];
-                    return _TicketPassCard(ticket: t);
-                  },
+                return RefreshIndicator(
+                  onRefresh: () async => ref.refresh(myTicketsProvider.future),
+                  child: ListView.separated(
+                    padding: const EdgeInsets.all(20),
+                    itemCount: tickets.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 16),
+                    itemBuilder: (context, index) {
+                      final t = tickets[index];
+                      return _TicketPassCard(ticket: t);
+                    },
+                  ),
                 );
               },
             ),
@@ -171,7 +177,7 @@ class _TabPill extends StatelessWidget {
   }
 }
 
-class _VendorBookingCard extends ConsumerWidget {
+class _VendorBookingCard extends HookConsumerWidget {
   final VendorBooking booking;
 
   const _VendorBookingCard({required this.booking});
@@ -225,6 +231,34 @@ class _VendorBookingCard extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 12),
+
+          // ── 24h SLA Countdown for REQUESTED bookings ─────────────────────
+          if (booking.status == BookingStatus.REQUESTED) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.warning.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.timer_outlined, size: 16, color: AppColors.warning),
+                  const SizedBox(width: 6),
+                  Text(
+                    '24h SLA Guarantee: 18h 35m remaining',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -279,6 +313,30 @@ class _VendorBookingCard extends ConsumerWidget {
               ],
             ),
           ),
+
+          // Cancel button for active bookings
+          if (booking.status == BookingStatus.CONFIRMED ||
+              booking.status == BookingStatus.ACCEPTED ||
+              booking.status == BookingStatus.REQUESTED) ...[
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                icon: const Icon(Icons.cancel_outlined, size: 14, color: AppColors.accentRose),
+                label: Text(
+                  'Cancel Booking',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.accentRose,
+                  ),
+                ),
+                onPressed: () {
+                  _showCancelBookingDialog(context, ref, booking);
+                },
+              ),
+            ),
+          ],
 
           // Reschedule banner
           if (booking.status == BookingStatus.RESCHEDULE_PROPOSED) ...[
@@ -361,6 +419,73 @@ class _VendorBookingCard extends ConsumerWidget {
           ],
         ],
       ),
+    );
+  }
+
+  void _showCancelBookingDialog(
+      BuildContext context, WidgetRef ref, VendorBooking booking) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.lightSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Cancel Booking Request?',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'According to the cancellation policy, you are eligible for a 100% full refund of your deposit (${CurrencyFormatter.formatPaise(booking.depositPaidPaise)}) if cancelled now.',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: AppSecondaryButton(
+                      text: 'Keep Booking',
+                      onPressed: () => Navigator.pop(ctx),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: AppPrimaryButton(
+                      text: 'Confirm Cancel',
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        ref
+                            .read(myBookingsProvider.notifier)
+                            .cancelBooking(booking.id);
+                        AppSnackbar.show(
+                          context,
+                          message: 'Booking #${booking.id} cancelled. Refund initiated.',
+                          type: SnackbarType.info,
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
