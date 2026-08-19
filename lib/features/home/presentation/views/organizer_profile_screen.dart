@@ -9,6 +9,7 @@ import '../../../../core/common_widgets/app_loader.dart';
 import '../../../../core/common_widgets/app_network_image.dart';
 import '../../../../core/common_widgets/app_rating_chip.dart';
 import '../../../../core/common_widgets/app_status_badge.dart';
+import '../../../../core/common_widgets/app_video_player.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../domain/entities/catalog_entities.dart';
 import '../providers/catalog_providers.dart';
@@ -367,39 +368,152 @@ class _OrganizerPortfolioTab extends StatelessWidget {
       itemCount: portfolioItems.length,
       itemBuilder: (context, idx) {
         final item = portfolioItems[idx];
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              AppNetworkImage(
-                url: item.mediaUrl,
-                fit: BoxFit.cover,
-              ),
-              if (item.caption != null)
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    color: Colors.black.withValues(alpha: 0.6),
-                    child: Text(
-                      item.caption!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11,
+        return GestureDetector(
+          onTap: () {
+            _showMediaLightbox(context, item);
+          },
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                AppNetworkImage(
+                  url: item.mediaUrl,
+                  fit: BoxFit.cover,
+                ),
+                if (item.isVideo) ...[
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.25),
+                    ),
+                  ),
+                  Center(
+                    child: Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.65),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 1.5),
+                      ),
+                      child: const Icon(
+                        Icons.play_arrow_rounded,
                         color: Colors.white,
-                        fontWeight: FontWeight.w600,
+                        size: 26,
                       ),
                     ),
+                  ),
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.accentRose,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        'VIDEO',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+                if (item.caption != null)
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      color: Colors.black.withValues(alpha: 0.6),
+                      child: Text(
+                        item.caption!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 11,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showMediaLightbox(BuildContext context, PortfolioItem item) {
+    if (item.isVideo) {
+      showAppVideoPlayerDialog(
+        context,
+        item.mediaUrl,
+        title: item.caption?.isNotEmpty == true
+            ? item.caption!
+            : 'Portfolio Video',
+        caption: item.caption,
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        backgroundColor: Colors.black,
+        insetPadding: const EdgeInsets.all(12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                leading: IconButton(
+                  icon: const Icon(Icons.close_rounded, color: Colors.white),
+                  onPressed: () => Navigator.pop(context),
+                ),
+                title: Text(
+                  'Portfolio Photo',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Flexible(
+                child: AppNetworkImage(
+                  url: item.mediaUrl,
+                  fit: BoxFit.contain,
+                ),
+              ),
+              if (item.caption != null)
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    item.caption!,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      color: Colors.white70,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
             ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

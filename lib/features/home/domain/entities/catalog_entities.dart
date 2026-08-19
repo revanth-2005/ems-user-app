@@ -135,13 +135,22 @@ class PortfolioItem {
   final String mediaUrl;
   final String mediaType;
   final String? caption;
+  final int sortOrder;
 
   const PortfolioItem({
     this.id,
     required this.mediaUrl,
     this.mediaType = 'image',
     this.caption,
+    this.sortOrder = 0,
   });
+
+  bool get isVideo =>
+      mediaType.toLowerCase() == 'video' ||
+      mediaUrl.toLowerCase().endsWith('.mp4') ||
+      mediaUrl.toLowerCase().endsWith('.mov');
+
+  bool get isImage => !isVideo;
 
   factory PortfolioItem.fromJson(Map<String, dynamic> json) {
     return PortfolioItem(
@@ -153,6 +162,7 @@ class PortfolioItem {
           json['media_type']?.toString() ??
           'image',
       caption: json['caption']?.toString(),
+      sortOrder: (json['sortOrder'] ?? json['sort_order'] ?? 0) as int,
     );
   }
 
@@ -161,6 +171,7 @@ class PortfolioItem {
         'mediaUrl': mediaUrl,
         'mediaType': mediaType,
         if (caption != null) 'caption': caption,
+        'sortOrder': sortOrder,
       };
 }
 
@@ -317,6 +328,7 @@ class EventPackage {
   final String name;
   final String slug;
   final String? coverImageUrl;
+  final List<PortfolioItem> mediaItems;
   final List<String> galleryImages;
   final String? description;
   final int priceInPaise;
@@ -338,6 +350,7 @@ class EventPackage {
     required this.name,
     required this.slug,
     this.coverImageUrl,
+    this.mediaItems = const [],
     this.galleryImages = const [],
     this.description,
     required this.priceInPaise,
@@ -414,21 +427,40 @@ class EventPackage {
     final rawDeposit = json['advanceDepositFlat'] ?? json['advance_deposit_flat'] ?? 0;
     final parsedDeposit = rawDeposit is num ? rawDeposit.toInt() : (int.tryParse(rawDeposit.toString()) ?? 0);
 
-    final gallery = (json['galleryImages'] as List<dynamic>?)
-            ?.map((e) => e.toString())
-            .toList() ??
-        const [];
+    final rawMedia = json['mediaUrls'] ?? json['media_urls'] ?? json['galleryImages'] ?? json['gallery_images'];
+    final List<PortfolioItem> mediaList = [];
+    final List<String> galleryList = [];
 
-    final rawCover = json['coverImageUrl']?.toString() ??
-        json['cover_image_url']?.toString() ??
-        (gallery.isNotEmpty ? gallery.first : null);
+    if (rawMedia is List) {
+      for (final item in rawMedia) {
+        if (item is Map<String, dynamic>) {
+          final pItem = PortfolioItem.fromJson(item);
+          mediaList.add(pItem);
+          galleryList.add(pItem.mediaUrl);
+        } else if (item is String && item.isNotEmpty) {
+          final isVid = item.toLowerCase().endsWith('.mp4') || item.toLowerCase().endsWith('.mov');
+          mediaList.add(PortfolioItem(
+            mediaUrl: item,
+            mediaType: isVid ? 'video' : 'image',
+          ));
+          galleryList.add(item);
+        }
+      }
+    }
+
+    var rawCover = json['coverImageUrl']?.toString() ??
+        json['cover_image_url']?.toString();
+    if ((rawCover == null || rawCover.isEmpty) && galleryList.isNotEmpty) {
+      rawCover = galleryList.first;
+    }
 
     return EventPackage(
       id: json['id']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
       slug: json['slug']?.toString() ?? '',
       coverImageUrl: rawCover,
-      galleryImages: gallery,
+      mediaItems: mediaList,
+      galleryImages: galleryList,
       description: json['description']?.toString(),
       priceInPaise: parsedPrice,
       advanceDepositFlat: parsedDeposit,
@@ -456,6 +488,8 @@ class StandaloneService {
   final String? slug;
   final String? description;
   final String? coverImageUrl;
+  final List<PortfolioItem> mediaItems;
+  final List<String> galleryImages;
   final int priceInPaise;
   final int advanceDepositFlat;
   final int? advanceDepositPct;
@@ -473,6 +507,8 @@ class StandaloneService {
     this.slug,
     this.description,
     this.coverImageUrl,
+    this.mediaItems = const [],
+    this.galleryImages = const [],
     required this.priceInPaise,
     int? depositRequiredPaise,
     int advanceDepositFlat = 0,
@@ -548,13 +584,41 @@ class StandaloneService {
     final rawDeposit = json['advanceDepositFlat'] ?? json['advance_deposit_flat'] ?? 0;
     final parsedDeposit = rawDeposit is num ? rawDeposit.toInt() : (int.tryParse(rawDeposit.toString()) ?? 0);
 
+    final rawMedia = json['mediaUrls'] ?? json['media_urls'] ?? json['galleryImages'] ?? json['gallery_images'];
+    final List<PortfolioItem> mediaList = [];
+    final List<String> galleryList = [];
+
+    if (rawMedia is List) {
+      for (final item in rawMedia) {
+        if (item is Map<String, dynamic>) {
+          final pItem = PortfolioItem.fromJson(item);
+          mediaList.add(pItem);
+          galleryList.add(pItem.mediaUrl);
+        } else if (item is String && item.isNotEmpty) {
+          final isVid = item.toLowerCase().endsWith('.mp4') || item.toLowerCase().endsWith('.mov');
+          mediaList.add(PortfolioItem(
+            mediaUrl: item,
+            mediaType: isVid ? 'video' : 'image',
+          ));
+          galleryList.add(item);
+        }
+      }
+    }
+
+    var rawCover = json['coverImageUrl']?.toString() ??
+        json['cover_image_url']?.toString();
+    if ((rawCover == null || rawCover.isEmpty) && galleryList.isNotEmpty) {
+      rawCover = galleryList.first;
+    }
+
     return StandaloneService(
       id: json['id']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
       slug: json['slug']?.toString(),
       description: json['description']?.toString(),
-      coverImageUrl:
-          json['coverImageUrl']?.toString() ?? json['cover_image_url']?.toString(),
+      coverImageUrl: rawCover,
+      mediaItems: mediaList,
+      galleryImages: galleryList,
       priceInPaise: parsedPrice,
       advanceDepositFlat: parsedDeposit,
       advanceDepositPct: json['advanceDepositPct'] as int?,

@@ -30,11 +30,16 @@ class CatalogRemoteDataSource {
     return null;
   }
 
-  // ── Categories & Subcategories (GET /master/categories) ───────────────────
+  // ── Categories & Subcategories (GET /admin/categories & /master/categories) ──
 
   Future<List<Category>> getCategories() async {
     try {
-      final res = await _dio.get(ApiConstants.masterCategories);
+      Response res;
+      try {
+        res = await _dio.get(ApiConstants.masterCategories);
+      } catch (_) {
+        res = await _dio.get('/admin/categories');
+      }
       if (res.statusCode == 200) {
         final list = _extractList(res.data, ['categories', 'data', 'items']);
         return list

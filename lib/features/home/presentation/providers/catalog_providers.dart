@@ -139,31 +139,31 @@ final eventsProvider = FutureProvider<List<PublicEvent>>((ref) async {
 // ── Single Item Detail Providers ──────────────────────────────────────────
 
 final packageDetailProvider =
-    FutureProvider.family<EventPackage?, String>((ref, idOrSlug) async {
+    FutureProvider.autoDispose.family<EventPackage?, String>((ref, idOrSlug) async {
   final repo = ref.watch(catalogRepositoryProvider);
   return repo.getPackageById(idOrSlug);
 });
 
 final serviceDetailProvider =
-    FutureProvider.family<StandaloneService?, String>((ref, idOrSlug) async {
+    FutureProvider.autoDispose.family<StandaloneService?, String>((ref, idOrSlug) async {
   final repo = ref.watch(catalogRepositoryProvider);
   return repo.getServiceById(idOrSlug);
 });
 
 final organizerDetailProvider =
-    FutureProvider.family<OrganizerSummary?, String>((ref, id) async {
+    FutureProvider.autoDispose.family<OrganizerSummary?, String>((ref, id) async {
   final repo = ref.watch(catalogRepositoryProvider);
   return repo.getOrganizerById(id);
 });
 
 final organizerAvailabilityProvider =
-    FutureProvider.family<Map<String, dynamic>, String>((ref, id) async {
+    FutureProvider.autoDispose.family<Map<String, dynamic>, String>((ref, id) async {
   final repo = ref.watch(catalogRepositoryProvider);
   return repo.getOrganizerAvailability(id);
 });
 
 final eventDetailProvider =
-    FutureProvider.family<PublicEvent?, String>((ref, idOrSlug) async {
+    FutureProvider.autoDispose.family<PublicEvent?, String>((ref, idOrSlug) async {
   final repo = ref.watch(catalogRepositoryProvider);
   return repo.getEventById(idOrSlug);
 });

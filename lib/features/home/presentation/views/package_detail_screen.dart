@@ -16,6 +16,8 @@ import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../bookings/presentation/providers/booking_providers.dart';
 import '../../../bookings/presentation/widgets/add_to_cart_dialog.dart';
+import '../../../../core/common_widgets/app_video_player.dart';
+import '../../domain/entities/catalog_entities.dart';
 import '../providers/catalog_providers.dart';
 import '../widgets/full_package_specs_sheet.dart';
 
@@ -29,6 +31,7 @@ class PackageDetailScreen extends HookConsumerWidget {
     final packageAsync = ref.watch(packageDetailProvider(packageId));
     final selectedDate =
         useState(DateTime.now().add(const Duration(days: 14)));
+    final activeMediaIndex = useState(0);
 
     Future<void> pickEventDate() async {
       final picked = await showDatePicker(
@@ -65,6 +68,24 @@ class PackageDetailScreen extends HookConsumerWidget {
             return const Center(child: Text('Package not found'));
           }
 
+          final List<PortfolioItem> mediaList = [];
+          if (pkg.coverImageUrl != null && pkg.coverImageUrl!.isNotEmpty) {
+            mediaList.add(PortfolioItem(
+              mediaUrl: pkg.coverImageUrl!,
+              mediaType: 'image',
+              caption: 'Package Cover Banner',
+            ));
+          }
+          for (final item in pkg.mediaItems) {
+            if (!mediaList.any((m) => m.mediaUrl == item.mediaUrl)) {
+              mediaList.add(item);
+            }
+          }
+
+          final currentMedia = mediaList.isNotEmpty
+              ? mediaList[activeMediaIndex.value.clamp(0, mediaList.length - 1)]
+              : null;
+
           return CustomScrollView(
             slivers: [
               // ── Hero Header ──────────────────────────────────────────────
@@ -87,28 +108,58 @@ class PackageDetailScreen extends HookConsumerWidget {
                   ),
                 ),
                 flexibleSpace: FlexibleSpaceBar(
-                  background: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      AppNetworkImage(
-                        url: pkg.coverImageUrl,
-                        categoryHint: pkg.categoryName,
-                        titleHint: pkg.name,
-                        fit: BoxFit.cover,
-                      ),
-                      DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.transparent,
-                              Colors.black.withValues(alpha: 0.7),
-                            ],
+                  background: GestureDetector(
+                    onTap: () {
+                      if (currentMedia != null) {
+                        _showMediaLightbox(context, currentMedia);
+                      }
+                    },
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        AppNetworkImage(
+                          url: currentMedia?.mediaUrl ?? pkg.coverImageUrl,
+                          categoryHint: pkg.categoryName,
+                          titleHint: pkg.name,
+                          fit: BoxFit.cover,
+                        ),
+                        if (currentMedia?.isVideo == true) ...[
+                          DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          Center(
+                            child: Container(
+                              width: 54,
+                              height: 54,
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.7),
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white, width: 2),
+                              ),
+                              child: const Icon(
+                                Icons.play_arrow_rounded,
+                                color: Colors.white,
+                                size: 36,
+                              ),
+                            ),
+                          ),
+                        ],
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withValues(alpha: 0.7),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -120,6 +171,68 @@ class PackageDetailScreen extends HookConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // ── Gallery Thumbnail Switcher Strip ─────────────────
+                      if (mediaList.length > 1) ...[
+                        SizedBox(
+                          height: 64,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: mediaList.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(width: 10),
+                            itemBuilder: (ctx, idx) {
+                              final item = mediaList[idx];
+                              final isSelected =
+                                  activeMediaIndex.value == idx;
+                              return GestureDetector(
+                                onTap: () => activeMediaIndex.value = idx,
+                                child: Container(
+                                  width: 64,
+                                  height: 64,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? AppColors.primary
+                                          : AppColors.lightBorder,
+                                      width: isSelected ? 2.5 : 1,
+                                    ),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: Stack(
+                                      fit: StackFit.expand,
+                                      children: [
+                                        AppNetworkImage(
+                                          url: item.mediaUrl,
+                                          fit: BoxFit.cover,
+                                        ),
+                                        if (item.isVideo)
+                                          Center(
+                                            child: Container(
+                                              padding: const EdgeInsets.all(3),
+                                              decoration: const BoxDecoration(
+                                                color: Colors.black54,
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: const Icon(
+                                                Icons.play_arrow_rounded,
+                                                size: 16,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -421,6 +534,71 @@ class PackageDetailScreen extends HookConsumerWidget {
                 ),
               ),
             ),
+    );
+  }
+
+  void _showMediaLightbox(BuildContext context, PortfolioItem item) {
+    if (item.isVideo) {
+      showAppVideoPlayerDialog(
+        context,
+        item.mediaUrl,
+        title: item.caption?.isNotEmpty == true
+            ? item.caption!
+            : 'Video Showcase',
+        caption: item.caption,
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        backgroundColor: Colors.black,
+        insetPadding: const EdgeInsets.all(12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                leading: IconButton(
+                  icon: const Icon(Icons.close_rounded, color: Colors.white),
+                  onPressed: () => Navigator.pop(context),
+                ),
+                title: Text(
+                  'Media Preview',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Flexible(
+                child: AppNetworkImage(
+                  url: item.mediaUrl,
+                  fit: BoxFit.contain,
+                ),
+              ),
+              if (item.caption != null && item.caption!.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    item.caption!,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      color: Colors.white70,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
