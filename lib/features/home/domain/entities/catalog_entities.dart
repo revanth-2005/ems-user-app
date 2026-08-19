@@ -210,8 +210,34 @@ class OrganizerSummary {
             .toList()
         : const <PortfolioItem>[];
 
-    final pkgs = json['packages'] is List ? (json['packages'] as List).length : 0;
-    final srvs = json['services'] is List ? (json['services'] as List).length : 0;
+    final pkgs = json['packages'] is List ? (json['packages'] as List) : const [];
+    final srvs = json['services'] is List ? (json['services'] as List) : const [];
+
+    String? foundAvatar = json['coverImageUrl']?.toString() ??
+        json['cover_image_url']?.toString() ??
+        json['avatarUrl']?.toString() ??
+        json['avatar_url']?.toString() ??
+        userObj?.profilePhoto;
+
+    if ((foundAvatar == null || foundAvatar.isEmpty) && pkgs.isNotEmpty) {
+      final firstPkg = pkgs.first;
+      if (firstPkg is Map<String, dynamic>) {
+        foundAvatar = firstPkg['coverImageUrl']?.toString() ??
+            firstPkg['cover_image_url']?.toString();
+      }
+    }
+
+    if ((foundAvatar == null || foundAvatar.isEmpty) && srvs.isNotEmpty) {
+      final firstSrv = srvs.first;
+      if (firstSrv is Map<String, dynamic>) {
+        foundAvatar = firstSrv['coverImageUrl']?.toString() ??
+            firstSrv['cover_image_url']?.toString();
+      }
+    }
+
+    if ((foundAvatar == null || foundAvatar.isEmpty) && portfolio.isNotEmpty) {
+      foundAvatar = portfolio.first.mediaUrl;
+    }
 
     return OrganizerSummary(
       id: json['id']?.toString() ?? '',
@@ -226,12 +252,11 @@ class OrganizerSummary {
           json['kyc_status']?.toString() ??
           'APPROVED',
       rating: (json['rating'] as num?)?.toDouble() ?? 4.8,
-      avatarUrl:
-          json['avatarUrl']?.toString() ?? json['avatar_url']?.toString() ?? userObj?.profilePhoto,
+      avatarUrl: foundAvatar,
       user: userObj,
       portfolioItems: portfolio,
-      packageCount: pkgs,
-      serviceCount: srvs,
+      packageCount: pkgs.length,
+      serviceCount: srvs.length,
     );
   }
 
@@ -389,16 +414,21 @@ class EventPackage {
     final rawDeposit = json['advanceDepositFlat'] ?? json['advance_deposit_flat'] ?? 0;
     final parsedDeposit = rawDeposit is num ? rawDeposit.toInt() : (int.tryParse(rawDeposit.toString()) ?? 0);
 
+    final gallery = (json['galleryImages'] as List<dynamic>?)
+            ?.map((e) => e.toString())
+            .toList() ??
+        const [];
+
+    final rawCover = json['coverImageUrl']?.toString() ??
+        json['cover_image_url']?.toString() ??
+        (gallery.isNotEmpty ? gallery.first : null);
+
     return EventPackage(
       id: json['id']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
       slug: json['slug']?.toString() ?? '',
-      coverImageUrl:
-          json['coverImageUrl']?.toString() ?? json['cover_image_url']?.toString(),
-      galleryImages: (json['galleryImages'] as List<dynamic>?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          const [],
+      coverImageUrl: rawCover,
+      galleryImages: gallery,
       description: json['description']?.toString(),
       priceInPaise: parsedPrice,
       advanceDepositFlat: parsedDeposit,

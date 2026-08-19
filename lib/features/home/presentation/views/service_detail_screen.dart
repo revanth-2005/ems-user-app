@@ -547,15 +547,22 @@ class ServiceDetailScreen extends HookConsumerWidget {
 
               AppPrimaryButton(
                 text: 'Add to Cart & Checkout',
-                onPressed: () {
+                onPressed: () async {
                   final eventDate = DateTime.now().add(Duration(days: srv.leadTimeDays > 0 ? srv.leadTimeDays : 1));
-                  ref.read(cartProvider.notifier).addService(srv, eventDate);
-                  AppSnackbar.show(
-                    context,
-                    message: '✓ ${srv.name} scheduled & added to cart!',
-                    type: SnackbarType.success,
+                  await ref.read(cartProvider.notifier).addService(
+                    srv,
+                    eventDate,
+                    startTime: '18:00',
+                    endTime: '23:00',
                   );
-                  context.push(AppRoutes.cart);
+                  if (context.mounted) {
+                    AppSnackbar.show(
+                      context,
+                      message: '✓ ${srv.name} scheduled & added to cart!',
+                      type: SnackbarType.success,
+                    );
+                    context.push(AppRoutes.cart);
+                  }
                 },
               ),
             ],

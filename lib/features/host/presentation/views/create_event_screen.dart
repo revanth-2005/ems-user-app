@@ -52,8 +52,7 @@ class CreateEventScreen extends HookConsumerWidget {
         totalCapacity: capacity,
         revenueInPaise: 0,
         isLive: true,
-        coverImageUrl:
-            'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&auto=format&fit=crop',
+        coverImageUrl: null,
         ticketTiers: [
           TicketType(
             id: 'tkt_custom_01',

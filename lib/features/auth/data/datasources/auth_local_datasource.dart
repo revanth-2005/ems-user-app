@@ -35,6 +35,9 @@ class AuthLocalDataSource {
   }
 
   Future<UserEntity?> getSession() async {
+    final token = await _secureStorage.getAccessToken();
+    if (token == null || token.isEmpty) return null;
+
     final id = await _secureStorage.getUserId();
     if (id == null) return null;
 

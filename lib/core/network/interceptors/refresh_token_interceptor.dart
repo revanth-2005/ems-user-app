@@ -16,6 +16,51 @@ class RefreshTokenInterceptor extends Interceptor {
         _secureStorage = secureStorage;
 
   @override
+  Future<void> onResponse(
+    Response response,
+    ResponseInterceptorHandler handler,
+  ) async {
+    // If response status is 401 and not the refresh endpoint
+    if (response.statusCode == 401 &&
+        !response.requestOptions.path.contains(ApiConstants.refreshToken) &&
+        !_isRefreshing) {
+      _isRefreshing = true;
+      try {
+        final refreshToken = await _secureStorage.getRefreshToken();
+        if (refreshToken != null && refreshToken.isNotEmpty) {
+          final refreshDio = Dio(BaseOptions(baseUrl: ApiConstants.baseUrl));
+          final refreshRes = await refreshDio.post(
+            ApiConstants.refreshToken,
+            data: {'refreshToken': refreshToken},
+          );
+
+          if (refreshRes.statusCode == 200) {
+            final newAccessToken = refreshRes.data['accessToken'] as String?;
+            final newRefreshToken = refreshRes.data['refreshToken'] as String?;
+
+            if (newAccessToken != null) {
+              await _secureStorage.saveTokens(
+                accessToken: newAccessToken,
+                refreshToken: newRefreshToken,
+              );
+
+              response.requestOptions.headers['Authorization'] =
+                  'Bearer $newAccessToken';
+              final retried = await _dio.fetch(response.requestOptions);
+              return handler.resolve(retried);
+            }
+          }
+        }
+      } catch (_) {
+        // Refresh token failed
+      } finally {
+        _isRefreshing = false;
+      }
+    }
+    handler.next(response);
+  }
+
+  @override
   Future<void> onError(
     DioException err,
     ErrorInterceptorHandler handler,
@@ -32,7 +77,6 @@ class RefreshTokenInterceptor extends Interceptor {
     try {
       final refreshToken = await _secureStorage.getRefreshToken();
       if (refreshToken == null) {
-        await _secureStorage.clearAll();
         return handler.next(err);
       }
 
@@ -61,11 +105,8 @@ class RefreshTokenInterceptor extends Interceptor {
         }
       }
 
-      // Refresh failed — wipe storage (user will be redirected to login)
-      await _secureStorage.clearAll();
       handler.next(err);
     } catch (_) {
-      await _secureStorage.clearAll();
       handler.next(err);
     } finally {
       _isRefreshing = false;

@@ -10,21 +10,34 @@ abstract class BookingRepository {
     String? packageId,
     String? serviceId,
     required String eventDate,
+    String? endDate,
     String? startTime,
     String? endTime,
     int quantity = 1,
   });
   Future<Map<String, dynamic>?> getCartRemote();
+  Future<Map<String, dynamic>?> updateCartItemRemote({
+    required String itemId,
+    String? startDate,
+    String? startTime,
+    String? endTime,
+    int? quantity,
+  });
   Future<bool> removeCartItemRemote(String itemId);
+  Future<bool> clearCartRemote();
   Future<Map<String, dynamic>> processCheckout({
     String? couponCode,
     String? notes,
+    String? eventId,
   });
   Future<Map<String, dynamic>> createPaymentOrder({
-    required String orderId,
     required int amountInPaise,
     String paymentType = 'DEPOSIT',
     String currency = 'INR',
+    String? bookingId,
+    String? registrationId,
+    String? subscriptionId,
+    String? orderId,
   });
   Future<Map<String, dynamic>> verifyPayment({
     required String gatewayOrderId,

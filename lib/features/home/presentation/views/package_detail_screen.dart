@@ -392,19 +392,26 @@ class PackageDetailScreen extends HookConsumerWidget {
                             context: context,
                             title: currentPkg.name,
                             leadTimeDays: 7,
-                            onConfirm: (eventDateStr, startTime, endTime) {
+                            onConfirm: (eventDateStr, startTime, endTime) async {
                               final date =
                                   DateTime.tryParse(eventDateStr) ?? selectedDate.value;
-                              ref
+                              await ref
                                   .read(cartProvider.notifier)
-                                  .addPackage(currentPkg, date);
-                              AppSnackbar.show(
-                                context,
-                                message:
-                                    '✓ Added to Cart for $eventDateStr!',
-                                type: SnackbarType.success,
-                              );
-                              context.push(AppRoutes.cart);
+                                  .addPackage(
+                                    currentPkg,
+                                    date,
+                                    startTime: startTime,
+                                    endTime: endTime,
+                                  );
+                              if (context.mounted) {
+                                AppSnackbar.show(
+                                  context,
+                                  message:
+                                      '✓ Added to Cart for $eventDateStr!',
+                                  type: SnackbarType.success,
+                                );
+                                context.push(AppRoutes.cart);
+                              }
                             },
                           );
                         },

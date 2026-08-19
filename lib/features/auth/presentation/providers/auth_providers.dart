@@ -46,8 +46,8 @@ final authStateProvider =
 class AuthNotifier extends AsyncNotifier<UserEntity?> {
   @override
   Future<UserEntity?> build() async {
-    final repo = await ref.watch(authRepositoryProvider.future);
-    return repo.getSession();
+    // Start unauthenticated so app requires explicit login on entry
+    return null;
   }
 
   Future<String?> loginWithEmail(String email, String password) async {

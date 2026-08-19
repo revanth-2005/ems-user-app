@@ -101,11 +101,11 @@ class AppNetworkImage extends StatelessWidget {
         },
         errorBuilder: (context, error, stackTrace) {
           debugPrint('⚠️ [IMAGE ERROR] Failed to load: $normalized ($error)');
-          return errorWidget ?? _buildThematicFallback(width, height);
+          return errorWidget ?? _buildPlaceholder(width, height);
         },
       );
     } else {
-      imageWidget = errorWidget ?? _buildThematicFallback(width, height);
+      imageWidget = errorWidget ?? _buildPlaceholder(width, height);
     }
 
     if (borderRadius > 0) {
@@ -117,119 +117,59 @@ class AppNetworkImage extends StatelessWidget {
     return imageWidget;
   }
 
-  Widget _buildThematicFallback(double? w, double? h) {
-    final fallbackUrl = _getCuratedFallbackImage(categoryHint, titleHint);
+  Widget _buildPlaceholder(double? w, double? h) {
+    final hasTitle = titleHint?.trim().isNotEmpty == true;
+    final initial = hasTitle ? titleHint!.trim()[0].toUpperCase() : '';
 
-    return Image.network(
-      fallbackUrl,
+    return Container(
       width: w,
       height: h,
-      fit: fit,
-      loadingBuilder: (context, child, loadingProgress) {
-        if (loadingProgress == null) return child;
-        return Container(
-          width: w,
-          height: h,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppColors.primary.withValues(alpha: 0.15),
-                AppColors.accent.withValues(alpha: 0.1),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-          child: const Center(
-            child: Icon(Icons.event_seat_rounded,
-                color: AppColors.primary, size: 28),
-          ),
-        );
-      },
-      errorBuilder: (_, __, ___) => Container(
-        width: w,
-        height: h,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              const Color(0xFF6366F1).withValues(alpha: 0.8),
-              const Color(0xFF8B5CF6).withValues(alpha: 0.9),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.primary.withValues(alpha: 0.12),
+            AppColors.accent.withValues(alpha: 0.08),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.celebration_rounded,
-                  color: Colors.white, size: 28),
-              if (titleHint?.isNotEmpty == true) ...[
-                const SizedBox(height: 4),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Text(
-                    titleHint!,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (initial.isNotEmpty &&
+                (w == null || w >= 48) &&
+                (h == null || h >= 48)) ...[
+              Container(
+                width: (w != null && w < 80) ? 28 : 36,
+                height: (w != null && w < 80) ? 28 : 36,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  initial,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: (w != null && w < 80) ? 14 : 16,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.primary,
                   ),
                 ),
-              ],
+              ),
+            ] else ...[
+              Icon(
+                Icons.image_outlined,
+                color: AppColors.primary.withValues(alpha: 0.5),
+                size: (w != null && w < 60) ? 20 : 28,
+              ),
             ],
-          ),
+          ],
         ),
       ),
     );
   }
-
-  static String _getCuratedFallbackImage(
-      String? categoryHint, String? titleHint) {
-    final text = '${categoryHint ?? ''} ${titleHint ?? ''}'.toLowerCase();
-
-    if (text.contains('cater') ||
-        text.contains('food') ||
-        text.contains('dining') ||
-        text.contains('cake') ||
-        text.contains('chef')) {
-      return 'https://images.unsplash.com/photo-1555244162-803834f70033?w=800&auto=format&fit=crop';
-    }
-    if (text.contains('wed') ||
-        text.contains('marri') ||
-        text.contains('stage') ||
-        text.contains('mandap') ||
-        text.contains('decor')) {
-      return 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800&auto=format&fit=crop';
-    }
-    if (text.contains('dj') ||
-        text.contains('music') ||
-        text.contains('sound') ||
-        text.contains('band') ||
-        text.contains('concert')) {
-      return 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&auto=format&fit=crop';
-    }
-    if (text.contains('photo') ||
-        text.contains('shoot') ||
-        text.contains('film') ||
-        text.contains('camera')) {
-      return 'https://images.unsplash.com/photo-1537633552985-df8429e8048b?w=800&auto=format&fit=crop';
-    }
-    if (text.contains('birth') ||
-        text.contains('party') ||
-        text.contains('celebrat')) {
-      return 'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800&auto=format&fit=crop';
-    }
-    if (text.contains('corpor') ||
-        text.contains('confer') ||
-        text.contains('work')) {
-      return 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&auto=format&fit=crop';
-    }
-
-    return 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&auto=format&fit=crop';
-  }
 }
+

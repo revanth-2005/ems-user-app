@@ -76,6 +76,7 @@ class BookingRemoteDataSource {
   Future<Map<String, dynamic>> processCheckout({
     String? couponCode,
     String? notes,
+    String? eventId,
   }) async {
     try {
       final res = await _dio.post(
@@ -83,6 +84,7 @@ class BookingRemoteDataSource {
         data: {
           if (couponCode != null && couponCode.isNotEmpty) 'couponCode': couponCode,
           'notes': notes ?? 'Booked via EMS Mobile App',
+          if (eventId != null && eventId.isNotEmpty) 'eventId': eventId,
         },
       );
       if ((res.statusCode == 200 || res.statusCode == 201) && res.data is Map<String, dynamic>) {
@@ -95,25 +97,32 @@ class BookingRemoteDataSource {
   }
 
   Future<Map<String, dynamic>> createPaymentOrder({
-    required String orderId,
     required int amountInPaise,
     String paymentType = 'DEPOSIT',
     String currency = 'INR',
+    String? bookingId,
+    String? registrationId,
+    String? subscriptionId,
+    String? orderId,
   }) async {
     try {
+      final payload = <String, dynamic>{
+        'amountInPaise': amountInPaise,
+        'paymentType': paymentType,
+        'currency': currency,
+        if (bookingId != null) 'bookingId': bookingId,
+        if (registrationId != null) 'registrationId': registrationId,
+        if (subscriptionId != null) 'subscriptionId': subscriptionId,
+        if (orderId != null) 'orderId': orderId,
+      };
       final res = await _dio.post(
         ApiConstants.createPaymentOrder,
-        data: {
-          'orderId': orderId,
-          'amountInPaise': amountInPaise,
-          'paymentType': paymentType,
-          'currency': currency,
-        },
+        data: payload,
       );
       if ((res.statusCode == 200 || res.statusCode == 201) && res.data is Map<String, dynamic>) {
         return res.data as Map<String, dynamic>;
       }
-      throw Exception('Create payment order failed');
+      throw Exception('Create payment order failed: ${res.statusCode}');
     } on DioException catch (e) {
       throw NetworkException.fromDioError(e);
     }
@@ -163,18 +172,25 @@ class BookingRemoteDataSource {
     String? packageId,
     String? serviceId,
     required String eventDate,
+    String? endDate,
     String? startTime,
     String? endTime,
     int quantity = 1,
   }) async {
     try {
+      final startDateStr = eventDate.length >= 10 ? eventDate.substring(0, 10) : eventDate;
+      final endDateStr = endDate != null && endDate.isNotEmpty
+          ? (endDate.length >= 10 ? endDate.substring(0, 10) : endDate)
+          : startDateStr;
+
       final payload = <String, dynamic>{
-        if (packageId != null) 'packageId': packageId,
-        if (serviceId != null) 'serviceId': serviceId,
-        'eventDate': eventDate,
-        if (startTime != null) 'startTime': startTime,
-        if (endTime != null) 'endTime': endTime,
-        'quantity': quantity,
+        if (packageId != null && packageId.isNotEmpty) 'packageId': packageId,
+        if (serviceId != null && serviceId.isNotEmpty) 'serviceId': serviceId,
+        'startDate': startDateStr,
+        'endDate': endDateStr,
+        if (startTime != null && startTime.isNotEmpty) 'startTime': startTime,
+        if (endTime != null && endTime.isNotEmpty) 'endTime': endTime,
+        'quantity': quantity > 0 ? quantity : 1,
       };
       final res = await _dio.post(ApiConstants.cartItems, data: payload);
       if (res.statusCode == 200 || res.statusCode == 201) {
@@ -198,9 +214,43 @@ class BookingRemoteDataSource {
     }
   }
 
+  Future<Map<String, dynamic>?> updateCartItemRemote({
+    required String itemId,
+    String? startDate,
+    String? startTime,
+    String? endTime,
+    int? quantity,
+  }) async {
+    try {
+      final payload = <String, dynamic>{
+        if (startDate != null)
+          'startDate': startDate.length >= 10 ? startDate.substring(0, 10) : startDate,
+        if (startTime != null) 'startTime': startTime,
+        if (endTime != null) 'endTime': endTime,
+        if (quantity != null) 'quantity': quantity,
+      };
+      final res = await _dio.put('${ApiConstants.cartItems}/$itemId', data: payload);
+      if (res.statusCode == 200 && res.data is Map<String, dynamic>) {
+        return res.data as Map<String, dynamic>;
+      }
+      return null;
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
   Future<bool> removeCartItemRemote(String itemId) async {
     try {
       final res = await _dio.delete('${ApiConstants.cartItems}/$itemId');
+      return res.statusCode == 200 || res.statusCode == 204;
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  Future<bool> clearCartRemote() async {
+    try {
+      final res = await _dio.delete(ApiConstants.cart);
       return res.statusCode == 200 || res.statusCode == 204;
     } on DioException catch (e) {
       throw NetworkException.fromDioError(e);

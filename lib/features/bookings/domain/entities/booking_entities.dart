@@ -239,6 +239,38 @@ class CartItem {
     this.coverImageUrl,
     required this.organizer,
   });
+
+  CartItem copyWith({
+    String? id,
+    String? packageId,
+    String? serviceId,
+    DateTime? eventDate,
+    String? startTime,
+    String? endTime,
+    int? quantity,
+    int? priceInPaise,
+    int? depositRequiredPaise,
+    int? balanceDuePaise,
+    String? itemName,
+    String? coverImageUrl,
+    OrganizerSummary? organizer,
+  }) {
+    return CartItem(
+      id: id ?? this.id,
+      packageId: packageId ?? this.packageId,
+      serviceId: serviceId ?? this.serviceId,
+      eventDate: eventDate ?? this.eventDate,
+      startTime: startTime ?? this.startTime,
+      endTime: endTime ?? this.endTime,
+      quantity: quantity ?? this.quantity,
+      priceInPaise: priceInPaise ?? this.priceInPaise,
+      depositRequiredPaise: depositRequiredPaise ?? this.depositRequiredPaise,
+      balanceDuePaise: balanceDuePaise ?? this.balanceDuePaise,
+      itemName: itemName ?? this.itemName,
+      coverImageUrl: coverImageUrl ?? this.coverImageUrl,
+      organizer: organizer ?? this.organizer,
+    );
+  }
 }
 
 class CartState {

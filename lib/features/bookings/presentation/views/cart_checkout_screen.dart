@@ -20,8 +20,16 @@ class CartCheckoutScreen extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final couponController = useTextEditingController();
+    final notesController = useTextEditingController();
     final cart = ref.watch(cartProvider);
     final isProcessing = useState(false);
+
+    useEffect(() {
+      Future.microtask(() {
+        ref.read(cartProvider.notifier).fetchCart();
+      });
+      return null;
+    }, const []);
 
     Future<void> handleCheckout() async {
       if (cart.items.isEmpty) return;
@@ -31,6 +39,9 @@ class CartCheckoutScreen extends HookConsumerWidget {
         depositAmountPaise: cart.finalPayablePaise,
         totalAmountPaise: cart.subtotalPaise,
         couponCode: cart.appliedCoupon,
+        notes: notesController.text.trim().isNotEmpty
+            ? notesController.text.trim()
+            : 'Booked via EMS Mobile App',
       );
     }
 
@@ -54,6 +65,15 @@ class CartCheckoutScreen extends HookConsumerWidget {
           ),
         ),
         centerTitle: true,
+        actions: [
+          if (cart.items.isNotEmpty)
+            IconButton(
+              tooltip: 'Clear Cart',
+              icon: const Icon(Icons.delete_sweep_outlined,
+                  color: AppColors.accentRose, size: 22),
+              onPressed: () => _confirmClearCart(context, ref),
+            ),
+        ],
       ),
       body: cart.items.isEmpty
           ? const AppEmptyView(
@@ -66,13 +86,29 @@ class CartCheckoutScreen extends HookConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Selected Event Items (${cart.items.length})',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Selected Event Items (${cart.items.length})',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => _confirmClearCart(context, ref),
+                        child: Text(
+                          'Clear All',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.accentRose,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 12),
 
@@ -87,58 +123,173 @@ class CartCheckoutScreen extends HookConsumerWidget {
                         border: Border.all(color: AppColors.lightBorder),
                         boxShadow: AppColors.cardShadow,
                       ),
-                      child: Row(
+                      child: Column(
                         children: [
-                          AppNetworkImage(
-                            url: item.coverImageUrl,
-                            width: 72,
-                            height: 72,
-                            borderRadius: 12,
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              AppNetworkImage(
+                                url: item.coverImageUrl,
+                                width: 72,
+                                height: 72,
+                                borderRadius: 12,
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item.itemName,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w800,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    // Clickable Event Date Badge
+                                    GestureDetector(
+                                      onTap: () async {
+                                        final picked = await showDatePicker(
+                                          context: context,
+                                          initialDate: item.eventDate,
+                                          firstDate: DateTime.now(),
+                                          lastDate: DateTime.now().add(const Duration(days: 365)),
+                                        );
+                                        if (picked != null) {
+                                          ref.read(cartProvider.notifier).updateItemDateTime(
+                                                item.id,
+                                                startDate: picked,
+                                                startTime: item.startTime,
+                                                endTime: item.endTime,
+                                              );
+                                        }
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.primary.withValues(alpha: 0.08),
+                                          borderRadius: BorderRadius.circular(6),
+                                          border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(Icons.calendar_today_rounded, size: 11, color: AppColors.primary),
+                                            const SizedBox(width: 4),
+                                            Flexible(
+                                              child: Text(
+                                                '${DateFormatter.formatDate(item.eventDate)} (${item.startTime}-${item.endTime})',
+                                                overflow: TextOverflow.ellipsis,
+                                                style: GoogleFonts.plusJakartaSans(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: AppColors.primary,
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 2),
+                                            const Icon(Icons.edit_outlined, size: 10, color: AppColors.primary),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      'Deposit: ${CurrencyFormatter.formatPaise(item.depositRequiredPaise * item.quantity)}',
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline_rounded,
+                                    color: AppColors.accentRose, size: 20),
+                                onPressed: () {
+                                  ref
+                                      .read(cartProvider.notifier)
+                                      .removeItem(item.id);
+                                },
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  item.itemName,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w800,
-                                    color: AppColors.textPrimary,
-                                  ),
+                          const SizedBox(height: 12),
+                          const Divider(height: 1, color: AppColors.lightBorder),
+                          const SizedBox(height: 10),
+                          // Bottom Row: Price & Quantity Controls
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Total: ${CurrencyFormatter.formatPaise(item.priceInPaise * item.quantity)}',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textMuted,
                                 ),
-                                const SizedBox(height: 3),
-                                Text(
-                                  DateFormatter.formatDate(item.eventDate),
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.primary,
-                                  ),
+                              ),
+                              // Quantity Controls
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: AppColors.lightBg,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: AppColors.lightBorder),
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Deposit: ${CurrencyFormatter.formatPaise(item.depositRequiredPaise)}',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.textPrimary,
-                                  ),
+                                child: Row(
+                                  children: [
+                                    InkWell(
+                                      borderRadius: const BorderRadius.horizontal(left: Radius.circular(10)),
+                                      onTap: () {
+                                        if (item.quantity > 1) {
+                                          ref.read(cartProvider.notifier).updateItemQuantity(
+                                                item.id,
+                                                item.quantity - 1,
+                                              );
+                                        } else {
+                                          ref.read(cartProvider.notifier).removeItem(item.id);
+                                        }
+                                      },
+                                      child: const Padding(
+                                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                        child: Icon(Icons.remove, size: 14, color: AppColors.textPrimary),
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                      color: AppColors.lightSurface,
+                                      child: Text(
+                                        '${item.quantity}',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w800,
+                                          color: AppColors.textPrimary,
+                                        ),
+                                      ),
+                                    ),
+                                    InkWell(
+                                      borderRadius: const BorderRadius.horizontal(right: Radius.circular(10)),
+                                      onTap: () {
+                                        ref.read(cartProvider.notifier).updateItemQuantity(
+                                              item.id,
+                                              item.quantity + 1,
+                                            );
+                                      },
+                                      child: const Padding(
+                                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                        child: Icon(Icons.add, size: 14, color: AppColors.primary),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete_outline_rounded,
-                                color: AppColors.accentRose, size: 20),
-                            onPressed: () {
-                              ref
-                                  .read(cartProvider.notifier)
-                                  .removeItem(item.id);
-                            },
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -294,6 +445,7 @@ class CartCheckoutScreen extends HookConsumerWidget {
                         ),
                         const SizedBox(height: 8),
                         TextField(
+                          controller: notesController,
                           maxLines: 2,
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 12,
@@ -411,6 +563,71 @@ class CartCheckoutScreen extends HookConsumerWidget {
                 ),
               ),
             ),
+    );
+  }
+
+  void _confirmClearCart(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.lightSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Clear Cart?',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        content: Text(
+          'Are you sure you want to remove all items from your event cart?',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w700,
+                color: AppColors.textMuted,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.accentRose,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await ref.read(cartProvider.notifier).clearCart();
+              if (context.mounted) {
+                AppSnackbar.show(
+                  context,
+                  message: 'Cart cleared successfully',
+                  type: SnackbarType.info,
+                );
+              }
+            },
+            child: Text(
+              'Clear All',
+              style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

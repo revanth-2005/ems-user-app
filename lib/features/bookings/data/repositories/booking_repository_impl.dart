@@ -37,6 +37,7 @@ class BookingRepositoryImpl implements BookingRepository {
     String? packageId,
     String? serviceId,
     required String eventDate,
+    String? endDate,
     String? startTime,
     String? endTime,
     int quantity = 1,
@@ -45,6 +46,7 @@ class BookingRepositoryImpl implements BookingRepository {
       packageId: packageId,
       serviceId: serviceId,
       eventDate: eventDate,
+      endDate: endDate,
       startTime: startTime,
       endTime: endTime,
       quantity: quantity,
@@ -57,30 +59,63 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
+  Future<Map<String, dynamic>?> updateCartItemRemote({
+    required String itemId,
+    String? startDate,
+    String? startTime,
+    String? endTime,
+    int? quantity,
+  }) async {
+    return _remote.updateCartItemRemote(
+      itemId: itemId,
+      startDate: startDate,
+      startTime: startTime,
+      endTime: endTime,
+      quantity: quantity,
+    );
+  }
+
+  @override
   Future<bool> removeCartItemRemote(String itemId) async {
     return _remote.removeCartItemRemote(itemId);
+  }
+
+  @override
+  Future<bool> clearCartRemote() async {
+    return _remote.clearCartRemote();
   }
 
   @override
   Future<Map<String, dynamic>> processCheckout({
     String? couponCode,
     String? notes,
+    String? eventId,
   }) async {
-    return _remote.processCheckout(couponCode: couponCode, notes: notes);
+    return _remote.processCheckout(
+      couponCode: couponCode,
+      notes: notes,
+      eventId: eventId,
+    );
   }
 
   @override
   Future<Map<String, dynamic>> createPaymentOrder({
-    required String orderId,
     required int amountInPaise,
     String paymentType = 'DEPOSIT',
     String currency = 'INR',
+    String? bookingId,
+    String? registrationId,
+    String? subscriptionId,
+    String? orderId,
   }) async {
     return _remote.createPaymentOrder(
-      orderId: orderId,
       amountInPaise: amountInPaise,
       paymentType: paymentType,
       currency: currency,
+      bookingId: bookingId,
+      registrationId: registrationId,
+      subscriptionId: subscriptionId,
+      orderId: orderId,
     );
   }
 

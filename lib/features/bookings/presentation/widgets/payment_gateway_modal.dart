@@ -7,7 +7,9 @@ import '../../../../app/app_router.dart';
 import '../../../../core/common_widgets/app_button.dart';
 import '../../../../core/common_widgets/app_snackbar.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/services/razorpay_service.dart';
 import '../../../../core/utils/currency_formatter.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/booking_providers.dart';
 
 /// Shows the interactive Payment Gateway Modal for completing pre-booking deposit payments.
@@ -51,71 +53,96 @@ class _PaymentGatewayBottomSheet extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedMethod = ValueNotifier<String>('UPI');
     final isLoading = ValueNotifier<bool>(false);
+    final user = ref.watch(authStateProvider).valueOrNull;
+    final razorpayService = ref.watch(razorpayServiceProvider);
 
     Future<void> handlePayNow() async {
       isLoading.value = true;
       final repo = ref.read(bookingRepositoryProvider);
+      final cartState = ref.read(cartProvider);
 
       try {
-        // 1. Process Checkout
-        final checkoutRes = await repo.processCheckout(
-          couponCode: couponCode,
-          notes: notes,
-        );
-
-        final orderId = (checkoutRes['orderId'] as String?) ?? 'order-dev-mock';
-        final requiredDeposit = (checkoutRes['depositAmountPaise'] as int?) ?? depositAmountPaise;
-
-        // 2. Create Payment Order
-        final payOrderRes = await repo.createPaymentOrder(
-          orderId: orderId,
-          amountInPaise: requiredDeposit,
-          paymentType: 'DEPOSIT',
-          currency: 'INR',
-        );
-
-        final gatewayOrderId = (payOrderRes['gatewayOrderId'] as String?) ?? 'order_rzp_mock_${DateTime.now().millisecondsSinceEpoch}';
-        final gatewayPaymentId = 'pay_rzp_mock_${DateTime.now().millisecondsSinceEpoch}';
-        const mockSig = 'mock_sig_dev';
-
-        // 3. Verify Payment
-        final verifyRes = await repo.verifyPayment(
-          gatewayOrderId: gatewayOrderId,
-          gatewayPaymentId: gatewayPaymentId,
-          gatewaySignature: mockSig,
-        );
-
-        isLoading.value = false;
-
-        if (verifyRes['success'] == true || verifyRes['payment'] != null) {
-          ref.read(cartProvider.notifier).clearCart();
-          if (context.mounted) {
-            Navigator.pop(context); // Close payment modal
-            _showPaymentSuccessDialog(
-              context,
-              paymentId: gatewayPaymentId,
-              amountPaise: requiredDeposit,
+        // 0. Sync local cart items to server so /checkout has something to process
+        for (final item in cartState.items) {
+          try {
+            await repo.addToCartRemote(
+              packageId: item.packageId,
+              serviceId: item.serviceId,
+              eventDate: item.eventDate.toIso8601String().substring(0, 10),
+              quantity: item.quantity,
             );
-          }
-        } else {
-          if (context.mounted) {
-            AppSnackbar.show(
-              context,
-              message: 'Payment signature verification failed.',
-              type: SnackbarType.error,
-            );
+          } catch (_) {
+            // Ignore if item already in cart
           }
         }
+
+        // 1. Process Checkout to generate orderId
+        String? orderId;
+        int requiredDeposit = depositAmountPaise;
+
+        try {
+          final checkoutRes = await repo.processCheckout(
+            couponCode: couponCode,
+            notes: notes,
+          );
+          orderId = checkoutRes['orderId'] as String? ?? checkoutRes['id'] as String?;
+          if (checkoutRes['depositAmountPaise'] is int) {
+            requiredDeposit = checkoutRes['depositAmountPaise'] as int;
+          }
+        } catch (e) {
+          // If checkout failed, throw descriptive error
+          throw Exception('Failed to create booking order: $e');
+        }
+
+        // 2. Launch Native Razorpay Payment Flow
+        await razorpayService.startPaymentFlow(
+          amountInPaise: requiredDeposit,
+          paymentType: 'DEPOSIT',
+          orderId: orderId,
+          userEmail: user?.email,
+          userPhone: user?.phone,
+          userName: user?.name,
+          description: 'EMS Pre-Booking Deposit',
+          onSuccess: (verifyData) {
+            isLoading.value = false;
+            ref.read(cartProvider.notifier).clearCart();
+            if (context.mounted) {
+              Navigator.pop(context); // Close payment modal
+              final paymentObj = verifyData['payment'] as Map<String, dynamic>?;
+              final paymentId = (paymentObj?['gatewayPaymentId'] ?? paymentObj?['id'] ?? 'pay_rzp_success').toString();
+              _showPaymentSuccessDialog(
+                context,
+                paymentId: paymentId,
+                amountPaise: requiredDeposit,
+              );
+            }
+          },
+          onError: (errorMsg, isCancelled) {
+            isLoading.value = false;
+            if (context.mounted) {
+              if (isCancelled) {
+                AppSnackbar.show(
+                  context,
+                  message: 'Payment cancelled.',
+                  type: SnackbarType.info,
+                );
+              } else {
+                AppSnackbar.show(
+                  context,
+                  message: errorMsg,
+                  type: SnackbarType.error,
+                );
+              }
+            }
+          },
+        );
       } catch (e) {
         isLoading.value = false;
         if (context.mounted) {
-          // Fallback dev mode success so app user is never blocked
-          ref.read(cartProvider.notifier).clearCart();
-          Navigator.pop(context);
-          _showPaymentSuccessDialog(
+          AppSnackbar.show(
             context,
-            paymentId: 'pay_dev_${DateTime.now().millisecondsSinceEpoch}',
-            amountPaise: depositAmountPaise,
+            message: 'Failed to initiate payment: $e',
+            type: SnackbarType.error,
           );
         }
       }
@@ -127,13 +154,14 @@ class _PaymentGatewayBottomSheet extends HookConsumerWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(context).viewInsets.bottom + 24),
-      child: ValueListenableBuilder<bool>(
-        valueListenable: isLoading,
-        builder: (context, loading, _) {
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+      child: SingleChildScrollView(
+        child: ValueListenableBuilder<bool>(
+          valueListenable: isLoading,
+          builder: (context, loading, _) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
               Center(
                 child: Container(
                   width: 40,
@@ -150,30 +178,33 @@ class _PaymentGatewayBottomSheet extends HookConsumerWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Secure Pre-Booking Payment',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Secure Pre-Booking Payment',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimary,
+                          ),
                         ),
-                      ),
-                      Text(
-                        'Powered by Razorpay Escrow Protection',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
+                        Text(
+                          'Powered by Razorpay Escrow',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
+                  const SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
-                      color: AppColors.accentEmerald.withOpacity(0.12),
+                      color: AppColors.accentEmerald.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -200,28 +231,31 @@ class _PaymentGatewayBottomSheet extends HookConsumerWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Pre-Booking Deposit Payable Today',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 11,
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.w500,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Pre-Booking Deposit',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 11,
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          CurrencyFormatter.formatPaise(depositAmountPaise),
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            color: AppColors.primary,
+                          const SizedBox(height: 2),
+                          Text(
+                            CurrencyFormatter.formatPaise(depositAmountPaise),
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.primary,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
+                    const SizedBox(width: 8),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
@@ -303,6 +337,7 @@ class _PaymentGatewayBottomSheet extends HookConsumerWidget {
             ],
           );
         },
+        ),
       ),
     );
   }
@@ -331,7 +366,7 @@ class _PaymentOptionTile extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withOpacity(0.06) : AppColors.lightSurface,
+          color: isSelected ? AppColors.primary.withValues(alpha: 0.06) : AppColors.lightSurface,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isSelected ? AppColors.primary : AppColors.lightBorder,
@@ -343,7 +378,7 @@ class _PaymentOptionTile extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.primary.withOpacity(0.12) : AppColors.lightCardAlt,
+                color: isSelected ? AppColors.primary.withValues(alpha: 0.12) : AppColors.lightCardAlt,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
@@ -408,7 +443,7 @@ void _showPaymentSuccessDialog(
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.accentEmerald.withOpacity(0.12),
+                  color: AppColors.accentEmerald.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -451,7 +486,14 @@ void _showPaymentSuccessDialog(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text('Payment ID:', style: GoogleFonts.plusJakartaSans(fontSize: 11, color: AppColors.textSecondary)),
-                        Text(paymentId.length > 18 ? '${paymentId.substring(0, 18)}…' : paymentId, style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            paymentId.length > 18 ? '${paymentId.substring(0, 18)}…' : paymentId,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 4),
@@ -459,7 +501,14 @@ void _showPaymentSuccessDialog(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text('SLA Guarantee:', style: GoogleFonts.plusJakartaSans(fontSize: 11, color: AppColors.textSecondary)),
-                        Text('24h Vendor Confirmation', style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.accentEmerald)),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            '24h Vendor Confirmation',
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.accentEmerald),
+                          ),
+                        ),
                       ],
                     ),
                   ],
