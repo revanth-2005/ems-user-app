@@ -286,4 +286,29 @@ class CatalogRemoteDataSource {
       throw NetworkException.fromDioError(e);
     }
   }
+
+  Future<Map<String, dynamic>> registerForEvent({
+    required String eventId,
+    String? ticketTypeId,
+    int quantity = 1,
+    String? couponCode,
+  }) async {
+    try {
+      final res = await _dio.post(
+        '${ApiConstants.catalogEvents}/$eventId/register',
+        data: {
+          if (ticketTypeId != null) 'ticketTypeId': ticketTypeId,
+          'quantity': quantity,
+          if (couponCode != null) 'couponCode': couponCode,
+        },
+      );
+      if ((res.statusCode == 200 || res.statusCode == 201) &&
+          res.data is Map<String, dynamic>) {
+        return res.data as Map<String, dynamic>;
+      }
+      return const {};
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
 }

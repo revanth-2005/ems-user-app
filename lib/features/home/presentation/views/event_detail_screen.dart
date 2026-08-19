@@ -30,16 +30,32 @@ class EventDetailScreen extends HookConsumerWidget {
     Future<void> handleRegister() async {
       if (selectedTicket.value == null) return;
       isRegistering.value = true;
-      await Future.delayed(const Duration(milliseconds: 700));
-      isRegistering.value = false;
-
-      if (context.mounted) {
-        AppSnackbar.show(
-          context,
-          message: 'Ticket confirmed! Added to your bookings.',
-          type: SnackbarType.success,
+      try {
+        final repo = ref.read(catalogRepositoryProvider);
+        await repo.registerForEvent(
+          eventId: eventId,
+          ticketTypeId: selectedTicket.value?.id,
+          quantity: 1,
         );
-        context.go(AppRoutes.bookings);
+        isRegistering.value = false;
+
+        if (context.mounted) {
+          AppSnackbar.show(
+            context,
+            message: 'Ticket confirmed! Added to your passes.',
+            type: SnackbarType.success,
+          );
+          context.go(AppRoutes.bookings);
+        }
+      } catch (e) {
+        isRegistering.value = false;
+        if (context.mounted) {
+          AppSnackbar.show(
+            context,
+            message: 'Failed to register ticket: $e',
+            type: SnackbarType.error,
+          );
+        }
       }
     }
 

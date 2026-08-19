@@ -115,4 +115,18 @@ class CatalogRepositoryImpl implements CatalogRepository {
   @override
   Future<PublicEvent?> getEventById(String idOrSlug) =>
       _remote.getEventDetails(idOrSlug);
+
+  @override
+  Future<Map<String, dynamic>> registerForEvent({
+    required String eventId,
+    String? ticketTypeId,
+    int quantity = 1,
+    String? couponCode,
+  }) =>
+      _remote.registerForEvent(
+        eventId: eventId,
+        ticketTypeId: ticketTypeId,
+        quantity: quantity,
+        couponCode: couponCode,
+      );
 }

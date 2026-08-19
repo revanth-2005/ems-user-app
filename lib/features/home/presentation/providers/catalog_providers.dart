@@ -36,6 +36,10 @@ final minPriceFilterProvider = StateProvider<int?>((_) => null);
 
 final maxPriceFilterProvider = StateProvider<int?>((_) => null);
 
+final selectedDateFilterProvider = StateProvider<DateTime?>((_) => null);
+
+final minRatingFilterProvider = StateProvider<double?>((_) => null);
+
 enum CatalogTab { PACKAGES, SERVICES, ORGANIZERS, EVENTS }
 
 final activeCatalogTabProvider =
@@ -58,8 +62,9 @@ final packagesProvider = FutureProvider<List<EventPackage>>((ref) async {
   final sortBy = ref.watch(catalogSortByProvider);
   final minPrice = ref.watch(minPriceFilterProvider);
   final maxPrice = ref.watch(maxPriceFilterProvider);
+  final minRating = ref.watch(minRatingFilterProvider);
 
-  return repo.getPackages(
+  final list = await repo.getPackages(
     city: city,
     categoryId: categoryId,
     subCategoryId: subCategoryId,
@@ -68,6 +73,11 @@ final packagesProvider = FutureProvider<List<EventPackage>>((ref) async {
     minPrice: minPrice,
     maxPrice: maxPrice,
   );
+
+  if (minRating != null) {
+    return list.where((p) => p.organizer.rating >= minRating).toList();
+  }
+  return list;
 });
 
 final servicesProvider = FutureProvider<List<StandaloneService>>((ref) async {
@@ -81,8 +91,9 @@ final servicesProvider = FutureProvider<List<StandaloneService>>((ref) async {
   final sortBy = ref.watch(catalogSortByProvider);
   final minPrice = ref.watch(minPriceFilterProvider);
   final maxPrice = ref.watch(maxPriceFilterProvider);
+  final minRating = ref.watch(minRatingFilterProvider);
 
-  return repo.getServices(
+  final list = await repo.getServices(
     city: city,
     categoryId: categoryId,
     subCategoryId: subCategoryId,
@@ -92,6 +103,11 @@ final servicesProvider = FutureProvider<List<StandaloneService>>((ref) async {
     minPrice: minPrice,
     maxPrice: maxPrice,
   );
+
+  if (minRating != null) {
+    return list.where((s) => s.organizer.rating >= minRating).toList();
+  }
+  return list;
 });
 
 final organizersProvider = FutureProvider<List<OrganizerSummary>>((ref) async {

@@ -8,6 +8,7 @@ import '../../../../core/common_widgets/app_loader.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../providers/catalog_providers.dart';
 import '../widgets/catalog_cards.dart';
+import '../widgets/catalog_filter_modal.dart';
 
 class SearchFilterScreen extends HookConsumerWidget {
   const SearchFilterScreen({super.key});
@@ -134,6 +135,42 @@ class SearchFilterScreen extends HookConsumerWidget {
                 PopupMenuItem(value: 'Hyderabad', child: Text('Hyderabad')),
                 PopupMenuItem(value: 'Goa', child: Text('Goa')),
               ],
+            ),
+            const SizedBox(width: 4),
+
+            // Filter Sheet Trigger Button
+            IconButton(
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: (ref.watch(minPriceFilterProvider) != null ||
+                          ref.watch(maxPriceFilterProvider) != null ||
+                          ref.watch(selectedDateFilterProvider) != null ||
+                          ref.watch(minRatingFilterProvider) != null)
+                      ? AppColors.primary
+                      : AppColors.lightCardAlt,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: (ref.watch(minPriceFilterProvider) != null ||
+                            ref.watch(maxPriceFilterProvider) != null ||
+                            ref.watch(selectedDateFilterProvider) != null ||
+                            ref.watch(minRatingFilterProvider) != null)
+                        ? AppColors.primary
+                        : AppColors.lightBorder,
+                  ),
+                ),
+                child: Icon(
+                  Icons.tune_rounded,
+                  size: 18,
+                  color: (ref.watch(minPriceFilterProvider) != null ||
+                          ref.watch(maxPriceFilterProvider) != null ||
+                          ref.watch(selectedDateFilterProvider) != null ||
+                          ref.watch(minRatingFilterProvider) != null)
+                      ? Colors.white
+                      : AppColors.textPrimary,
+                ),
+              ),
+              onPressed: () => showCatalogFilterModal(context),
             ),
           ],
         ),

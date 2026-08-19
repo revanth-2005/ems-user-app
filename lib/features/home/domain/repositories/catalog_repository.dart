@@ -56,4 +56,10 @@ abstract class CatalogRepository {
   });
 
   Future<PublicEvent?> getEventById(String idOrSlug);
+  Future<Map<String, dynamic>> registerForEvent({
+    required String eventId,
+    String? ticketTypeId,
+    int quantity = 1,
+    String? couponCode,
+  });
 }
