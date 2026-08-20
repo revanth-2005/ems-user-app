@@ -19,19 +19,16 @@ class SearchFilterScreen extends HookConsumerWidget {
     final activeTab = ref.watch(activeCatalogTabProvider);
     final searchQuery = ref.watch(catalogSearchQueryProvider);
     final selectedCity = ref.watch(selectedCityProvider);
-    final selectedCategoryId = ref.watch(selectedCategoryFilterProvider);
-    final selectedPricingUnit = ref.watch(selectedPricingUnitFilterProvider);
 
-    final categoriesAsync = ref.watch(categoriesProvider);
     final packagesAsync = ref.watch(packagesProvider);
     final servicesAsync = ref.watch(servicesProvider);
     final organizersAsync = ref.watch(organizersProvider);
     final eventsAsync = ref.watch(eventsProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.lightBg,
+      backgroundColor: AppColors.getBg(context),
       appBar: AppBar(
-        backgroundColor: AppColors.lightSurface,
+        backgroundColor: AppColors.getSurface(context),
         elevation: 0,
         scrolledUnderElevation: 0,
         automaticallyImplyLeading: false,
@@ -43,9 +40,9 @@ class SearchFilterScreen extends HookConsumerWidget {
               child: Container(
                 height: 44,
                 decoration: BoxDecoration(
-                  color: AppColors.lightCardAlt,
+                  color: AppColors.getCardAlt(context),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppColors.lightBorder),
+                  border: Border.all(color: AppColors.getBorder(context)),
                 ),
                 child: TextField(
                   controller: searchController,
@@ -54,7 +51,7 @@ class SearchFilterScreen extends HookConsumerWidget {
                   },
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 13,
-                    color: AppColors.textPrimary,
+                    color: AppColors.getTextPrimary(context),
                   ),
                   decoration: InputDecoration(
                     hintText: activeTab == CatalogTab.PACKAGES
@@ -66,14 +63,14 @@ class SearchFilterScreen extends HookConsumerWidget {
                                 : 'Search concerts, workshops, parties…',
                     hintStyle: GoogleFonts.plusJakartaSans(
                       fontSize: 13,
-                      color: AppColors.textMuted,
+                      color: AppColors.getTextMuted(context),
                     ),
                     prefixIcon: const Icon(Icons.search_rounded,
                         color: AppColors.primary, size: 20),
                     suffixIcon: searchQuery.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(Icons.close_rounded,
-                                size: 16, color: AppColors.textMuted),
+                            icon: Icon(Icons.close_rounded,
+                                size: 16, color: AppColors.getTextMuted(context)),
                             onPressed: () {
                               searchController.clear();
                               ref
@@ -98,14 +95,14 @@ class SearchFilterScreen extends HookConsumerWidget {
               },
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16)),
-              color: AppColors.lightSurface,
+              color: AppColors.getSurface(context),
               child: Container(
                 height: 44,
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 decoration: BoxDecoration(
-                  color: AppColors.lightCardAlt,
+                  color: AppColors.getCardAlt(context),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppColors.lightBorder),
+                  border: Border.all(color: AppColors.getBorder(context)),
                 ),
                 child: Row(
                   children: [
@@ -117,11 +114,11 @@ class SearchFilterScreen extends HookConsumerWidget {
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
+                        color: AppColors.getTextPrimary(context),
                       ),
                     ),
-                    const Icon(Icons.arrow_drop_down_rounded,
-                        size: 18, color: AppColors.textSecondary),
+                    Icon(Icons.arrow_drop_down_rounded,
+                        size: 18, color: AppColors.getTextSecondary(context)),
                   ],
                 ),
               ),
@@ -148,7 +145,7 @@ class SearchFilterScreen extends HookConsumerWidget {
                           ref.watch(selectedDateFilterProvider) != null ||
                           ref.watch(minRatingFilterProvider) != null)
                       ? AppColors.primary
-                      : AppColors.lightCardAlt,
+                      : AppColors.getCardAlt(context),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: (ref.watch(minPriceFilterProvider) != null ||
@@ -156,7 +153,7 @@ class SearchFilterScreen extends HookConsumerWidget {
                             ref.watch(selectedDateFilterProvider) != null ||
                             ref.watch(minRatingFilterProvider) != null)
                         ? AppColors.primary
-                        : AppColors.lightBorder,
+                        : AppColors.getBorder(context),
                   ),
                 ),
                 child: Icon(
@@ -167,7 +164,7 @@ class SearchFilterScreen extends HookConsumerWidget {
                           ref.watch(selectedDateFilterProvider) != null ||
                           ref.watch(minRatingFilterProvider) != null)
                       ? Colors.white
-                      : AppColors.textPrimary,
+                      : AppColors.getTextPrimary(context),
                 ),
               ),
               onPressed: () => showCatalogFilterModal(context),
@@ -179,115 +176,18 @@ class SearchFilterScreen extends HookConsumerWidget {
         children: [
           // ── Tabs Header (4 Discovery Tabs) ───────────────────────────────
           Container(
-            color: AppColors.lightSurface,
+            color: AppColors.getSurface(context),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Row(
               children: [
-                _buildTab(ref, CatalogTab.PACKAGES, 'Packages', activeTab),
-                _buildTab(ref, CatalogTab.SERVICES, 'Services', activeTab),
-                _buildTab(ref, CatalogTab.ORGANIZERS, 'Organizers', activeTab),
-                _buildTab(ref, CatalogTab.EVENTS, 'Events', activeTab),
+                _buildTab(context, ref, CatalogTab.PACKAGES, 'Packages', activeTab),
+                _buildTab(context, ref, CatalogTab.SERVICES, 'Services', activeTab),
+                _buildTab(context, ref, CatalogTab.ORGANIZERS, 'Organizers', activeTab),
+                _buildTab(context, ref, CatalogTab.EVENTS, 'Events', activeTab),
               ],
             ),
           ),
-          const Divider(height: 1, color: AppColors.lightBorder),
-
-          // ── Category & Pricing Filter Strip ──────────────────────────────
-          Container(
-            color: AppColors.lightSurface,
-            height: 48,
-            child: categoriesAsync.when(
-              loading: () => const SizedBox(),
-              error: (_, __) => const SizedBox(),
-              data: (categories) {
-                return ListView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  children: [
-                    // "All Categories" chip
-                    _buildCategoryChip(
-                      label: 'All Categories',
-                      isSelected: selectedCategoryId == null,
-                      onTap: () {
-                        ref
-                            .read(selectedCategoryFilterProvider.notifier)
-                            .state = null;
-                        ref
-                            .read(selectedSubCategoryFilterProvider.notifier)
-                            .state = null;
-                      },
-                    ),
-                    const SizedBox(width: 8),
-
-                    // Individual Categories
-                    ...categories.map((cat) {
-                      final isSelected = selectedCategoryId == cat.id;
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: _buildCategoryChip(
-                          label: cat.name,
-                          isSelected: isSelected,
-                          onTap: () {
-                            ref
-                                .read(selectedCategoryFilterProvider.notifier)
-                                .state = isSelected ? null : cat.id;
-                            ref
-                                .read(selectedSubCategoryFilterProvider.notifier)
-                                .state = null;
-                          },
-                        ),
-                      );
-                    }),
-
-                    // Unit filters for services tab
-                    if (activeTab == CatalogTab.SERVICES) ...[
-                      const VerticalDivider(width: 16, color: AppColors.lightBorder),
-                      _buildCategoryChip(
-                        label: 'All Units',
-                        isSelected: selectedPricingUnit == null,
-                        onTap: () {
-                          ref
-                              .read(selectedPricingUnitFilterProvider.notifier)
-                              .state = null;
-                        },
-                      ),
-                      const SizedBox(width: 8),
-                      _buildCategoryChip(
-                        label: 'Fixed Rate',
-                        isSelected: selectedPricingUnit == 'FIXED',
-                        onTap: () {
-                          ref
-                              .read(selectedPricingUnitFilterProvider.notifier)
-                              .state = selectedPricingUnit == 'FIXED' ? null : 'FIXED';
-                        },
-                      ),
-                      const SizedBox(width: 8),
-                      _buildCategoryChip(
-                        label: 'Per Hour',
-                        isSelected: selectedPricingUnit == 'PER_HOUR',
-                        onTap: () {
-                          ref
-                              .read(selectedPricingUnitFilterProvider.notifier)
-                              .state = selectedPricingUnit == 'PER_HOUR' ? null : 'PER_HOUR';
-                        },
-                      ),
-                      const SizedBox(width: 8),
-                      _buildCategoryChip(
-                        label: 'Per Head',
-                        isSelected: selectedPricingUnit == 'PER_HEAD',
-                        onTap: () {
-                          ref
-                              .read(selectedPricingUnitFilterProvider.notifier)
-                              .state = selectedPricingUnit == 'PER_HEAD' ? null : 'PER_HEAD';
-                        },
-                      ),
-                    ],
-                  ],
-                );
-              },
-            ),
-          ),
-          const Divider(height: 1, color: AppColors.lightBorder),
+          Divider(height: 1, color: AppColors.getBorder(context)),
 
           // ── Tab Content ──────────────────────────────────────────────────
           Expanded(
@@ -333,28 +233,28 @@ class SearchFilterScreen extends HookConsumerWidget {
                         message: e.toString(),
                         onRetry: () => ref.refresh(servicesProvider),
                       ),
-                      data: (srvs) {
-                        if (srvs.isEmpty) {
+                      data: (svcs) {
+                        if (svcs.isEmpty) {
                           return const AppEmptyView(
-                            title: 'No Standalone Services Found',
+                            title: 'No Services Found',
                             subtitle:
-                                'Try adjusting your search keywords or filters.',
+                                'Try clearing your search filters to find available talent.',
                           );
                         }
 
                         return ListView.separated(
                           padding: const EdgeInsets.all(16),
-                          itemCount: srvs.length,
+                          itemCount: svcs.length,
                           separatorBuilder: (_, __) =>
                               const SizedBox(height: 16),
                           itemBuilder: (context, index) {
-                            return ServiceCard(service: srvs[index]);
+                            return ServiceCard(service: svcs[index]);
                           },
                         );
                       },
                     );
 
-                  // ── 3. Organizers Directory ──────────────────────────────
+                  // ── 3. Verified Organizers Directory ─────────────────────
                   case CatalogTab.ORGANIZERS:
                     return organizersAsync.when(
                       loading: () => const Center(
@@ -368,7 +268,7 @@ class SearchFilterScreen extends HookConsumerWidget {
                           return const AppEmptyView(
                             title: 'No Organizers Found',
                             subtitle:
-                                'No verified organizers matching your criteria.',
+                                'We could not find organizers matching your criteria.',
                           );
                         }
 
@@ -376,7 +276,7 @@ class SearchFilterScreen extends HookConsumerWidget {
                           padding: const EdgeInsets.all(16),
                           itemCount: orgs.length,
                           separatorBuilder: (_, __) =>
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 14),
                           itemBuilder: (context, index) {
                             return OrganizerCard(organizer: orgs[index]);
                           },
@@ -384,7 +284,7 @@ class SearchFilterScreen extends HookConsumerWidget {
                       },
                     );
 
-                  // ── 4. Live Events ───────────────────────────────────────
+                  // ── 4. Public Live Events ────────────────────────────────
                   case CatalogTab.EVENTS:
                     return eventsAsync.when(
                       loading: () => const Center(
@@ -423,6 +323,7 @@ class SearchFilterScreen extends HookConsumerWidget {
   }
 
   Widget _buildTab(
+    BuildContext context,
     WidgetRef ref,
     CatalogTab tab,
     String title,
@@ -435,49 +336,19 @@ class SearchFilterScreen extends HookConsumerWidget {
           ref.read(activeCatalogTabProvider.notifier).state = tab;
         },
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: 9),
           decoration: BoxDecoration(
-            color: isSelected
-                ? AppColors.primary.withValues(alpha: 0.12)
-                : Colors.transparent,
+            color: isSelected ? AppColors.primary : Colors.transparent,
             borderRadius: BorderRadius.circular(50),
           ),
           child: Text(
             title,
             textAlign: TextAlign.center,
             style: GoogleFonts.plusJakartaSans(
-              fontSize: 12,
-              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-              color: isSelected ? AppColors.primary : AppColors.textSecondary,
+              fontSize: 12.5,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              color: isSelected ? Colors.white : AppColors.getTextSecondary(context),
             ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCategoryChip({
-    required String label,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : AppColors.lightCardAlt,
-          borderRadius: BorderRadius.circular(50),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.lightBorder,
-          ),
-        ),
-        child: Text(
-          label,
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 11,
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-            color: isSelected ? Colors.white : AppColors.textPrimary,
           ),
         ),
       ),

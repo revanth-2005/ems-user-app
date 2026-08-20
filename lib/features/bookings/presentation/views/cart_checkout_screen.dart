@@ -46,14 +46,14 @@ class CartCheckoutScreen extends HookConsumerWidget {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.lightBg,
+      backgroundColor: AppColors.getBg(context),
       appBar: AppBar(
-        backgroundColor: AppColors.lightSurface,
+        backgroundColor: AppColors.getSurface(context),
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              color: AppColors.textPrimary, size: 20),
+          icon: Icon(Icons.arrow_back_ios_new_rounded,
+              color: AppColors.getTextPrimary(context), size: 20),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -61,7 +61,7 @@ class CartCheckoutScreen extends HookConsumerWidget {
           style: GoogleFonts.plusJakartaSans(
             fontSize: 18,
             fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
+            color: AppColors.getTextPrimary(context),
           ),
         ),
         centerTitle: true,
@@ -94,7 +94,7 @@ class CartCheckoutScreen extends HookConsumerWidget {
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
+                          color: AppColors.getTextPrimary(context),
                         ),
                       ),
                       GestureDetector(
@@ -118,10 +118,10 @@ class CartCheckoutScreen extends HookConsumerWidget {
                       margin: const EdgeInsets.only(bottom: 14),
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppColors.lightSurface,
+                        color: AppColors.getSurface(context),
                         borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: AppColors.lightBorder),
-                        boxShadow: AppColors.cardShadow,
+                        border: Border.all(color: AppColors.getBorder(context)),
+                        boxShadow: AppColors.getCardShadow(context),
                       ),
                       child: Column(
                         children: [
@@ -146,7 +146,7 @@ class CartCheckoutScreen extends HookConsumerWidget {
                                       style: GoogleFonts.plusJakartaSans(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w800,
-                                        color: AppColors.textPrimary,
+                                        color: AppColors.getTextPrimary(context),
                                       ),
                                     ),
                                     const SizedBox(height: 4),
@@ -158,41 +158,36 @@ class CartCheckoutScreen extends HookConsumerWidget {
                                           initialDate: item.eventDate,
                                           firstDate: DateTime.now(),
                                           lastDate: DateTime.now().add(const Duration(days: 365)),
+                                          builder: (context, child) {
+                                            return Theme(
+                                              data: Theme.of(context),
+                                              child: child!,
+                                            );
+                                          },
                                         );
                                         if (picked != null) {
-                                          ref.read(cartProvider.notifier).updateItemDateTime(
-                                                item.id,
-                                                startDate: picked,
-                                                startTime: item.startTime,
-                                                endTime: item.endTime,
-                                              );
+                                          ref.read(cartProvider.notifier).updateItemDateTime(item.id, startDate: picked);
                                         }
                                       },
                                       child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                         decoration: BoxDecoration(
-                                          color: AppColors.primary.withValues(alpha: 0.08),
-                                          borderRadius: BorderRadius.circular(6),
-                                          border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                                          color: AppColors.primary.withValues(alpha: 0.1),
+                                          borderRadius: BorderRadius.circular(8),
                                         ),
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            const Icon(Icons.calendar_today_rounded, size: 11, color: AppColors.primary),
+                                            const Icon(Icons.calendar_month_rounded, size: 12, color: AppColors.primary),
                                             const SizedBox(width: 4),
-                                            Flexible(
-                                              child: Text(
-                                                '${DateFormatter.formatDate(item.eventDate)} (${item.startTime}-${item.endTime})',
-                                                overflow: TextOverflow.ellipsis,
-                                                style: GoogleFonts.plusJakartaSans(
-                                                  fontSize: 11,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: AppColors.primary,
-                                                ),
+                                            Text(
+                                              DateFormatter.formatDate(item.eventDate),
+                                              style: GoogleFonts.plusJakartaSans(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w700,
+                                                color: AppColors.primary,
                                               ),
                                             ),
-                                            const SizedBox(width: 2),
-                                            const Icon(Icons.edit_outlined, size: 10, color: AppColors.primary),
                                           ],
                                         ),
                                       ),
@@ -203,7 +198,7 @@ class CartCheckoutScreen extends HookConsumerWidget {
                                       style: GoogleFonts.plusJakartaSans(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w700,
-                                        color: AppColors.textPrimary,
+                                        color: AppColors.getTextPrimary(context),
                                       ),
                                     ),
                                   ],
@@ -221,7 +216,7 @@ class CartCheckoutScreen extends HookConsumerWidget {
                             ],
                           ),
                           const SizedBox(height: 12),
-                          const Divider(height: 1, color: AppColors.lightBorder),
+                          Divider(height: 1, color: AppColors.getBorder(context)),
                           const SizedBox(height: 10),
                           // Bottom Row: Price & Quantity Controls
                           Row(
@@ -232,15 +227,15 @@ class CartCheckoutScreen extends HookConsumerWidget {
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
-                                  color: AppColors.textMuted,
+                                  color: AppColors.getTextMuted(context),
                                 ),
                               ),
                               // Quantity Controls
                               Container(
                                 decoration: BoxDecoration(
-                                  color: AppColors.lightBg,
+                                  color: AppColors.getCardAlt(context),
                                   borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(color: AppColors.lightBorder),
+                                  border: Border.all(color: AppColors.getBorder(context)),
                                 ),
                                 child: Row(
                                   children: [
@@ -256,20 +251,20 @@ class CartCheckoutScreen extends HookConsumerWidget {
                                           ref.read(cartProvider.notifier).removeItem(item.id);
                                         }
                                       },
-                                      child: const Padding(
-                                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                        child: Icon(Icons.remove, size: 14, color: AppColors.textPrimary),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                        child: Icon(Icons.remove, size: 14, color: AppColors.getTextPrimary(context)),
                                       ),
                                     ),
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                      color: AppColors.lightSurface,
+                                      color: AppColors.getSurface(context),
                                       child: Text(
                                         '${item.quantity}',
                                         style: GoogleFonts.plusJakartaSans(
                                           fontSize: 13,
                                           fontWeight: FontWeight.w800,
-                                          color: AppColors.textPrimary,
+                                          color: AppColors.getTextPrimary(context),
                                         ),
                                       ),
                                     ),
@@ -302,10 +297,10 @@ class CartCheckoutScreen extends HookConsumerWidget {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.lightSurface,
+                      color: AppColors.getSurface(context),
                       borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: AppColors.lightBorder),
-                      boxShadow: AppColors.cardShadow,
+                      border: Border.all(color: AppColors.getBorder(context)),
+                      boxShadow: AppColors.getCardShadow(context),
                     ),
                     child: Row(
                       children: [
@@ -315,13 +310,13 @@ class CartCheckoutScreen extends HookConsumerWidget {
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
+                              color: AppColors.getTextPrimary(context),
                             ),
                             decoration: InputDecoration(
                               hintText: 'Enter coupon (try SPHERE10)',
                               hintStyle: GoogleFonts.plusJakartaSans(
                                 fontSize: 13,
-                                color: AppColors.textMuted,
+                                color: AppColors.getTextMuted(context),
                               ),
                               border: InputBorder.none,
                               contentPadding: EdgeInsets.zero,
@@ -370,10 +365,10 @@ class CartCheckoutScreen extends HookConsumerWidget {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.lightSurface,
+                      color: AppColors.getSurface(context),
                       borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: AppColors.lightBorder),
-                      boxShadow: AppColors.cardShadow,
+                      border: Border.all(color: AppColors.getBorder(context)),
+                      boxShadow: AppColors.getCardShadow(context),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -386,7 +381,7 @@ class CartCheckoutScreen extends HookConsumerWidget {
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w800,
-                                color: AppColors.textPrimary,
+                                color: AppColors.getTextPrimary(context),
                               ),
                             ),
                             Text(
@@ -410,7 +405,7 @@ class CartCheckoutScreen extends HookConsumerWidget {
                                 'Grand Palace Hall, 42 Residency Road, Coimbatore, Tamil Nadu - 641018',
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 12,
-                                  color: AppColors.textSecondary,
+                                  color: AppColors.getTextSecondary(context),
                                   height: 1.4,
                                 ),
                               ),
@@ -427,10 +422,10 @@ class CartCheckoutScreen extends HookConsumerWidget {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.lightSurface,
+                      color: AppColors.getSurface(context),
                       borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: AppColors.lightBorder),
-                      boxShadow: AppColors.cardShadow,
+                      border: Border.all(color: AppColors.getBorder(context)),
+                      boxShadow: AppColors.getCardShadow(context),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -440,7 +435,7 @@ class CartCheckoutScreen extends HookConsumerWidget {
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary,
+                            color: AppColors.getTextPrimary(context),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -449,17 +444,17 @@ class CartCheckoutScreen extends HookConsumerWidget {
                           maxLines: 2,
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 12,
-                            color: AppColors.textPrimary,
+                            color: AppColors.getTextPrimary(context),
                           ),
                           decoration: InputDecoration(
                             hintText: 'Add dietary requirements, entry gate info, or timing notes…',
                             hintStyle: GoogleFonts.plusJakartaSans(
                               fontSize: 12,
-                              color: AppColors.textMuted,
+                              color: AppColors.getTextMuted(context),
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: AppColors.lightBorder),
+                              borderSide: BorderSide(color: AppColors.getBorder(context)),
                             ),
                             contentPadding: const EdgeInsets.all(12),
                           ),
@@ -474,10 +469,10 @@ class CartCheckoutScreen extends HookConsumerWidget {
                   Container(
                     padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
-                      color: AppColors.lightSurface,
+                      color: AppColors.getSurface(context),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.lightBorder),
-                      boxShadow: AppColors.cardShadow,
+                      border: Border.all(color: AppColors.getBorder(context)),
+                      boxShadow: AppColors.getCardShadow(context),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -487,7 +482,7 @@ class CartCheckoutScreen extends HookConsumerWidget {
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 15,
                             fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary,
+                            color: AppColors.getTextPrimary(context),
                           ),
                         ),
                         const SizedBox(height: 14),
@@ -507,7 +502,7 @@ class CartCheckoutScreen extends HookConsumerWidget {
                           label: 'Remaining Balance Due Later',
                           value: CurrencyFormatter.formatPaise(
                               cart.subtotalPaise - cart.totalDepositPaise),
-                          valueColor: AppColors.textSecondary,
+                          valueColor: AppColors.getTextSecondary(context),
                         ),
                         if (cart.discountPaise > 0) ...[
                           const SizedBox(height: 8),
@@ -518,8 +513,8 @@ class CartCheckoutScreen extends HookConsumerWidget {
                             valueColor: AppColors.accentEmerald,
                           ),
                         ],
-                        const Divider(
-                            height: 24, color: AppColors.lightBorder),
+                        Divider(
+                            height: 24, color: AppColors.getBorder(context)),
                         _PriceRow(
                           label: 'Payable Today',
                           value: CurrencyFormatter.formatPaise(
@@ -532,7 +527,7 @@ class CartCheckoutScreen extends HookConsumerWidget {
                           'Remaining balance is payable after vendor completes event setup.',
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 11,
-                            color: AppColors.textMuted,
+                            color: AppColors.getTextMuted(context),
                           ),
                         ),
                       ],
@@ -548,9 +543,9 @@ class CartCheckoutScreen extends HookConsumerWidget {
           : Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.lightSurface,
+                color: AppColors.getSurface(context),
                 border: Border(
-                  top: BorderSide(color: AppColors.lightBorder),
+                  top: BorderSide(color: AppColors.getBorder(context)),
                 ),
               ),
               child: SafeArea(
@@ -570,14 +565,14 @@ class CartCheckoutScreen extends HookConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.lightSurface,
+        backgroundColor: AppColors.getSurface(context),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           'Clear Cart?',
           style: GoogleFonts.plusJakartaSans(
             fontSize: 18,
             fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
+            color: AppColors.getTextPrimary(context),
           ),
         ),
         content: Text(
@@ -585,7 +580,7 @@ class CartCheckoutScreen extends HookConsumerWidget {
           style: GoogleFonts.plusJakartaSans(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: AppColors.textSecondary,
+            color: AppColors.getTextSecondary(context),
           ),
         ),
         actions: [
@@ -595,7 +590,7 @@ class CartCheckoutScreen extends HookConsumerWidget {
               'Cancel',
               style: GoogleFonts.plusJakartaSans(
                 fontWeight: FontWeight.w700,
-                color: AppColors.textMuted,
+                color: AppColors.getTextMuted(context),
               ),
             ),
           ),
@@ -655,7 +650,7 @@ class _PriceRow extends StatelessWidget {
           style: GoogleFonts.plusJakartaSans(
             fontSize: isBold ? 14 : 12,
             fontWeight: isBold ? FontWeight.w800 : FontWeight.w500,
-            color: isBold ? AppColors.textPrimary : AppColors.textSecondary,
+            color: isBold ? AppColors.getTextPrimary(context) : AppColors.getTextSecondary(context),
           ),
         ),
         Text(
@@ -663,7 +658,7 @@ class _PriceRow extends StatelessWidget {
           style: GoogleFonts.plusJakartaSans(
             fontSize: isBold ? 16 : 13,
             fontWeight: isBold ? FontWeight.w900 : FontWeight.w700,
-            color: valueColor ?? AppColors.textPrimary,
+            color: valueColor ?? AppColors.getTextPrimary(context),
           ),
         ),
       ],

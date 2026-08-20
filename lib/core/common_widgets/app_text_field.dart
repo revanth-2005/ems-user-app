@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_colors.dart';
 
-/// Reusable light-mode text field — wraps [TextFormField] with the
-/// project design system. All screens should use this instead of raw
-/// TextFormField or TextField directly.
+/// Reusable theme-aware text field — wraps [TextFormField] with the
+/// project design system.
 class AppTextField extends StatelessWidget {
   final String label;
   final String? hint;
@@ -54,7 +53,7 @@ class AppTextField extends StatelessWidget {
           style: GoogleFonts.plusJakartaSans(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: AppColors.textSecondary,
+            color: AppColors.getTextSecondary(context),
           ),
         ),
         const SizedBox(height: 6),
@@ -73,27 +72,27 @@ class AppTextField extends StatelessWidget {
           validator: validator,
           style: GoogleFonts.plusJakartaSans(
             fontSize: 14,
-            color: AppColors.textPrimary,
+            color: AppColors.getTextPrimary(context),
           ),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: GoogleFonts.plusJakartaSans(
               fontSize: 14,
-              color: AppColors.textMuted,
+              color: AppColors.getTextMuted(context),
             ),
             prefixIcon: prefixIcon,
             suffixIcon: suffixIcon,
             filled: true,
-            fillColor: AppColors.lightCardAlt,
+            fillColor: AppColors.getCardAlt(context),
             contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16, vertical: 14),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: AppColors.lightBorder),
+              borderSide: BorderSide(color: AppColors.getBorder(context)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: AppColors.lightBorder),
+              borderSide: BorderSide(color: AppColors.getBorder(context)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
@@ -156,12 +155,12 @@ class _AppPasswordFieldState extends State<AppPasswordField> {
       textInputAction: widget.textInputAction,
       onSubmitted: widget.onSubmitted,
       validator: widget.validator,
-      prefixIcon: const Icon(Icons.lock_outline_rounded,
-          color: AppColors.textMuted, size: 20),
+      prefixIcon: Icon(Icons.lock_outline_rounded,
+          color: AppColors.getTextMuted(context), size: 20),
       suffixIcon: IconButton(
         icon: Icon(
           _obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-          color: AppColors.textMuted,
+          color: AppColors.getTextMuted(context),
           size: 20,
         ),
         onPressed: () => setState(() => _obscure = !_obscure),

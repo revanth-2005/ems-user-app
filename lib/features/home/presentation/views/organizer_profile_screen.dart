@@ -27,7 +27,7 @@ class OrganizerProfileScreen extends HookConsumerWidget {
     final organizerAsync = ref.watch(organizerDetailProvider(organizerId));
 
     return Scaffold(
-      backgroundColor: AppColors.lightBg,
+      backgroundColor: AppColors.getBg(context),
       body: organizerAsync.when(
         loading: () =>
             const Center(child: AppLoader(message: 'Loading studio profile…')),
@@ -38,8 +38,15 @@ class OrganizerProfileScreen extends HookConsumerWidget {
         data: (org) {
           if (org == null) {
             return Scaffold(
-              appBar: AppBar(backgroundColor: AppColors.lightSurface),
-              body: const Center(child: Text('Organizer profile not found.')),
+              appBar: AppBar(backgroundColor: AppColors.getSurface(context)),
+              body: Center(
+                child: Text(
+                  'Organizer profile not found.',
+                  style: GoogleFonts.plusJakartaSans(
+                    color: AppColors.getTextPrimary(context),
+                  ),
+                ),
+              ),
             );
           }
 
@@ -51,11 +58,11 @@ class OrganizerProfileScreen extends HookConsumerWidget {
                   // App Bar
                   SliverAppBar(
                     pinned: true,
-                    backgroundColor: AppColors.lightSurface,
+                    backgroundColor: AppColors.getSurface(context),
                     elevation: 0,
                     leading: IconButton(
-                      icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                          size: 18, color: AppColors.textPrimary),
+                      icon: Icon(Icons.arrow_back_ios_new_rounded,
+                          size: 18, color: AppColors.getTextPrimary(context)),
                       onPressed: () => context.pop(),
                     ),
                     title: Text(
@@ -63,7 +70,7 @@ class OrganizerProfileScreen extends HookConsumerWidget {
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
+                        color: AppColors.getTextPrimary(context),
                       ),
                     ),
                     centerTitle: true,
@@ -76,10 +83,10 @@ class OrganizerProfileScreen extends HookConsumerWidget {
                       child: Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: AppColors.lightSurface,
+                          color: AppColors.getSurface(context),
                           borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: AppColors.lightBorder),
-                          boxShadow: AppColors.cardShadow,
+                          border: Border.all(color: AppColors.getBorder(context)),
+                          boxShadow: AppColors.getCardShadow(context),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -108,7 +115,7 @@ class OrganizerProfileScreen extends HookConsumerWidget {
                                                   GoogleFonts.plusJakartaSans(
                                                 fontSize: 18,
                                                 fontWeight: FontWeight.w800,
-                                                color: AppColors.textPrimary,
+                                                color: AppColors.getTextPrimary(context),
                                               ),
                                             ),
                                           ),
@@ -150,7 +157,7 @@ class OrganizerProfileScreen extends HookConsumerWidget {
                                                     fontSize: 12,
                                                     fontWeight: FontWeight.w700,
                                                     color: AppColors
-                                                        .textSecondary,
+                                                        .getTextSecondary(context),
                                                   ),
                                                 ),
                                               ],
@@ -169,7 +176,7 @@ class OrganizerProfileScreen extends HookConsumerWidget {
                                 org.bio!,
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 13,
-                                  color: AppColors.textSecondary,
+                                  color: AppColors.getTextSecondary(context),
                                   height: 1.4,
                                 ),
                               ),
@@ -186,7 +193,7 @@ class OrganizerProfileScreen extends HookConsumerWidget {
                     delegate: _SliverTabBarDelegate(
                       TabBar(
                         labelColor: AppColors.primary,
-                        unselectedLabelColor: AppColors.textMuted,
+                        unselectedLabelColor: AppColors.getTextMuted(context),
                         indicatorColor: AppColors.primary,
                         indicatorWeight: 3,
                         labelStyle: GoogleFonts.plusJakartaSans(
@@ -200,6 +207,7 @@ class OrganizerProfileScreen extends HookConsumerWidget {
                           Tab(text: 'Reviews'),
                         ],
                       ),
+                      backgroundColor: AppColors.getSurface(context),
                     ),
                   ),
                 ];
@@ -231,8 +239,9 @@ class OrganizerProfileScreen extends HookConsumerWidget {
 
 class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
   final TabBar _tabBar;
+  final Color backgroundColor;
 
-  _SliverTabBarDelegate(this._tabBar);
+  _SliverTabBarDelegate(this._tabBar, {required this.backgroundColor});
 
   @override
   double get minExtent => _tabBar.preferredSize.height;
@@ -243,14 +252,14 @@ class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
-      color: AppColors.lightSurface,
+      color: backgroundColor,
       child: _tabBar,
     );
   }
 
   @override
   bool shouldRebuild(_SliverTabBarDelegate oldDelegate) {
-    return false;
+    return oldDelegate.backgroundColor != backgroundColor;
   }
 }
 
@@ -553,9 +562,10 @@ class _OrganizerReviewsTab extends StatelessWidget {
           margin: const EdgeInsets.only(bottom: 14),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.lightSurface,
+            color: AppColors.getSurface(context),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.lightBorder),
+            border: Border.all(color: AppColors.getBorder(context)),
+            boxShadow: AppColors.getCardShadow(context),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -568,7 +578,7 @@ class _OrganizerReviewsTab extends StatelessWidget {
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 14,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+                      color: AppColors.getTextPrimary(context),
                     ),
                   ),
                   AppRatingChip(rating: (rev['rating'] as double)),
@@ -579,7 +589,7 @@ class _OrganizerReviewsTab extends StatelessWidget {
                 rev['comment'] as String,
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 12,
-                  color: AppColors.textSecondary,
+                  color: AppColors.getTextSecondary(context),
                   height: 1.4,
                 ),
               ),
@@ -588,7 +598,7 @@ class _OrganizerReviewsTab extends StatelessWidget {
                 rev['date'] as String,
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 11,
-                  color: AppColors.textMuted,
+                  color: AppColors.getTextMuted(context),
                 ),
               ),
             ],

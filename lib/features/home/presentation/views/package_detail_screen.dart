@@ -41,12 +41,7 @@ class PackageDetailScreen extends HookConsumerWidget {
         lastDate: DateTime.now().add(const Duration(days: 365)),
         builder: (ctx, child) {
           return Theme(
-            data: ThemeData.light().copyWith(
-              colorScheme: const ColorScheme.light(
-                primary: AppColors.primary,
-                surface: AppColors.lightSurface,
-              ),
-            ),
+            data: Theme.of(context),
             child: child!,
           );
         },
@@ -58,14 +53,28 @@ class PackageDetailScreen extends HookConsumerWidget {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.lightBg,
+      backgroundColor: AppColors.getBg(context),
       body: packageAsync.when(
         loading: () =>
             const Center(child: AppLoader(message: 'Loading package…')),
-        error: (e, _) => Center(child: Text(e.toString())),
+        error: (e, _) => Center(
+          child: Text(
+            e.toString(),
+            style: GoogleFonts.plusJakartaSans(
+              color: AppColors.getTextPrimary(context),
+            ),
+          ),
+        ),
         data: (pkg) {
           if (pkg == null) {
-            return const Center(child: Text('Package not found'));
+            return Center(
+              child: Text(
+                'Package not found',
+                style: GoogleFonts.plusJakartaSans(
+                  color: AppColors.getTextPrimary(context),
+                ),
+              ),
+            );
           }
 
           final List<PortfolioItem> mediaList = [];
@@ -92,18 +101,18 @@ class PackageDetailScreen extends HookConsumerWidget {
               SliverAppBar(
                 expandedHeight: 280,
                 pinned: true,
-                backgroundColor: AppColors.lightSurface,
+                backgroundColor: AppColors.getSurface(context),
                 elevation: 0,
                 leading: Container(
                   margin: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.9),
+                    color: AppColors.getSurface(context).withValues(alpha: 0.9),
                     shape: BoxShape.circle,
-                    boxShadow: AppColors.cardShadow,
+                    boxShadow: AppColors.getCardShadow(context),
                   ),
                   child: IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                        size: 18, color: AppColors.textPrimary),
+                    icon: Icon(Icons.arrow_back_ios_new_rounded,
+                        size: 18, color: AppColors.getTextPrimary(context)),
                     onPressed: () => context.pop(),
                   ),
                 ),
@@ -194,7 +203,7 @@ class PackageDetailScreen extends HookConsumerWidget {
                                     border: Border.all(
                                       color: isSelected
                                           ? AppColors.primary
-                                          : AppColors.lightBorder,
+                                          : AppColors.getBorder(context),
                                       width: isSelected ? 2.5 : 1,
                                     ),
                                   ),
@@ -250,7 +259,7 @@ class PackageDetailScreen extends HookConsumerWidget {
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 22,
                           fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
+                          color: AppColors.getTextPrimary(context),
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -283,10 +292,10 @@ class PackageDetailScreen extends HookConsumerWidget {
                         child: Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: AppColors.lightSurface,
+                            color: AppColors.getSurface(context),
                             borderRadius: BorderRadius.circular(18),
-                            border: Border.all(color: AppColors.lightBorder),
-                            boxShadow: AppColors.cardShadow,
+                            border: Border.all(color: AppColors.getBorder(context)),
+                            boxShadow: AppColors.getCardShadow(context),
                           ),
                           child: Row(
                             children: [
@@ -315,7 +324,7 @@ class PackageDetailScreen extends HookConsumerWidget {
                                       style: GoogleFonts.plusJakartaSans(
                                         fontSize: 11,
                                         fontWeight: FontWeight.w600,
-                                        color: AppColors.textSecondary,
+                                        color: AppColors.getTextSecondary(context),
                                       ),
                                     ),
                                     Text(
@@ -324,7 +333,7 @@ class PackageDetailScreen extends HookConsumerWidget {
                                       style: GoogleFonts.plusJakartaSans(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w800,
-                                        color: AppColors.textPrimary,
+                                        color: AppColors.getTextPrimary(context),
                                       ),
                                     ),
                                   ],
@@ -389,7 +398,7 @@ class PackageDetailScreen extends HookConsumerWidget {
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary,
+                            color: AppColors.getTextPrimary(context),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -397,7 +406,7 @@ class PackageDetailScreen extends HookConsumerWidget {
                           pkg.description!,
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 13,
-                            color: AppColors.textSecondary,
+                            color: AppColors.getTextSecondary(context),
                             height: 1.5,
                           ),
                         ),
@@ -411,7 +420,7 @@ class PackageDetailScreen extends HookConsumerWidget {
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary,
+                            color: AppColors.getTextPrimary(context),
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -440,7 +449,7 @@ class PackageDetailScreen extends HookConsumerWidget {
                                     style: GoogleFonts.plusJakartaSans(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w600,
-                                      color: AppColors.textPrimary,
+                                      color: AppColors.getTextPrimary(context),
                                     ),
                                   ),
                                 ),
@@ -464,9 +473,9 @@ class PackageDetailScreen extends HookConsumerWidget {
           : Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.lightSurface,
+                color: AppColors.getSurface(context),
                 border: Border(
-                  top: BorderSide(color: AppColors.lightBorder),
+                  top: BorderSide(color: AppColors.getBorder(context)),
                 ),
               ),
               child: SafeArea(
@@ -480,7 +489,7 @@ class PackageDetailScreen extends HookConsumerWidget {
                           'Total Price',
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 11,
-                            color: AppColors.textSecondary,
+                            color: AppColors.getTextSecondary(context),
                           ),
                         ),
                         Text(

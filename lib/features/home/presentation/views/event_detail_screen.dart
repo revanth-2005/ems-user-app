@@ -60,13 +60,27 @@ class EventDetailScreen extends HookConsumerWidget {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.lightBg,
+      backgroundColor: AppColors.getBg(context),
       body: eventAsync.when(
         loading: () => const Center(child: AppLoader(message: 'Loading event…')),
-        error: (e, _) => Center(child: Text(e.toString())),
+        error: (e, _) => Center(
+          child: Text(
+            e.toString(),
+            style: GoogleFonts.plusJakartaSans(
+              color: AppColors.getTextPrimary(context),
+            ),
+          ),
+        ),
         data: (event) {
           if (event == null) {
-            return const Center(child: Text('Event not found'));
+            return Center(
+              child: Text(
+                'Event not found',
+                style: GoogleFonts.plusJakartaSans(
+                  color: AppColors.getTextPrimary(context),
+                ),
+              ),
+            );
           }
 
           if (selectedTicket.value == null && event.ticketTypes.isNotEmpty) {
@@ -82,18 +96,18 @@ class EventDetailScreen extends HookConsumerWidget {
               SliverAppBar(
                 expandedHeight: 280,
                 pinned: true,
-                backgroundColor: AppColors.lightSurface,
+                backgroundColor: AppColors.getSurface(context),
                 elevation: 0,
                 leading: Container(
                   margin: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.9),
+                    color: AppColors.getSurface(context).withValues(alpha: 0.9),
                     shape: BoxShape.circle,
-                    boxShadow: AppColors.cardShadow,
+                    boxShadow: AppColors.getCardShadow(context),
                   ),
                   child: IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                        size: 18, color: AppColors.textPrimary),
+                    icon: Icon(Icons.arrow_back_ios_new_rounded,
+                        size: 18, color: AppColors.getTextPrimary(context)),
                     onPressed: () => context.pop(),
                   ),
                 ),
@@ -156,7 +170,7 @@ class EventDetailScreen extends HookConsumerWidget {
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 22,
                           fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
+                          color: AppColors.getTextPrimary(context),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -175,10 +189,10 @@ class EventDetailScreen extends HookConsumerWidget {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: AppColors.lightSurface,
+                          color: AppColors.getSurface(context),
                           borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: AppColors.lightBorder),
-                          boxShadow: AppColors.cardShadow,
+                          border: Border.all(color: AppColors.getBorder(context)),
+                          boxShadow: AppColors.getCardShadow(context),
                         ),
                         child: Column(
                           children: [
@@ -189,8 +203,8 @@ class EventDetailScreen extends HookConsumerWidget {
                               subtitle: DateFormatter.formatEventTime(
                                   event.startDatetime),
                             ),
-                            const Divider(
-                                height: 20, color: AppColors.lightBorder),
+                            Divider(
+                                height: 20, color: AppColors.getBorder(context)),
                             _InfoRow(
                               icon: Icons.location_on_rounded,
                               title: event.venueName ?? 'Online Link',
@@ -210,7 +224,7 @@ class EventDetailScreen extends HookConsumerWidget {
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary,
+                            color: AppColors.getTextPrimary(context),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -218,7 +232,7 @@ class EventDetailScreen extends HookConsumerWidget {
                           event.description!,
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 13,
-                            color: AppColors.textSecondary,
+                            color: AppColors.getTextSecondary(context),
                             height: 1.5,
                           ),
                         ),
@@ -232,7 +246,7 @@ class EventDetailScreen extends HookConsumerWidget {
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary,
+                            color: AppColors.getTextPrimary(context),
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -246,12 +260,12 @@ class EventDetailScreen extends HookConsumerWidget {
                               decoration: BoxDecoration(
                                 color: isSelected
                                     ? AppColors.primary.withValues(alpha: 0.06)
-                                    : AppColors.lightSurface,
+                                    : AppColors.getSurface(context),
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
                                   color: isSelected
                                       ? AppColors.primary
-                                      : AppColors.lightBorder,
+                                      : AppColors.getBorder(context),
                                   width: isSelected ? 2 : 1,
                                 ),
                               ),
@@ -263,7 +277,7 @@ class EventDetailScreen extends HookConsumerWidget {
                                         : Icons.radio_button_off_rounded,
                                     color: isSelected
                                         ? AppColors.primary
-                                        : AppColors.textMuted,
+                                        : AppColors.getTextMuted(context),
                                     size: 20,
                                   ),
                                   const SizedBox(width: 12),
@@ -277,7 +291,7 @@ class EventDetailScreen extends HookConsumerWidget {
                                           style: GoogleFonts.plusJakartaSans(
                                             fontSize: 14,
                                             fontWeight: FontWeight.w700,
-                                            color: AppColors.textPrimary,
+                                            color: AppColors.getTextPrimary(context),
                                           ),
                                         ),
                                         if (t.description != null)
@@ -286,7 +300,7 @@ class EventDetailScreen extends HookConsumerWidget {
                                             style:
                                                 GoogleFonts.plusJakartaSans(
                                               fontSize: 11,
-                                              color: AppColors.textSecondary,
+                                              color: AppColors.getTextSecondary(context),
                                             ),
                                           ),
                                       ],
@@ -324,9 +338,9 @@ class EventDetailScreen extends HookConsumerWidget {
           : Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.lightSurface,
+                color: AppColors.getSurface(context),
                 border: Border(
-                  top: BorderSide(color: AppColors.lightBorder),
+                  top: BorderSide(color: AppColors.getBorder(context)),
                 ),
               ),
               child: SafeArea(
@@ -377,14 +391,14 @@ class _InfoRow extends StatelessWidget {
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                  color: AppColors.getTextPrimary(context),
                 ),
               ),
               Text(
                 subtitle,
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 11,
-                  color: AppColors.textSecondary,
+                  color: AppColors.getTextSecondary(context),
                 ),
               ),
             ],

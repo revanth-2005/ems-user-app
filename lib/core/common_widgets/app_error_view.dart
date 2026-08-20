@@ -34,7 +34,7 @@ class AppErrorView extends StatelessWidget {
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: AppColors.getTextPrimary(context),
               ),
             ),
             const SizedBox(height: 8),
@@ -43,7 +43,7 @@ class AppErrorView extends StatelessWidget {
               textAlign: TextAlign.center,
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 13,
-                color: AppColors.textSecondary,
+                color: AppColors.getTextSecondary(context),
                 height: 1.5,
               ),
             ),
@@ -104,7 +104,7 @@ class AppEmptyView extends StatelessWidget {
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: AppColors.getTextPrimary(context),
               ),
             ),
             if (subtitle != null) ...[
@@ -114,7 +114,7 @@ class AppEmptyView extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 13,
-                  color: AppColors.textSecondary,
+                  color: AppColors.getTextSecondary(context),
                   height: 1.5,
                 ),
               ),

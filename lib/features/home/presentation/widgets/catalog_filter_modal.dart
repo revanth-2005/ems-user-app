@@ -22,13 +22,16 @@ class _CatalogFilterSheet extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final currentCategory = ref.watch(selectedCategoryFilterProvider);
     final currentCity = ref.watch(selectedCityProvider);
     final currentMinPrice = ref.watch(minPriceFilterProvider);
     final currentMaxPrice = ref.watch(maxPriceFilterProvider);
     final currentDate = ref.watch(selectedDateFilterProvider);
     final currentRating = ref.watch(minRatingFilterProvider);
     final currentSort = ref.watch(catalogSortByProvider);
+    final categoriesAsync = ref.watch(categoriesProvider);
 
+    final tempCategory = useState(currentCategory);
     final tempCity = useState(currentCity);
     final tempMinPrice = useState(currentMinPrice);
     final tempMaxPrice = useState(currentMaxPrice);
@@ -62,9 +65,9 @@ class _CatalogFilterSheet extends HookConsumerWidget {
     ];
 
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.lightSurface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      decoration: BoxDecoration(
+        color: AppColors.getSurface(context),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       padding: EdgeInsets.fromLTRB(
         20,
@@ -83,7 +86,7 @@ class _CatalogFilterSheet extends HookConsumerWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.lightBorder,
+                  color: AppColors.getBorder(context),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -99,11 +102,12 @@ class _CatalogFilterSheet extends HookConsumerWidget {
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
+                    color: AppColors.getTextPrimary(context),
                   ),
                 ),
                 TextButton(
                   onPressed: () {
+                    tempCategory.value = null;
                     tempCity.value = 'All';
                     tempMinPrice.value = null;
                     tempMaxPrice.value = null;
@@ -124,13 +128,92 @@ class _CatalogFilterSheet extends HookConsumerWidget {
             ),
             const SizedBox(height: 16),
 
+            // ── 0. Category Filter ──────────────────────────────────────────
+            Text(
+              'Category',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: AppColors.getTextPrimary(context),
+              ),
+            ),
+            const SizedBox(height: 8),
+            categoriesAsync.when(
+              loading: () => const SizedBox(height: 36),
+              error: (_, __) => const SizedBox(),
+              data: (categories) {
+                return Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    ChoiceChip(
+                      label: const Text('All Categories'),
+                      selected: tempCategory.value == null,
+                      labelStyle: GoogleFonts.plusJakartaSans(
+                        fontSize: 12,
+                        fontWeight: tempCategory.value == null
+                            ? FontWeight.w800
+                            : FontWeight.w600,
+                        color: tempCategory.value == null
+                            ? Colors.white
+                            : AppColors.getTextSecondary(context),
+                      ),
+                      selectedColor: AppColors.primary,
+                      backgroundColor: AppColors.getCardAlt(context),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        side: BorderSide(
+                          color: tempCategory.value == null
+                              ? AppColors.primary
+                              : AppColors.getBorder(context),
+                        ),
+                      ),
+                      onSelected: (val) {
+                        if (val) tempCategory.value = null;
+                      },
+                    ),
+                    ...categories.map((cat) {
+                      final isSelected = tempCategory.value == cat.id;
+                      return ChoiceChip(
+                        label: Text(cat.name),
+                        selected: isSelected,
+                        labelStyle: GoogleFonts.plusJakartaSans(
+                          fontSize: 12,
+                          fontWeight: isSelected
+                              ? FontWeight.w800
+                              : FontWeight.w600,
+                          color: isSelected
+                              ? Colors.white
+                              : AppColors.getTextSecondary(context),
+                        ),
+                        selectedColor: AppColors.primary,
+                        backgroundColor: AppColors.getCardAlt(context),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          side: BorderSide(
+                            color: isSelected
+                                ? AppColors.primary
+                                : AppColors.getBorder(context),
+                          ),
+                        ),
+                        onSelected: (val) {
+                          tempCategory.value = val ? cat.id : null;
+                        },
+                      );
+                    }),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 20),
+
             // ── 1. City Filter ─────────────────────────────────────────────
             Text(
               'Location / City',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: AppColors.getTextPrimary(context),
               ),
             ),
             const SizedBox(height: 8),
@@ -145,14 +228,14 @@ class _CatalogFilterSheet extends HookConsumerWidget {
                   labelStyle: GoogleFonts.plusJakartaSans(
                     fontSize: 12,
                     fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                    color: isSelected ? Colors.white : AppColors.textSecondary,
+                    color: isSelected ? Colors.white : AppColors.getTextSecondary(context),
                   ),
                   selectedColor: AppColors.primary,
-                  backgroundColor: AppColors.lightCardAlt,
+                  backgroundColor: AppColors.getCardAlt(context),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                     side: BorderSide(
-                      color: isSelected ? AppColors.primary : AppColors.lightBorder,
+                      color: isSelected ? AppColors.primary : AppColors.getBorder(context),
                     ),
                   ),
                   onSelected: (val) {
@@ -169,7 +252,7 @@ class _CatalogFilterSheet extends HookConsumerWidget {
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: AppColors.getTextPrimary(context),
               ),
             ),
             const SizedBox(height: 8),
@@ -180,6 +263,12 @@ class _CatalogFilterSheet extends HookConsumerWidget {
                   initialDate: tempDate.value ?? DateTime.now(),
                   firstDate: DateTime.now(),
                   lastDate: DateTime.now().add(const Duration(days: 365)),
+                  builder: (context, child) {
+                    return Theme(
+                      data: Theme.of(context),
+                      child: child!,
+                    );
+                  },
                 );
                 if (picked != null) {
                   tempDate.value = picked;
@@ -189,9 +278,9 @@ class _CatalogFilterSheet extends HookConsumerWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 decoration: BoxDecoration(
-                  color: AppColors.lightCardAlt,
+                  color: AppColors.getCardAlt(context),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.lightBorder),
+                  border: Border.all(color: AppColors.getBorder(context)),
                 ),
                 child: Row(
                   children: [
@@ -209,16 +298,16 @@ class _CatalogFilterSheet extends HookConsumerWidget {
                               ? FontWeight.w700
                               : FontWeight.w500,
                           color: tempDate.value != null
-                              ? AppColors.textPrimary
-                              : AppColors.textMuted,
+                              ? AppColors.getTextPrimary(context)
+                              : AppColors.getTextMuted(context),
                         ),
                       ),
                     ),
                     if (tempDate.value != null)
                       GestureDetector(
                         onTap: () => tempDate.value = null,
-                        child: const Icon(Icons.close_rounded,
-                            size: 16, color: AppColors.textMuted),
+                        child: Icon(Icons.close_rounded,
+                            size: 16, color: AppColors.getTextMuted(context)),
                       ),
                   ],
                 ),
@@ -232,7 +321,7 @@ class _CatalogFilterSheet extends HookConsumerWidget {
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: AppColors.getTextPrimary(context),
               ),
             ),
             const SizedBox(height: 8),
@@ -241,6 +330,7 @@ class _CatalogFilterSheet extends HookConsumerWidget {
               runSpacing: 8,
               children: [
                 _budgetChip(
+                  context: context,
                   label: 'Under ₹50k',
                   isSelected: tempMinPrice.value == null && tempMaxPrice.value == 5000000,
                   onTap: () {
@@ -249,6 +339,7 @@ class _CatalogFilterSheet extends HookConsumerWidget {
                   },
                 ),
                 _budgetChip(
+                  context: context,
                   label: '₹50k - ₹1.5L',
                   isSelected: tempMinPrice.value == 5000000 && tempMaxPrice.value == 15000000,
                   onTap: () {
@@ -257,6 +348,7 @@ class _CatalogFilterSheet extends HookConsumerWidget {
                   },
                 ),
                 _budgetChip(
+                  context: context,
                   label: '₹1.5L - ₹5L',
                   isSelected: tempMinPrice.value == 15000000 && tempMaxPrice.value == 50000000,
                   onTap: () {
@@ -265,6 +357,7 @@ class _CatalogFilterSheet extends HookConsumerWidget {
                   },
                 ),
                 _budgetChip(
+                  context: context,
                   label: '₹5L+',
                   isSelected: tempMinPrice.value == 50000000 && tempMaxPrice.value == null,
                   onTap: () {
@@ -273,6 +366,7 @@ class _CatalogFilterSheet extends HookConsumerWidget {
                   },
                 ),
                 _budgetChip(
+                  context: context,
                   label: 'Any Budget',
                   isSelected: tempMinPrice.value == null && tempMaxPrice.value == null,
                   onTap: () {
@@ -290,7 +384,7 @@ class _CatalogFilterSheet extends HookConsumerWidget {
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: AppColors.getTextPrimary(context),
               ),
             ),
             const SizedBox(height: 8),
@@ -304,14 +398,14 @@ class _CatalogFilterSheet extends HookConsumerWidget {
                   labelStyle: GoogleFonts.plusJakartaSans(
                     fontSize: 12,
                     fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                    color: isSelected ? Colors.white : AppColors.textSecondary,
+                    color: isSelected ? Colors.white : AppColors.getTextSecondary(context),
                   ),
                   selectedColor: AppColors.accentAmber,
-                  backgroundColor: AppColors.lightCardAlt,
+                  backgroundColor: AppColors.getCardAlt(context),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                     side: BorderSide(
-                      color: isSelected ? AppColors.accentAmber : AppColors.lightBorder,
+                      color: isSelected ? AppColors.accentAmber : AppColors.getBorder(context),
                     ),
                   ),
                   onSelected: (val) {
@@ -328,7 +422,7 @@ class _CatalogFilterSheet extends HookConsumerWidget {
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: AppColors.getTextPrimary(context),
               ),
             ),
             const SizedBox(height: 8),
@@ -343,14 +437,14 @@ class _CatalogFilterSheet extends HookConsumerWidget {
                   labelStyle: GoogleFonts.plusJakartaSans(
                     fontSize: 12,
                     fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                    color: isSelected ? Colors.white : AppColors.textSecondary,
+                    color: isSelected ? Colors.white : AppColors.getTextSecondary(context),
                   ),
                   selectedColor: AppColors.primary,
-                  backgroundColor: AppColors.lightCardAlt,
+                  backgroundColor: AppColors.getCardAlt(context),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                     side: BorderSide(
-                      color: isSelected ? AppColors.primary : AppColors.lightBorder,
+                      color: isSelected ? AppColors.primary : AppColors.getBorder(context),
                     ),
                   ),
                   onSelected: (val) {
@@ -376,6 +470,8 @@ class _CatalogFilterSheet extends HookConsumerWidget {
                   child: AppPrimaryButton(
                     text: 'Apply Filters',
                     onPressed: () {
+                      ref.read(selectedCategoryFilterProvider.notifier).state = tempCategory.value;
+                      ref.read(selectedSubCategoryFilterProvider.notifier).state = null;
                       ref.read(selectedCityProvider.notifier).state = tempCity.value;
                       ref.read(minPriceFilterProvider.notifier).state = tempMinPrice.value;
                       ref.read(maxPriceFilterProvider.notifier).state = tempMaxPrice.value;
@@ -395,6 +491,7 @@ class _CatalogFilterSheet extends HookConsumerWidget {
   }
 
   Widget _budgetChip({
+    required BuildContext context,
     required String label,
     required bool isSelected,
     required VoidCallback onTap,
@@ -404,10 +501,10 @@ class _CatalogFilterSheet extends HookConsumerWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : AppColors.lightCardAlt,
+          color: isSelected ? AppColors.primary : AppColors.getCardAlt(context),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.lightBorder,
+            color: isSelected ? AppColors.primary : AppColors.getBorder(context),
           ),
         ),
         child: Text(
@@ -415,7 +512,7 @@ class _CatalogFilterSheet extends HookConsumerWidget {
           style: GoogleFonts.plusJakartaSans(
             fontSize: 12,
             fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-            color: isSelected ? Colors.white : AppColors.textSecondary,
+            color: isSelected ? Colors.white : AppColors.getTextSecondary(context),
           ),
         ),
       ),

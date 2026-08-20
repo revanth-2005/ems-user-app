@@ -25,9 +25,9 @@ class AppLoader extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               message!,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: AppColors.textSecondary,
+                color: AppColors.getTextSecondary(context),
               ),
             ),
           ],
@@ -38,10 +38,6 @@ class AppLoader extends StatelessWidget {
 }
 
 /// Shimmer rectangle — use as a skeleton placeholder during loading.
-///
-/// ```dart
-/// AppShimmerBox(width: double.infinity, height: 120, borderRadius: 16)
-/// ```
 class AppShimmerBox extends StatelessWidget {
   final double width;
   final double height;
@@ -56,14 +52,15 @@ class AppShimmerBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppColors.isDark(context);
     return Shimmer.fromColors(
-      baseColor: const Color(0xFFE8E8F0),
-      highlightColor: const Color(0xFFF8F8FF),
+      baseColor: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFE8E8F0),
+      highlightColor: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF8F8FF),
       child: Container(
         width: width,
         height: height,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
           borderRadius: BorderRadius.circular(borderRadius),
         ),
       ),
@@ -81,9 +78,9 @@ class AppShimmerCard extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.lightSurface,
+        color: AppColors.getSurface(context),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.lightBorder),
+        border: Border.all(color: AppColors.getBorder(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

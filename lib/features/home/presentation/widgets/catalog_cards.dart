@@ -29,10 +29,10 @@ class PackageCard extends StatelessWidget {
       onTap: onTap ?? () => context.push('/detail/package/${package.id}'),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.lightSurface,
+          color: AppColors.getSurface(context),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.lightBorder),
-          boxShadow: AppColors.cardShadow,
+          border: Border.all(color: AppColors.getBorder(context)),
+          boxShadow: AppColors.getCardShadow(context),
         ),
         clipBehavior: Clip.antiAlias,
         child: Column(
@@ -52,38 +52,22 @@ class PackageCard extends StatelessWidget {
                 ),
                 Positioned(
                   top: 12,
-                  left: 12,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.65),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      package.categoryName.toUpperCase(),
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.8,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 12,
                   right: 12,
                   child: Container(
                     padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.92),
-                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.black.withValues(alpha: 0.65),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        width: 1,
+                      ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
+                          color: Colors.black.withValues(alpha: 0.3),
                           blurRadius: 6,
+                          offset: const Offset(0, 2),
                         ),
                       ],
                     ),
@@ -91,14 +75,15 @@ class PackageCard extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(Icons.location_on_rounded,
-                            size: 13, color: AppColors.accentRose),
-                        const SizedBox(width: 3),
+                            size: 12, color: Color(0xFFE50914)),
+                        const SizedBox(width: 4),
                         Text(
                           cityName.toUpperCase(),
                           style: GoogleFonts.plusJakartaSans(
-                            fontSize: 11,
+                            fontSize: 10.5,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
+                            letterSpacing: 0.6,
+                            color: Colors.white,
                           ),
                         ),
                       ],
@@ -120,87 +105,96 @@ class PackageCard extends StatelessWidget {
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 17,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+                      color: AppColors.getTextPrimary(context),
                       height: 1.25,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
 
-                  // Organizer Byline
-                  Text(
-                    'by ${package.organizerName}',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-
-                  // Guests capacity info
+                  // 1. Organizer Byline & Category
                   Row(
                     children: [
-                      const Icon(Icons.people_alt_outlined,
-                          size: 15, color: AppColors.textSecondary),
-                      const SizedBox(width: 5),
-                      Text(
-                        'Up to ${package.effectiveMaxGuests} guests',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
+                      Icon(
+                        Icons.storefront_outlined,
+                        size: 14,
+                        color: AppColors.getTextSecondary(context),
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          package.categoryName.isNotEmpty
+                              ? 'by ${package.organizerName}  ·  ${package.categoryName}'
+                              : 'by ${package.organizerName}',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.getTextSecondary(context),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 6),
 
-                  // Inclusions Chips
-                  if (package.inclusions.isNotEmpty) ...[
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: package.inclusions.take(3).map((item) {
-                        return Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.accentEmerald.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                                color: AppColors.accentEmerald
-                                    .withValues(alpha: 0.25)),
+                  // 2. Guests capacity info
+                  if (package.effectiveMaxGuests > 0) ...[
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.people_alt_outlined,
+                          size: 14,
+                          color: AppColors.getTextSecondary(context),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'Up to ${package.effectiveMaxGuests} guests',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.getTextSecondary(context),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.check_rounded,
-                                  size: 12, color: AppColors.accentEmerald),
-                              const SizedBox(width: 4),
-                              ConstrainedBox(
-                                constraints: const BoxConstraints(maxWidth: 160),
-                                child: Text(
-                                  item,
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.accentEmerald,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }).toList(),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 6),
                   ],
 
-                  const Divider(height: 1, color: AppColors.lightBorder),
+                  // 3. Inclusions info
+                  if (package.inclusions.isNotEmpty) ...[
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.task_alt_rounded,
+                          size: 14,
+                          color: AppColors.getTextSecondary(context),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            package.inclusions.take(3).join('  ·  '),
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.getTextSecondary(context),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+
+                  Divider(height: 1, color: AppColors.getBorder(context)),
                   const SizedBox(height: 12),
 
                   // Price and View Details Footer
@@ -217,7 +211,7 @@ class PackageCard extends StatelessWidget {
                               fontSize: 10,
                               fontWeight: FontWeight.w800,
                               letterSpacing: 0.5,
-                              color: AppColors.textMuted,
+                              color: AppColors.getTextMuted(context),
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -226,7 +220,7 @@ class PackageCard extends StatelessWidget {
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
-                              color: AppColors.textPrimary,
+                              color: AppColors.getTextPrimary(context),
                             ),
                           ),
                         ],
@@ -290,10 +284,10 @@ class ServiceCard extends StatelessWidget {
       onTap: onTap ?? () => context.push('/detail/service/${service.id}'),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.lightSurface,
+          color: AppColors.getSurface(context),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.lightBorder),
-          boxShadow: AppColors.cardShadow,
+          border: Border.all(color: AppColors.getBorder(context)),
+          boxShadow: AppColors.getCardShadow(context),
         ),
         clipBehavior: Clip.antiAlias,
         child: Column(
@@ -336,23 +330,35 @@ class ServiceCard extends StatelessWidget {
                   right: 12,
                   child: Container(
                     padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.92),
-                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.black.withValues(alpha: 0.65),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(Icons.location_on_rounded,
-                            size: 13, color: AppColors.accentRose),
-                        const SizedBox(width: 3),
+                            size: 12, color: Color(0xFFE50914)),
+                        const SizedBox(width: 4),
                         Text(
                           cityName.toUpperCase(),
                           style: GoogleFonts.plusJakartaSans(
-                            fontSize: 11,
+                            fontSize: 10.5,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
+                            letterSpacing: 0.6,
+                            color: Colors.white,
                           ),
                         ),
                       ],
@@ -371,7 +377,7 @@ class ServiceCard extends StatelessWidget {
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+                      color: AppColors.getTextPrimary(context),
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -382,7 +388,7 @@ class ServiceCard extends StatelessWidget {
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
+                      color: AppColors.getTextSecondary(context),
                     ),
                   ),
                   if (service.description?.isNotEmpty == true) ...[
@@ -391,7 +397,7 @@ class ServiceCard extends StatelessWidget {
                       service.description!,
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 12,
-                        color: AppColors.textSecondary,
+                        color: AppColors.getTextSecondary(context),
                         height: 1.3,
                       ),
                       maxLines: 2,
@@ -399,7 +405,7 @@ class ServiceCard extends StatelessWidget {
                     ),
                   ],
                   const SizedBox(height: 12),
-                  const Divider(height: 1, color: AppColors.lightBorder),
+                  Divider(height: 1, color: AppColors.getBorder(context)),
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -414,7 +420,7 @@ class ServiceCard extends StatelessWidget {
                               fontSize: 10,
                               fontWeight: FontWeight.w800,
                               letterSpacing: 0.5,
-                              color: AppColors.textMuted,
+                              color: AppColors.getTextMuted(context),
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -423,7 +429,7 @@ class ServiceCard extends StatelessWidget {
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
-                              color: AppColors.textPrimary,
+                              color: AppColors.getTextPrimary(context),
                             ),
                           ),
                         ],
@@ -481,55 +487,64 @@ class OrganizerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cityName = organizer.city?.isNotEmpty == true ? organizer.city! : 'India';
+    final cityName =
+        organizer.city?.isNotEmpty == true ? organizer.city! : 'India';
+    final hasBio = organizer.bio?.isNotEmpty == true &&
+        organizer.bio!.trim().toLowerCase() !=
+            organizer.effectiveName.trim().toLowerCase();
 
     return GestureDetector(
       onTap: onTap ??
           () => context.push(
               AppRoutes.organizerProfile.replaceAll(':id', organizer.id)),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: AppColors.lightSurface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.lightBorder),
-          boxShadow: AppColors.cardShadow,
+          color: AppColors.getSurface(context),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppColors.getBorder(context)),
+          boxShadow: AppColors.getCardShadow(context),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header Row
             Row(
               children: [
+                // Left Image Avatar
                 ClipRRect(
                   borderRadius: BorderRadius.circular(14),
-                  child: Container(
-                    width: 54,
-                    height: 54,
-                    color: AppColors.primary.withValues(alpha: 0.1),
+                  child: SizedBox(
+                    width: 62,
+                    height: 62,
                     child: organizer.effectiveAvatar != null
                         ? AppNetworkImage(
                             url: organizer.effectiveAvatar,
                             fit: BoxFit.cover,
                           )
-                        : Center(
-                            child: Text(
-                              organizer.effectiveName.isNotEmpty
-                                  ? organizer.effectiveName[0].toUpperCase()
-                                  : 'O',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.primary,
+                        : Container(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            child: Center(
+                              child: Text(
+                                organizer.effectiveName.isNotEmpty
+                                    ? organizer.effectiveName[0].toUpperCase()
+                                    : 'O',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.primary,
+                                ),
                               ),
                             ),
                           ),
                   ),
                 ),
                 const SizedBox(width: 14),
+
+                // Right Details
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Row(
                         children: [
@@ -537,9 +552,9 @@ class OrganizerCard extends StatelessWidget {
                             child: Text(
                               organizer.effectiveName,
                               style: GoogleFonts.plusJakartaSans(
-                                fontSize: 16,
+                                fontSize: 15,
                                 fontWeight: FontWeight.w800,
-                                color: AppColors.textPrimary,
+                                color: AppColors.getTextPrimary(context),
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -548,7 +563,7 @@ class OrganizerCard extends StatelessWidget {
                           if (organizer.kycStatus == 'APPROVED') ...[
                             const SizedBox(width: 4),
                             const Icon(Icons.verified_rounded,
-                                size: 16, color: AppColors.primary),
+                                size: 15, color: AppColors.primary),
                           ],
                         ],
                       ),
@@ -563,7 +578,7 @@ class OrganizerCard extends StatelessWidget {
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.textSecondary,
+                              color: AppColors.getTextSecondary(context),
                             ),
                           ),
                           const SizedBox(width: 10),
@@ -575,36 +590,35 @@ class OrganizerCard extends StatelessWidget {
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
+                              color: AppColors.getTextPrimary(context),
                             ),
                           ),
                         ],
                       ),
+                      if (hasBio) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          organizer.bio!,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12,
+                            color: AppColors.getTextSecondary(context),
+                            height: 1.25,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ],
                   ),
                 ),
               ],
             ),
 
-            if (organizer.bio?.isNotEmpty == true) ...[
-              const SizedBox(height: 12),
-              Text(
-                organizer.bio!,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13,
-                  color: AppColors.textSecondary,
-                  height: 1.35,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-
             // Portfolio previews if available
             if (organizer.portfolioItems.isNotEmpty) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               SizedBox(
-                height: 64,
+                height: 60,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: organizer.portfolioItems.length,
@@ -614,8 +628,8 @@ class OrganizerCard extends StatelessWidget {
                     return ClipRRect(
                       borderRadius: BorderRadius.circular(10),
                       child: SizedBox(
-                        width: 64,
-                        height: 64,
+                        width: 60,
+                        height: 60,
                         child: AppNetworkImage(
                           url: item.mediaUrl,
                           fit: BoxFit.cover,
@@ -653,10 +667,10 @@ class PublicEventCard extends StatelessWidget {
       onTap: onTap ?? () => context.push('/detail/event/${event.id}'),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.lightSurface,
+          color: AppColors.getSurface(context),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.lightBorder),
-          boxShadow: AppColors.cardShadow,
+          border: Border.all(color: AppColors.getBorder(context)),
+          boxShadow: AppColors.getCardShadow(context),
         ),
         clipBehavior: Clip.antiAlias,
         child: Column(
@@ -701,23 +715,35 @@ class PublicEventCard extends StatelessWidget {
                   right: 12,
                   child: Container(
                     padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.92),
-                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.black.withValues(alpha: 0.65),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(Icons.location_on_rounded,
-                            size: 13, color: AppColors.accentRose),
-                        const SizedBox(width: 3),
+                            size: 12, color: Color(0xFFE50914)),
+                        const SizedBox(width: 4),
                         Text(
                           cityName.toUpperCase(),
                           style: GoogleFonts.plusJakartaSans(
-                            fontSize: 11,
+                            fontSize: 10.5,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
+                            letterSpacing: 0.6,
+                            color: Colors.white,
                           ),
                         ),
                       ],
@@ -736,7 +762,7 @@ class PublicEventCard extends StatelessWidget {
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+                      color: AppColors.getTextPrimary(context),
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -752,13 +778,13 @@ class PublicEventCard extends StatelessWidget {
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
+                          color: AppColors.getTextSecondary(context),
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  const Divider(height: 1, color: AppColors.lightBorder),
+                  Divider(height: 1, color: AppColors.getBorder(context)),
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -772,7 +798,7 @@ class PublicEventCard extends StatelessWidget {
                               fontSize: 10,
                               fontWeight: FontWeight.w800,
                               letterSpacing: 0.5,
-                              color: AppColors.textMuted,
+                              color: AppColors.getTextMuted(context),
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -785,7 +811,7 @@ class PublicEventCard extends StatelessWidget {
                               fontWeight: FontWeight.w800,
                               color: event.minPricePaise == 0
                                   ? AppColors.accentEmerald
-                                  : AppColors.textPrimary,
+                                  : AppColors.getTextPrimary(context),
                             ),
                           ),
                         ],

@@ -19,21 +19,19 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authStateProvider);
     final user = authState.valueOrNull;
-    final userName = user?.name.split(' ').first ?? 'there';
+    final rawName = user?.name.split(' ').first ?? '';
+    final displayName = rawName.isNotEmpty
+        ? '${rawName[0].toUpperCase()}${rawName.substring(1)}'
+        : 'Discover Events';
     final selectedCity = ref.watch(selectedCityProvider);
     final homeFeedAsync = ref.watch(homeFeedProvider);
     final cartState = ref.watch(cartProvider);
     final cartCount = cartState.items.length;
 
-    final hour = DateTime.now().hour;
-    final greeting = hour < 12
-        ? 'Good Morning'
-        : hour < 17
-            ? 'Good Afternoon'
-            : 'Good Evening';
+    final isDark = AppColors.isDark(context);
 
     return Scaffold(
-      backgroundColor: AppColors.lightBg,
+      backgroundColor: AppColors.getBg(context),
       body: homeFeedAsync.when(
         loading: () =>
             const Center(child: AppLoader(message: 'Loading experiences…')),
@@ -46,7 +44,7 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
             slivers: [
               // ── App Bar ──────────────────────────────────────────────────
               SliverAppBar(
-                backgroundColor: AppColors.lightSurface,
+                backgroundColor: AppColors.getBg(context),
                 floating: true,
                 pinned: false,
                 elevation: 0,
@@ -56,30 +54,18 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
                 title: Row(
                   children: [
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '$greeting 👋',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 12,
-                              color: AppColors.textSecondary,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          Text(
-                            user != null ? userName : 'Discover Events',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                        ],
+                      child: Text(
+                        user != null ? displayName : 'Discover Events',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.getTextPrimary(context),
+                          letterSpacing: -0.5,
+                        ),
                       ),
                     ),
 
-                    // City Selector Dropdown
+                    // City Selector (Clean Icon)
                     PopupMenuButton<String>(
                       initialValue: selectedCity,
                       onSelected: (city) {
@@ -87,34 +73,14 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
                       },
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16)),
-                      color: AppColors.lightSurface,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(50),
-                          border: Border.all(
-                              color: AppColors.primary.withValues(alpha: 0.2)),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.location_on_rounded,
-                                size: 14, color: AppColors.primary),
-                            const SizedBox(width: 4),
-                            Text(
-                              selectedCity == 'All' ? 'All Cities' : selectedCity,
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                            const SizedBox(width: 2),
-                            const Icon(Icons.keyboard_arrow_down_rounded,
-                                size: 16, color: AppColors.primary),
-                          ],
+                      color: AppColors.getSurface(context),
+                      tooltip: 'Select City',
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                        child: Icon(
+                          Icons.location_on_outlined,
+                          color: AppColors.getTextPrimary(context),
+                          size: 26,
                         ),
                       ),
                       itemBuilder: (_) => const [
@@ -128,54 +94,55 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
                         PopupMenuItem(value: 'Goa', child: Text('Goa')),
                       ],
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 4),
 
-                    // Cart Badge Button
+                    // Cart Badge Button (Clean Icon with Red Counter Badge)
                     GestureDetector(
                       onTap: () => context.push(AppRoutes.cart),
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: AppColors.lightCardAlt,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.lightBorder),
-                            ),
-                            child: const Icon(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Icon(
                               Icons.shopping_bag_outlined,
-                              color: AppColors.textPrimary,
-                              size: 20,
+                              color: AppColors.getTextPrimary(context),
+                              size: 26,
                             ),
-                          ),
-                          if (cartCount > 0)
-                            Positioned(
-                              top: -4,
-                              right: -4,
-                              child: Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: const BoxDecoration(
-                                  color: AppColors.accent,
-                                  shape: BoxShape.circle,
-                                ),
-                                constraints: const BoxConstraints(
-                                  minWidth: 18,
-                                  minHeight: 18,
-                                ),
-                                child: Text(
-                                  '$cartCount',
-                                  textAlign: TextAlign.center,
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.white,
+                            if (cartCount > 0)
+                              Positioned(
+                                top: -4,
+                                right: -4,
+                                child: Container(
+                                  padding: const EdgeInsets.all(3),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFE50914),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: isDark ? Colors.black : Colors.white,
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 18,
+                                    minHeight: 18,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      '$cartCount',
+                                      textAlign: TextAlign.center,
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w800,
+                                        color: Colors.white,
+                                        height: 1.0,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -192,10 +159,15 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 14),
                       decoration: BoxDecoration(
-                        color: AppColors.lightSurface,
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.08)
+                            : AppColors.whiteCardAlt,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.lightBorder),
-                        boxShadow: AppColors.cardShadow,
+                        border: Border.all(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.12)
+                              : AppColors.whiteBorder,
+                        ),
                       ),
                       child: Row(
                         children: [
@@ -209,7 +181,7 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
                               overflow: TextOverflow.ellipsis,
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 13,
-                                color: AppColors.textMuted,
+                                color: AppColors.getTextMuted(context),
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -221,60 +193,53 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
                 ),
               ),
 
-              // ── 4 Core Pillars Navigation Cards ──────────────────────────
+              // ── 4 Core Pillars Navigation (Circular Icons + Label Below) ──
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
                   child: Row(
                     children: [
                       // 1. Packages
-                      _buildPillarCard(
-                        emoji: '🎁',
+                      _buildPillarCircle(
+                        context: context,
+                        icon: Icons.inventory_2_rounded,
                         title: 'Packages',
-                        subtitle: 'Bundled Deals',
-                        color: AppColors.accent,
                         onTap: () {
                           ref.read(activeCatalogTabProvider.notifier).state =
                               CatalogTab.PACKAGES;
                           context.go(AppRoutes.search);
                         },
                       ),
-                      const SizedBox(width: 8),
 
                       // 2. Services
-                      _buildPillarCard(
-                        emoji: '🛠️',
+                      _buildPillarCircle(
+                        context: context,
+                        icon: Icons.design_services_rounded,
                         title: 'Services',
-                        subtitle: 'Solo Vendors',
-                        color: AppColors.primary,
                         onTap: () {
                           ref.read(activeCatalogTabProvider.notifier).state =
                               CatalogTab.SERVICES;
                           context.go(AppRoutes.search);
                         },
                       ),
-                      const SizedBox(width: 8),
 
                       // 3. Organizers
-                      _buildPillarCard(
-                        emoji: '🏢',
+                      _buildPillarCircle(
+                        context: context,
+                        icon: Icons.business_center_rounded,
                         title: 'Organizers',
-                        subtitle: 'KYC Verified',
-                        color: AppColors.success,
                         onTap: () {
                           ref.read(activeCatalogTabProvider.notifier).state =
                               CatalogTab.ORGANIZERS;
                           context.go(AppRoutes.search);
                         },
                       ),
-                      const SizedBox(width: 8),
 
                       // 4. Live Events
-                      _buildPillarCard(
-                        emoji: '🎟️',
+                      _buildPillarCircle(
+                        context: context,
+                        icon: Icons.confirmation_number_rounded,
                         title: 'Events',
-                        subtitle: 'Live Tickets',
-                        color: AppColors.accentAmber,
                         onTap: () {
                           ref.read(activeCatalogTabProvider.notifier).state =
                               CatalogTab.EVENTS;
@@ -286,112 +251,14 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
                 ),
               ),
 
-              // ── Categories Horizontal Strip ─────────────────────────────
-              if (feed.categories.isNotEmpty)
-                SliverToBoxAdapter(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Browse Categories',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () => context.go(AppRoutes.search),
-                              child: Text(
-                                'See all',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(
-                        height: 96,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          itemCount: feed.categories.length,
-                          separatorBuilder: (_, __) => const SizedBox(width: 12),
-                          itemBuilder: (context, index) {
-                            final cat = feed.categories[index];
-                            return GestureDetector(
-                              onTap: () {
-                                ref
-                                    .read(selectedCategoryFilterProvider.notifier)
-                                    .state = cat.id;
-                                context.go(AppRoutes.search);
-                              },
-                              child: Container(
-                                width: 88,
-                                padding: const EdgeInsets.symmetric(vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: AppColors.lightSurface,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(color: AppColors.lightBorder),
-                                  boxShadow: AppColors.cardShadow,
-                                ),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Container(
-                                      width: 40,
-                                      height: 40,
-                                      decoration: BoxDecoration(
-                                        color: AppColors.primary
-                                            .withValues(alpha: 0.1),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Icon(
-                                        _getCategoryIcon(cat.slug),
-                                        color: AppColors.primary,
-                                        size: 20,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      cat.name.split(' ').first,
-                                      textAlign: TextAlign.center,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.textPrimary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-              // ── Featured Bundled Packages ────────────────────────────────
+              // ── Featured Bundled Packages (Horizontal Carousel) ──────────
               if (feed.packages.isNotEmpty)
                 SliverToBoxAdapter(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 24, 20, 14),
+                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -403,14 +270,14 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
                                   style: GoogleFonts.plusJakartaSans(
                                     fontSize: 17,
                                     fontWeight: FontWeight.w800,
-                                    color: AppColors.textPrimary,
+                                    color: AppColors.getTextPrimary(context),
                                   ),
                                 ),
                                 Text(
                                   'All-inclusive verified vendor bundles',
                                   style: GoogleFonts.plusJakartaSans(
                                     fontSize: 12,
-                                    color: AppColors.textSecondary,
+                                    color: AppColors.getTextSecondary(context),
                                   ),
                                 ),
                               ],
@@ -434,60 +301,48 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
                           ],
                         ),
                       ),
-                      ListView.separated(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        itemCount: feed.packages.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 16),
-                        itemBuilder: (context, index) {
-                          return PackageCard(package: feed.packages[index]);
-                        },
+                      SizedBox(
+                        height: 360,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          itemCount: feed.packages.length,
+                          separatorBuilder: (_, __) => const SizedBox(width: 14),
+                          itemBuilder: (context, index) {
+                            return SizedBox(
+                              width: 300,
+                              child: PackageCard(package: feed.packages[index]),
+                            );
+                          },
+                        ),
                       ),
                     ],
                   ),
                 ),
 
-              // ── Standalone Services ──────────────────────────────────────
-              if (feed.services.isNotEmpty)
+              // ── Categories Horizontal Strip ─────────────────────────────
+              if (feed.categories.isNotEmpty)
                 SliverToBoxAdapter(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 28, 20, 14),
+                        padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Standalone Services',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w800,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
-                                Text(
-                                  'Individual hire: DJs, Catering, Staging & more',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 12,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                              ],
+                            Text(
+                              'Browse Categories',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.getTextPrimary(context),
+                              ),
                             ),
                             GestureDetector(
-                              onTap: () {
-                                ref
-                                    .read(activeCatalogTabProvider.notifier)
-                                    .state = CatalogTab.SERVICES;
-                                context.go(AppRoutes.search);
-                              },
+                              onTap: () => context.go(AppRoutes.search),
                               child: Text(
-                                'View all',
+                                'See all',
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w700,
@@ -498,15 +353,71 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
                           ],
                         ),
                       ),
-                      ListView.separated(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        itemCount: feed.services.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 16),
-                        itemBuilder: (context, index) {
-                          return ServiceCard(service: feed.services[index]);
-                        },
+                      SizedBox(
+                        height: 36,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          itemCount: feed.categories.length,
+                          separatorBuilder: (_, __) => const SizedBox(width: 8),
+                          itemBuilder: (context, index) {
+                            final cat = feed.categories[index];
+                            final shortName = _getCategoryDisplayName(cat.name);
+                            return GestureDetector(
+                              onTap: () {
+                                ref
+                                    .read(selectedCategoryFilterProvider.notifier)
+                                    .state = cat.id;
+                                context.go(AppRoutes.search);
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.fromLTRB(5, 4, 10, 4),
+                                decoration: BoxDecoration(
+                                  color: isDark
+                                      ? Colors.white.withValues(alpha: 0.08)
+                                      : AppColors.whiteCardAlt,
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: isDark
+                                        ? Colors.white.withValues(alpha: 0.14)
+                                        : AppColors.whiteBorder,
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 24,
+                                      height: 24,
+                                      decoration: BoxDecoration(
+                                        color: isDark
+                                            ? Colors.white.withValues(alpha: 0.12)
+                                            : AppColors.primary.withValues(alpha: 0.1),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        _getCategoryIcon(cat.slug),
+                                        size: 12.5,
+                                        color: isDark ? Colors.white : AppColors.primary,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      shortName,
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.getTextPrimary(context),
+                                        letterSpacing: 0.1,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                       ),
                     ],
                   ),
@@ -531,14 +442,14 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
                                   style: GoogleFonts.plusJakartaSans(
                                     fontSize: 17,
                                     fontWeight: FontWeight.w800,
-                                    color: AppColors.textPrimary,
+                                    color: AppColors.getTextPrimary(context),
                                   ),
                                 ),
                                 Text(
                                   'KYC-approved event specialists and studios',
                                   style: GoogleFonts.plusJakartaSans(
                                     fontSize: 12,
-                                    color: AppColors.textSecondary,
+                                    color: AppColors.getTextSecondary(context),
                                   ),
                                 ),
                               ],
@@ -555,7 +466,7 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w700,
-                                  color: AppColors.primary,
+                                  color: Colors.white,
                                 ),
                               ),
                             ),
@@ -607,7 +518,7 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w700,
-                                  color: AppColors.primary,
+                                  color: Colors.white,
                                 ),
                               ),
                             ),
@@ -638,77 +549,151 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
     );
   }
 
-  Widget _buildPillarCard({
-    required String emoji,
+  Widget _buildPillarCircle({
+    required BuildContext context,
+    required IconData icon,
     required String title,
-    required String subtitle,
-    required Color color,
     required VoidCallback onTap,
   }) {
+    final isDark = AppColors.isDark(context);
+
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                color.withValues(alpha: 0.08),
-                color.withValues(alpha: 0.02),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.07)
+                    : AppColors.whiteCardAlt,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.12)
+                      : AppColors.whiteBorder,
+                  width: 1,
+                ),
+              ),
+              child: Center(
+                child: Icon(
+                  icon,
+                  size: 22,
+                  color: isDark ? Colors.white : AppColors.getTextPrimary(context),
+                ),
+              ),
             ),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: color.withValues(alpha: 0.25)),
-          ),
-          child: Column(
-            children: [
-              Text(emoji, style: const TextStyle(fontSize: 20)),
-              const SizedBox(height: 5),
-              Text(
-                title,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+            const SizedBox(height: 7),
+            Text(
+              title,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.getTextPrimary(context),
               ),
-              Text(
-                subtitle,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 9,
-                  color: AppColors.textMuted,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
       ),
     );
   }
 
+  String _getCategoryDisplayName(String name) {
+    if (name.contains('&')) {
+      return name.split('&')[0].trim();
+    }
+    if (name.contains('Events')) {
+      return name.replaceAll('Events', '').trim();
+    }
+    return name.trim();
+  }
+
   IconData _getCategoryIcon(String slug) {
-    switch (slug) {
-      case 'decor-styling':
-        return Icons.auto_awesome_rounded;
+    switch (slug.toLowerCase()) {
+      case 'weddings':
+      case 'wedding':
+      case 'weddings-marriages':
+        return Icons.favorite_rounded;
+      case 'corporate':
+      case 'corporate-events':
+      case 'corporate-events-conferences':
+        return Icons.business_center_rounded;
+      case 'birthdays':
+      case 'birthday':
+      case 'birthdays-private-parties':
+        return Icons.cake_rounded;
+      case 'music-concerts':
+      case 'music':
+      case 'concerts':
       case 'sound-dj':
-        return Icons.graphic_eq_rounded;
+        return Icons.music_note_rounded;
       case 'catering-dining':
       case 'catering':
+      case 'dining':
         return Icons.restaurant_rounded;
+      case 'decor-styling':
+      case 'decor':
+      case 'decor-theme-design':
+        return Icons.auto_awesome_rounded;
       case 'photography-film':
+      case 'photography':
         return Icons.camera_alt_rounded;
       case 'venues-banquets':
+      case 'venues':
         return Icons.apartment_rounded;
       case 'full-event-planners':
+      case 'planners':
         return Icons.celebration_rounded;
       default:
         return Icons.category_rounded;
+    }
+  }
+
+  Color _getCategoryColor(String slug) {
+    switch (slug.toLowerCase()) {
+      case 'weddings':
+      case 'wedding':
+      case 'weddings-marriages':
+        return const Color(0xFFE91E63);
+      case 'corporate':
+      case 'corporate-events':
+      case 'corporate-events-conferences':
+        return const Color(0xFF1976D2);
+      case 'birthdays':
+      case 'birthday':
+      case 'birthdays-private-parties':
+        return const Color(0xFFFF9800);
+      case 'music-concerts':
+      case 'music':
+      case 'concerts':
+      case 'sound-dj':
+        return const Color(0xFF9C27B0);
+      case 'catering-dining':
+      case 'catering':
+      case 'dining':
+        return const Color(0xFF4CAF50);
+      case 'decor-styling':
+      case 'decor':
+      case 'decor-theme-design':
+        return const Color(0xFF00BCD4);
+      case 'photography-film':
+      case 'photography':
+        return const Color(0xFFE040FB);
+      case 'venues-banquets':
+      case 'venues':
+        return const Color(0xFF3F51B5);
+      case 'full-event-planners':
+      case 'planners':
+        return const Color(0xFFFF5722);
+      default:
+        return AppColors.primary;
     }
   }
 }

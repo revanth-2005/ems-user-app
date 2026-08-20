@@ -30,9 +30,9 @@ class MyBookingsTicketsScreen extends HookConsumerWidget {
     final ticketsCount = ticketsAsync.valueOrNull?.length ?? 0;
 
     return Scaffold(
-      backgroundColor: AppColors.lightBg,
+      backgroundColor: AppColors.getBg(context),
       appBar: AppBar(
-        backgroundColor: AppColors.lightSurface,
+        backgroundColor: AppColors.getSurface(context),
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: true,
@@ -42,7 +42,7 @@ class MyBookingsTicketsScreen extends HookConsumerWidget {
           style: GoogleFonts.plusJakartaSans(
             fontSize: 18,
             fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
+            color: AppColors.getTextPrimary(context),
           ),
         ),
         bottom: PreferredSize(
@@ -51,9 +51,9 @@ class MyBookingsTicketsScreen extends HookConsumerWidget {
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
             child: Container(
               decoration: BoxDecoration(
-                color: AppColors.lightCardAlt,
+                color: AppColors.getCardAlt(context),
                 borderRadius: BorderRadius.circular(50),
-                border: Border.all(color: AppColors.lightBorder),
+                border: Border.all(color: AppColors.getBorder(context)),
               ),
               padding: const EdgeInsets.all(4),
               child: Row(
@@ -90,7 +90,8 @@ class MyBookingsTicketsScreen extends HookConsumerWidget {
                   return const AppEmptyView(
                     icon: Icons.confirmation_number_outlined,
                     title: 'No Vendor Bookings',
-                    subtitle: 'Explore curated event packages and book your next celebration.',
+                    subtitle:
+                        'Explore curated event packages and book your next celebration.',
                   );
                 }
 
@@ -119,7 +120,8 @@ class MyBookingsTicketsScreen extends HookConsumerWidget {
                   return const AppEmptyView(
                     icon: Icons.qr_code_2_rounded,
                     title: 'No Active Event Passes',
-                    subtitle: 'Browse live events and register for workshops or concerts.',
+                    subtitle:
+                        'Browse live events and register for workshops or concerts.',
                   );
                 }
 
@@ -159,9 +161,9 @@ class _TabPill extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.lightSurface : Colors.transparent,
+          color: isSelected ? AppColors.getSurface(context) : Colors.transparent,
           borderRadius: BorderRadius.circular(50),
-          boxShadow: isSelected ? AppColors.cardShadow : [],
+          boxShadow: isSelected ? AppColors.getCardShadow(context) : [],
         ),
         child: Text(
           label,
@@ -169,7 +171,7 @@ class _TabPill extends StatelessWidget {
           style: GoogleFonts.plusJakartaSans(
             fontSize: 12,
             fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-            color: isSelected ? AppColors.primary : AppColors.textSecondary,
+            color: isSelected ? AppColors.primary : AppColors.getTextSecondary(context),
           ),
         ),
       ),
@@ -184,13 +186,17 @@ class _VendorBookingCard extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final shortOrderId = booking.orderId.length > 8
+        ? booking.orderId.substring(0, 8).toUpperCase()
+        : booking.orderId.toUpperCase();
+
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.lightSurface,
+        color: AppColors.getSurface(context),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.lightBorder),
-        boxShadow: AppColors.cardShadow,
+        border: Border.all(color: AppColors.getBorder(context)),
+        boxShadow: AppColors.getCardShadow(context),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,15 +204,19 @@ class _VendorBookingCard extends HookConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'ORDER #${booking.orderId}',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textMuted,
-                  letterSpacing: 0.5,
+              Expanded(
+                child: Text(
+                  'ORDER #$shortOrderId',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.getTextMuted(context),
+                    letterSpacing: 0.5,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 8),
               AppStatusBadge(
                 label: _statusLabel(booking.status),
                 status: _badgeStatus(booking.status),
@@ -219,7 +229,7 @@ class _VendorBookingCard extends HookConsumerWidget {
             style: GoogleFonts.plusJakartaSans(
               fontSize: 15,
               fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
+              color: AppColors.getTextPrimary(context),
             ),
           ),
           const SizedBox(height: 4),
@@ -227,7 +237,7 @@ class _VendorBookingCard extends HookConsumerWidget {
             'Organized by ${booking.organizer.businessName}',
             style: GoogleFonts.plusJakartaSans(
               fontSize: 12,
-              color: AppColors.textSecondary,
+              color: AppColors.getTextSecondary(context),
             ),
           ),
           const SizedBox(height: 12),
@@ -239,18 +249,23 @@ class _VendorBookingCard extends HookConsumerWidget {
               decoration: BoxDecoration(
                 color: AppColors.warning.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+                border: Border.all(
+                    color: AppColors.warning.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.timer_outlined, size: 16, color: AppColors.warning),
+                  const Icon(Icons.timer_outlined,
+                      size: 16, color: AppColors.warning),
                   const SizedBox(width: 6),
-                  Text(
-                    '24h SLA Guarantee: 18h 35m remaining',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+                  Expanded(
+                    child: Text(
+                      '24h SLA Guarantee: 18h 35m remaining',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.getTextPrimary(context),
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -262,7 +277,7 @@ class _VendorBookingCard extends HookConsumerWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.lightCardAlt,
+              color: AppColors.getCardAlt(context),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Row(
@@ -275,7 +290,7 @@ class _VendorBookingCard extends HookConsumerWidget {
                       'Event Date',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 10,
-                        color: AppColors.textMuted,
+                        color: AppColors.getTextMuted(context),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -284,7 +299,7 @@ class _VendorBookingCard extends HookConsumerWidget {
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 12,
                         fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
+                        color: AppColors.getTextPrimary(context),
                       ),
                     ),
                   ],
@@ -296,7 +311,7 @@ class _VendorBookingCard extends HookConsumerWidget {
                       'Deposit Paid',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 10,
-                        color: AppColors.textMuted,
+                        color: AppColors.getTextMuted(context),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -322,7 +337,8 @@ class _VendorBookingCard extends HookConsumerWidget {
             Align(
               alignment: Alignment.centerRight,
               child: TextButton.icon(
-                icon: const Icon(Icons.cancel_outlined, size: 14, color: AppColors.accentRose),
+                icon: const Icon(Icons.cancel_outlined,
+                    size: 14, color: AppColors.accentRose),
                 label: Text(
                   'Cancel Booking',
                   style: GoogleFonts.plusJakartaSans(
@@ -373,7 +389,7 @@ class _VendorBookingCard extends HookConsumerWidget {
                       booking.rescheduleNote!,
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 11,
-                        color: AppColors.textSecondary,
+                        color: AppColors.getTextSecondary(context),
                       ),
                     ),
                   ],
@@ -426,7 +442,7 @@ class _VendorBookingCard extends HookConsumerWidget {
       BuildContext context, WidgetRef ref, VendorBooking booking) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.lightSurface,
+      backgroundColor: AppColors.getSurface(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -442,7 +458,7 @@ class _VendorBookingCard extends HookConsumerWidget {
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
+                  color: AppColors.getTextPrimary(context),
                 ),
               ),
               const SizedBox(height: 8),
@@ -450,7 +466,7 @@ class _VendorBookingCard extends HookConsumerWidget {
                 'According to the cancellation policy, you are eligible for a 100% full refund of your deposit (${CurrencyFormatter.formatPaise(booking.depositPaidPaise)}) if cancelled now.',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 13,
-                  color: AppColors.textSecondary,
+                  color: AppColors.getTextSecondary(context),
                   height: 1.4,
                 ),
               ),
@@ -534,10 +550,10 @@ class _TicketPassCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.lightSurface,
+        color: AppColors.getSurface(context),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.lightBorder),
-        boxShadow: AppColors.cardShadow,
+        border: Border.all(color: AppColors.getBorder(context)),
+        boxShadow: AppColors.getCardShadow(context),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -567,7 +583,7 @@ class _TicketPassCard extends StatelessWidget {
             style: GoogleFonts.plusJakartaSans(
               fontSize: 16,
               fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
+              color: AppColors.getTextPrimary(context),
             ),
           ),
           const SizedBox(height: 4),
@@ -575,7 +591,7 @@ class _TicketPassCard extends StatelessWidget {
             ticket.venueName,
             style: GoogleFonts.plusJakartaSans(
               fontSize: 12,
-              color: AppColors.textSecondary,
+              color: AppColors.getTextSecondary(context),
             ),
           ),
           const SizedBox(height: 16),
@@ -585,7 +601,7 @@ class _TicketPassCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.lightBorder),
+                border: Border.all(color: AppColors.getBorder(context)),
               ),
               child: QrImageView(
                 data: ticket.qrCodeData,
@@ -601,7 +617,7 @@ class _TicketPassCard extends StatelessWidget {
               'Show this QR code at the entrance',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 11,
-                color: AppColors.textMuted,
+                color: AppColors.getTextMuted(context),
                 fontWeight: FontWeight.w600,
               ),
             ),

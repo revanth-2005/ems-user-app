@@ -26,15 +26,15 @@ class AppShell extends HookConsumerWidget {
       path: AppRoutes.search,
     ),
     _TabItem(
-      icon: Icons.confirmation_number_outlined,
-      activeIcon: Icons.confirmation_number_rounded,
-      label: 'Bookings',
+      icon: Icons.download_outlined,
+      activeIcon: Icons.download_rounded,
+      label: 'Downloads',
       path: AppRoutes.bookings,
     ),
     _TabItem(
-      icon: Icons.person_outline_rounded,
-      activeIcon: Icons.person_rounded,
-      label: 'Profile',
+      icon: Icons.menu_rounded,
+      activeIcon: Icons.menu_rounded,
+      label: 'More',
       path: AppRoutes.profile,
     ),
   ];
@@ -51,11 +51,8 @@ class AppShell extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final currentIndex = _currentIndex(context);
 
-    // Cart item count for badge
-    // final cartCount = ref.watch(cartProvider).items.length;
-
     return Scaffold(
-      backgroundColor: AppColors.lightBg,
+      backgroundColor: AppColors.getBg(context),
       body: child,
       bottomNavigationBar: _BottomNavBar(
         currentIndex: currentIndex,
@@ -82,65 +79,52 @@ class _BottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppColors.isDark(context);
+    final navBg = isDark ? const Color(0xFF0D0D0D) : Colors.white;
+    final navBorder = isDark ? const Color(0xFF1E1E1E) : const Color(0xFFE5E7EB);
+    final selectedColor = isDark ? Colors.white : AppColors.primary;
+    final unselectedColor = isDark ? const Color(0xFF7E7E7E) : const Color(0xFF9CA3AF);
+
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.lightSurface,
+        color: navBg,
         border: Border(
-          top: BorderSide(color: AppColors.lightBorder, width: 1),
+          top: BorderSide(color: navBorder, width: 0.8),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 20,
-            offset: const Offset(0, -4),
-          ),
-        ],
       ),
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 64,
+          height: 54,
           child: Row(
             children: List.generate(tabs.length, (i) {
               final tab = tabs[i];
               final isSelected = i == currentIndex;
+              final color = isSelected ? selectedColor : unselectedColor;
+
               return Expanded(
-                child: GestureDetector(
+                child: InkWell(
                   onTap: () => onTap(i),
-                  behavior: HitTestBehavior.opaque,
+                  splashColor: Colors.transparent,
+                  highlightColor: Colors.transparent,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 220),
-                        curve: Curves.easeOutCubic,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? AppColors.primary.withValues(alpha: 0.12)
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(50),
-                        ),
-                        child: Icon(
-                          isSelected ? tab.activeIcon : tab.icon,
-                          color: isSelected
-                              ? AppColors.primary
-                              : AppColors.textMuted,
-                          size: 22,
-                        ),
+                      Icon(
+                        isSelected ? tab.activeIcon : tab.icon,
+                        color: color,
+                        size: 22,
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 4),
                       Text(
                         tab.label,
                         style: GoogleFonts.plusJakartaSans(
-                          fontSize: 10,
+                          fontSize: 9.5,
                           fontWeight: isSelected
                               ? FontWeight.w700
                               : FontWeight.w500,
-                          color: isSelected
-                              ? AppColors.primary
-                              : AppColors.textMuted,
+                          color: color,
+                          letterSpacing: 0.2,
                         ),
                       ),
                     ],

@@ -30,14 +30,28 @@ class ServiceDetailScreen extends HookConsumerWidget {
     final activeMediaIndex = useState(0);
 
     return Scaffold(
-      backgroundColor: AppColors.lightBg,
+      backgroundColor: AppColors.getBg(context),
       body: serviceAsync.when(
         loading: () =>
             const Center(child: AppLoader(message: 'Loading service…')),
-        error: (e, _) => Center(child: Text(e.toString())),
+        error: (e, _) => Center(
+          child: Text(
+            e.toString(),
+            style: GoogleFonts.plusJakartaSans(
+              color: AppColors.getTextPrimary(context),
+            ),
+          ),
+        ),
         data: (srv) {
           if (srv == null) {
-            return const Center(child: Text('Service not found'));
+            return Center(
+              child: Text(
+                'Service not found',
+                style: GoogleFonts.plusJakartaSans(
+                  color: AppColors.getTextPrimary(context),
+                ),
+              ),
+            );
           }
 
           final List<PortfolioItem> mediaList = [];
@@ -63,18 +77,18 @@ class ServiceDetailScreen extends HookConsumerWidget {
               SliverAppBar(
                 expandedHeight: 280,
                 pinned: true,
-                backgroundColor: AppColors.lightSurface,
+                backgroundColor: AppColors.getSurface(context),
                 elevation: 0,
                 leading: Container(
                   margin: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.9),
+                    color: AppColors.getSurface(context).withValues(alpha: 0.9),
                     shape: BoxShape.circle,
-                    boxShadow: AppColors.cardShadow,
+                    boxShadow: AppColors.getCardShadow(context),
                   ),
                   child: IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                        size: 18, color: AppColors.textPrimary),
+                    icon: Icon(Icons.arrow_back_ios_new_rounded,
+                        size: 18, color: AppColors.getTextPrimary(context)),
                     onPressed: () => context.pop(),
                   ),
                 ),
@@ -134,6 +148,8 @@ class ServiceDetailScreen extends HookConsumerWidget {
                   ),
                 ),
               ),
+
+              // ── Details Body ─────────────────────────────────────────────
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.all(20),
@@ -163,7 +179,7 @@ class ServiceDetailScreen extends HookConsumerWidget {
                                     border: Border.all(
                                       color: isSelected
                                           ? AppColors.primary
-                                          : AppColors.lightBorder,
+                                          : AppColors.getBorder(context),
                                       width: isSelected ? 2.5 : 1,
                                     ),
                                   ),
@@ -205,23 +221,25 @@ class ServiceDetailScreen extends HookConsumerWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const AppStatusBadge(
-                            label: 'Standalone Service',
+                          AppStatusBadge(
+                            label: srv.categoryName,
                             status: BadgeStatus.accepted,
                           ),
                           AppRatingChip(rating: srv.organizer.rating),
                         ],
                       ),
                       const SizedBox(height: 12),
+
                       Text(
                         srv.name,
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 22,
                           fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
+                          color: AppColors.getTextPrimary(context),
                         ),
                       ),
                       const SizedBox(height: 6),
+
                       GestureDetector(
                         onTap: () => context.push(
                             AppRoutes.organizerProfile.replaceAll(':id', srv.organizer.id)),
@@ -244,13 +262,13 @@ class ServiceDetailScreen extends HookConsumerWidget {
                       ),
                       const SizedBox(height: 20),
 
-                      // ── Price & Deposit Breakdown Card ───────────────────
+                      // ── Pricing Card ─────────────────────────────────────
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: AppColors.lightCardAlt,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppColors.lightBorder),
+                          color: AppColors.getCardAlt(context),
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: AppColors.getBorder(context)),
                         ),
                         child: Column(
                           children: [
@@ -261,16 +279,19 @@ class ServiceDetailScreen extends HookConsumerWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Total Service Fee',
+                                      srv.pricingUnitLabel.toUpperCase(),
                                       style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 12,
-                                        color: AppColors.textSecondary,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 0.5,
+                                        color: AppColors.getTextSecondary(context),
                                       ),
                                     ),
+                                    const SizedBox(height: 2),
                                     Text(
                                       CurrencyFormatter.formatPaise(srv.priceInPaise),
                                       style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 20,
+                                        fontSize: 22,
                                         fontWeight: FontWeight.w900,
                                         color: AppColors.primary,
                                       ),
@@ -278,13 +299,14 @@ class ServiceDetailScreen extends HookConsumerWidget {
                                   ],
                                 ),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 6),
                                   decoration: BoxDecoration(
                                     color: AppColors.primary.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: BorderRadius.circular(50),
                                   ),
                                   child: Text(
-                                    srv.pricingUnit.name.replaceAll('_', ' '),
+                                    '${srv.priceInPaise > 0 ? ((srv.depositRequiredPaise / srv.priceInPaise) * 100).round() : 20}% Advance Deposit',
                                     style: GoogleFonts.plusJakartaSans(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w700,
@@ -294,24 +316,23 @@ class ServiceDetailScreen extends HookConsumerWidget {
                                 ),
                               ],
                             ),
-                            const Divider(height: 24, color: AppColors.lightBorder),
+                            Divider(height: 24, color: AppColors.getBorder(context)),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  'Advance Deposit Required (20%):',
+                                  'Advance Required Today',
                                   style: GoogleFonts.plusJakartaSans(
                                     fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.textPrimary,
+                                    color: AppColors.getTextSecondary(context),
                                   ),
                                 ),
                                 Text(
-                                  CurrencyFormatter.formatPaise((srv.priceInPaise * 0.2).round()),
+                                  CurrencyFormatter.formatPaise(srv.depositRequiredPaise),
                                   style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 13,
+                                    fontSize: 14,
                                     fontWeight: FontWeight.w800,
-                                    color: AppColors.textPrimary,
+                                    color: AppColors.getTextPrimary(context),
                                   ),
                                 ),
                               ],
@@ -319,44 +340,47 @@ class ServiceDetailScreen extends HookConsumerWidget {
                           ],
                         ),
                       ),
-
-                      const SizedBox(height: 16),
-
-                      // ── Lead Time Warning ────────────────────────────────
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: AppColors.warning.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.schedule_rounded, size: 18, color: AppColors.warning),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                'Booking Notice: Requires minimum 3 days advance lead time.',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
                       const SizedBox(height: 20),
 
-                      if (srv.description != null) ...[
+                      // ── Lead Time Alert ──────────────────────────────────
+                      if (srv.leadTimeDays > 0) ...[
+                        Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: AppColors.warning.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                                color: AppColors.warning.withValues(alpha: 0.3)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.schedule_rounded,
+                                  size: 18, color: AppColors.warning),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  'Booking lead time: Requires at least ${srv.leadTimeDays} days advance notice.',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.getTextPrimary(context),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+
+                      // ── Description ──────────────────────────────────────
+                      if (srv.description != null && srv.description!.isNotEmpty) ...[
                         Text(
                           'Service Details',
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary,
+                            color: AppColors.getTextPrimary(context),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -364,43 +388,45 @@ class ServiceDetailScreen extends HookConsumerWidget {
                           srv.description!,
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 13,
-                            color: AppColors.textSecondary,
+                            color: AppColors.getTextSecondary(context),
                             height: 1.5,
                           ),
                         ),
                         const SizedBox(height: 20),
                       ],
 
-                      // ── Cancellation Policy ──────────────────────────────
+                      // ── Cancellation Policy Card ─────────────────────────
                       Text(
                         'Cancellation Policy',
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
+                          color: AppColors.getTextPrimary(context),
                         ),
                       ),
                       const SizedBox(height: 8),
                       Container(
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: AppColors.lightSurface,
+                          color: AppColors.getSurface(context),
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: AppColors.lightBorder),
+                          border: Border.all(color: AppColors.getBorder(context)),
+                          boxShadow: AppColors.getCardShadow(context),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
                               children: [
-                                const Icon(Icons.verified_user_outlined, size: 16, color: AppColors.success),
+                                const Icon(Icons.verified_user_outlined,
+                                    size: 16, color: AppColors.success),
                                 const SizedBox(width: 6),
                                 Text(
                                   'Free Cancellation up to 48 Hours Before Event',
                                   style: GoogleFonts.plusJakartaSans(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w700,
-                                    color: AppColors.textPrimary,
+                                    color: AppColors.getTextPrimary(context),
                                   ),
                                 ),
                               ],
@@ -410,7 +436,7 @@ class ServiceDetailScreen extends HookConsumerWidget {
                               'Full refund of advance deposit if cancelled 48 hours prior to start time. 50% refund between 24-48 hours.',
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 11,
-                                color: AppColors.textSecondary,
+                                color: AppColors.getTextSecondary(context),
                                 height: 1.4,
                               ),
                             ),
@@ -426,23 +452,26 @@ class ServiceDetailScreen extends HookConsumerWidget {
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
+                          color: AppColors.getTextPrimary(context),
                         ),
                       ),
                       const SizedBox(height: 8),
                       Container(
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: AppColors.lightSurface,
+                          color: AppColors.getSurface(context),
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: AppColors.lightBorder),
+                          border: Border.all(color: AppColors.getBorder(context)),
+                          boxShadow: AppColors.getCardShadow(context),
                         ),
                         child: Row(
                           children: [
                             CircleAvatar(
                               radius: 22,
-                              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                              child: const Icon(Icons.business_rounded, color: AppColors.primary),
+                              backgroundColor:
+                                  AppColors.primary.withValues(alpha: 0.1),
+                              child: const Icon(Icons.business_rounded,
+                                  color: AppColors.primary),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
@@ -454,18 +483,19 @@ class ServiceDetailScreen extends HookConsumerWidget {
                                     style: GoogleFonts.plusJakartaSans(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w800,
-                                      color: AppColors.textPrimary,
+                                      color: AppColors.getTextPrimary(context),
                                     ),
                                   ),
                                   Row(
                                     children: [
-                                      const Icon(Icons.star_rounded, size: 14, color: AppColors.warning),
+                                      const Icon(Icons.star_rounded,
+                                          size: 14, color: AppColors.warning),
                                       const SizedBox(width: 2),
                                       Text(
                                         '${srv.organizer.rating} • ${srv.organizer.city}',
                                         style: GoogleFonts.plusJakartaSans(
                                           fontSize: 11,
-                                          color: AppColors.textSecondary,
+                                          color: AppColors.getTextSecondary(context),
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),
@@ -495,10 +525,10 @@ class ServiceDetailScreen extends HookConsumerWidget {
           ? null
           : Container(
               padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
-                color: AppColors.lightSurface,
+              decoration: BoxDecoration(
+                color: AppColors.getSurface(context),
                 border: Border(
-                  top: BorderSide(color: AppColors.lightBorder),
+                  top: BorderSide(color: AppColors.getBorder(context)),
                 ),
               ),
               child: SafeArea(
@@ -512,7 +542,7 @@ class ServiceDetailScreen extends HookConsumerWidget {
                           'Starting from',
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 11,
-                            color: AppColors.textSecondary,
+                            color: AppColors.getTextSecondary(context),
                           ),
                         ),
                         Text(
@@ -531,7 +561,8 @@ class ServiceDetailScreen extends HookConsumerWidget {
                       child: AppPrimaryButton(
                         text: 'Schedule & Book',
                         onPressed: () {
-                          _showSlotPickerSheet(context, ref, serviceAsync.valueOrNull!);
+                          _showSlotPickerSheet(
+                              context, ref, serviceAsync.valueOrNull!);
                         },
                       ),
                     ),
@@ -553,7 +584,7 @@ class ServiceDetailScreen extends HookConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.lightSurface,
+      backgroundColor: AppColors.getSurface(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -572,7 +603,7 @@ class ServiceDetailScreen extends HookConsumerWidget {
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: AppColors.lightBorder,
+                        color: AppColors.getBorder(context),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -583,7 +614,7 @@ class ServiceDetailScreen extends HookConsumerWidget {
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+                      color: AppColors.getTextPrimary(context),
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -591,7 +622,7 @@ class ServiceDetailScreen extends HookConsumerWidget {
                     'Select your event date (min $minLeadDays days lead time) and operational hours.',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 12,
-                      color: AppColors.textSecondary,
+                      color: AppColors.getTextSecondary(context),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -600,9 +631,9 @@ class ServiceDetailScreen extends HookConsumerWidget {
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: AppColors.lightCardAlt,
+                      color: AppColors.getCardAlt(context),
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppColors.lightBorder),
+                      border: Border.all(color: AppColors.getBorder(context)),
                     ),
                     child: Row(
                       children: [
@@ -617,7 +648,7 @@ class ServiceDetailScreen extends HookConsumerWidget {
                                 'Event Date',
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 11,
-                                  color: AppColors.textSecondary,
+                                  color: AppColors.getTextSecondary(context),
                                 ),
                               ),
                               Text(
@@ -625,7 +656,7 @@ class ServiceDetailScreen extends HookConsumerWidget {
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary,
+                                  color: AppColors.getTextPrimary(context),
                                 ),
                               ),
                             ],
@@ -640,6 +671,12 @@ class ServiceDetailScreen extends HookConsumerWidget {
                                   .add(Duration(days: minLeadDays)),
                               lastDate: DateTime.now()
                                   .add(const Duration(days: 365)),
+                              builder: (context, child) {
+                                return Theme(
+                                  data: Theme.of(context),
+                                  child: child!,
+                                );
+                              },
                             );
                             if (picked != null) {
                               setModalState(() {
@@ -664,6 +701,12 @@ class ServiceDetailScreen extends HookConsumerWidget {
                             final time = await showTimePicker(
                               context: context,
                               initialTime: const TimeOfDay(hour: 10, minute: 0),
+                              builder: (context, child) {
+                                return Theme(
+                                  data: Theme.of(context),
+                                  child: child!,
+                                );
+                              },
                             );
                             if (time != null) {
                               setModalState(() {
@@ -677,10 +720,10 @@ class ServiceDetailScreen extends HookConsumerWidget {
                           child: Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: AppColors.lightCardAlt,
+                              color: AppColors.getCardAlt(context),
                               borderRadius: BorderRadius.circular(14),
                               border:
-                                  Border.all(color: AppColors.lightBorder),
+                                  Border.all(color: AppColors.getBorder(context)),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -688,12 +731,12 @@ class ServiceDetailScreen extends HookConsumerWidget {
                                 Text('Start Time',
                                     style: GoogleFonts.plusJakartaSans(
                                         fontSize: 11,
-                                        color: AppColors.textSecondary)),
+                                        color: AppColors.getTextSecondary(context))),
                                 Text(startTime,
                                     style: GoogleFonts.plusJakartaSans(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w700,
-                                        color: AppColors.textPrimary)),
+                                        color: AppColors.getTextPrimary(context))),
                               ],
                             ),
                           ),
@@ -706,6 +749,12 @@ class ServiceDetailScreen extends HookConsumerWidget {
                             final time = await showTimePicker(
                               context: context,
                               initialTime: const TimeOfDay(hour: 18, minute: 0),
+                              builder: (context, child) {
+                                return Theme(
+                                  data: Theme.of(context),
+                                  child: child!,
+                                );
+                              },
                             );
                             if (time != null) {
                               setModalState(() {
@@ -719,10 +768,10 @@ class ServiceDetailScreen extends HookConsumerWidget {
                           child: Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: AppColors.lightCardAlt,
+                              color: AppColors.getCardAlt(context),
                               borderRadius: BorderRadius.circular(14),
                               border:
-                                  Border.all(color: AppColors.lightBorder),
+                                  Border.all(color: AppColors.getBorder(context)),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -730,12 +779,12 @@ class ServiceDetailScreen extends HookConsumerWidget {
                                 Text('End Time',
                                     style: GoogleFonts.plusJakartaSans(
                                         fontSize: 11,
-                                        color: AppColors.textSecondary)),
+                                        color: AppColors.getTextSecondary(context))),
                                 Text(endTime,
                                     style: GoogleFonts.plusJakartaSans(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w700,
-                                        color: AppColors.textPrimary)),
+                                        color: AppColors.getTextPrimary(context))),
                               ],
                             ),
                           ),

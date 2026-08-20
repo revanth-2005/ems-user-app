@@ -8,6 +8,7 @@ import '../../../../core/common_widgets/app_button.dart';
 import '../../../../core/common_widgets/app_snackbar.dart';
 import '../../../../core/common_widgets/app_status_badge.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/theme/theme_provider.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 
@@ -19,14 +20,15 @@ class CustomerProfileScreen extends HookConsumerWidget {
     final authState = ref.watch(authStateProvider);
     final user = authState.valueOrNull;
     final activePortal = user?.activePortal ?? ActivePortal.CUSTOMER;
+    final themeMode = ref.watch(themeModeProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.lightBg,
+      backgroundColor: AppColors.getBg(context),
       body: CustomScrollView(
         slivers: [
           // ── Header Bar ───────────────────────────────────────────────────
           SliverAppBar(
-            backgroundColor: AppColors.lightSurface,
+            backgroundColor: AppColors.getSurface(context),
             elevation: 0,
             scrolledUnderElevation: 0,
             floating: false,
@@ -35,7 +37,7 @@ class CustomerProfileScreen extends HookConsumerWidget {
             automaticallyImplyLeading: false,
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
-                color: AppColors.lightSurface,
+                color: AppColors.getSurface(context),
                 padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
                 child: Row(
                   children: [
@@ -72,7 +74,7 @@ class CustomerProfileScreen extends HookConsumerWidget {
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
-                              color: AppColors.textPrimary,
+                              color: AppColors.getTextPrimary(context),
                             ),
                           ),
                           const SizedBox(height: 3),
@@ -80,7 +82,7 @@ class CustomerProfileScreen extends HookConsumerWidget {
                             user?.email ?? user?.phone ?? '',
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 12,
-                              color: AppColors.textSecondary,
+                              color: AppColors.getTextSecondary(context),
                             ),
                           ),
                           const SizedBox(height: 6),
@@ -104,13 +106,13 @@ class CustomerProfileScreen extends HookConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── Portal Switcher ──────────────────────────────────────
+                  // ── Appearance & Theme ───────────────────────────────────
                   Text(
-                    'Workspace Mode',
+                    'Appearance & Theme',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+                      color: AppColors.getTextPrimary(context),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -118,10 +120,64 @@ class CustomerProfileScreen extends HookConsumerWidget {
                   Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: AppColors.lightSurface,
+                      color: AppColors.getSurface(context),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.lightBorder),
-                      boxShadow: AppColors.cardShadow,
+                      border: Border.all(color: AppColors.getBorder(context)),
+                      boxShadow: AppColors.getCardShadow(context),
+                    ),
+                    child: Row(
+                      children: [
+                        // Dark Theme Option
+                        Expanded(
+                          child: _ThemeModeOption(
+                            title: 'Dark Theme',
+                            icon: Icons.dark_mode_rounded,
+                            isSelected: themeMode == ThemeMode.dark,
+                            onTap: () {
+                              ref
+                                  .read(themeModeProvider.notifier)
+                                  .setTheme(ThemeMode.dark);
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        // Light / White Theme Option
+                        Expanded(
+                          child: _ThemeModeOption(
+                            title: 'White Theme',
+                            icon: Icons.light_mode_rounded,
+                            isSelected: themeMode == ThemeMode.light,
+                            onTap: () {
+                              ref
+                                  .read(themeModeProvider.notifier)
+                                  .setTheme(ThemeMode.light);
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // ── Portal Switcher ──────────────────────────────────────
+                  Text(
+                    'Workspace Mode',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.getTextPrimary(context),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: AppColors.getSurface(context),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppColors.getBorder(context)),
+                      boxShadow: AppColors.getCardShadow(context),
                     ),
                     child: Column(
                       children: [
@@ -138,7 +194,7 @@ class CustomerProfileScreen extends HookConsumerWidget {
                             context.go(AppRoutes.home);
                           },
                         ),
-                        const Divider(height: 1, color: AppColors.lightBorder),
+                        Divider(height: 1, color: AppColors.getBorder(context)),
                         _PortalSwitchTile(
                           title: 'Organizer & Vendor Hub',
                           subtitle:
@@ -153,7 +209,7 @@ class CustomerProfileScreen extends HookConsumerWidget {
                             context.go(AppRoutes.organizerDashboard);
                           },
                         ),
-                        const Divider(height: 1, color: AppColors.lightBorder),
+                        Divider(height: 1, color: AppColors.getBorder(context)),
                         _PortalSwitchTile(
                           title: 'Host & Ticket Scanner',
                           subtitle:
@@ -179,7 +235,7 @@ class CustomerProfileScreen extends HookConsumerWidget {
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+                      color: AppColors.getTextPrimary(context),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -247,6 +303,72 @@ class CustomerProfileScreen extends HookConsumerWidget {
   }
 }
 
+class _ThemeModeOption extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _ThemeModeOption({
+    required this.title,
+    required this.icon,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = AppColors.isDark(context);
+    final selectedBg = isDark
+        ? AppColors.primary.withValues(alpha: 0.16)
+        : AppColors.primary.withValues(alpha: 0.10);
+    final unselectedBg = isDark ? const Color(0xFF222222) : const Color(0xFFF3F4F6);
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? selectedBg : unselectedBg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : Colors.transparent,
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 20,
+              color: isSelected ? AppColors.primary : AppColors.getTextSecondary(context),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                color: isSelected ? AppColors.primary : AppColors.getTextPrimary(context),
+              ),
+            ),
+            if (isSelected) ...[
+              const SizedBox(width: 6),
+              const Icon(
+                Icons.check_circle_rounded,
+                size: 16,
+                color: AppColors.primary,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _PortalSwitchTile extends StatelessWidget {
   final String title;
   final String subtitle;
@@ -272,12 +394,12 @@ class _PortalSwitchTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.primary.withValues(alpha: 0.12)
-              : AppColors.lightCardAlt,
+              : AppColors.getCardAlt(context),
           shape: BoxShape.circle,
         ),
         child: Icon(
           icon,
-          color: isSelected ? AppColors.primary : AppColors.textSecondary,
+          color: isSelected ? AppColors.primary : AppColors.getTextSecondary(context),
           size: 20,
         ),
       ),
@@ -286,21 +408,21 @@ class _PortalSwitchTile extends StatelessWidget {
         style: GoogleFonts.plusJakartaSans(
           fontSize: 14,
           fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-          color: isSelected ? AppColors.primary : AppColors.textPrimary,
+          color: isSelected ? AppColors.primary : AppColors.getTextPrimary(context),
         ),
       ),
       subtitle: Text(
         subtitle,
         style: GoogleFonts.plusJakartaSans(
           fontSize: 11,
-          color: AppColors.textSecondary,
+          color: AppColors.getTextSecondary(context),
         ),
       ),
       trailing: isSelected
           ? const Icon(Icons.check_circle_rounded,
               color: AppColors.primary, size: 20)
-          : const Icon(Icons.arrow_forward_ios_rounded,
-              size: 14, color: AppColors.textMuted),
+          : Icon(Icons.arrow_forward_ios_rounded,
+              size: 14, color: AppColors.getTextMuted(context)),
     );
   }
 }
@@ -323,14 +445,14 @@ class _ActionTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.lightSurface,
+          color: AppColors.getSurface(context),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppColors.lightBorder),
-          boxShadow: AppColors.cardShadow,
+          border: Border.all(color: AppColors.getBorder(context)),
+          boxShadow: AppColors.getCardShadow(context),
         ),
         child: Row(
           children: [
-            Icon(icon, color: AppColors.textSecondary, size: 22),
+            Icon(icon, color: AppColors.getTextSecondary(context), size: 22),
             const SizedBox(width: 14),
             Expanded(
               child: Text(
@@ -338,12 +460,12 @@ class _ActionTile extends StatelessWidget {
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                  color: AppColors.getTextPrimary(context),
                 ),
               ),
             ),
-            const Icon(Icons.arrow_forward_ios_rounded,
-                size: 14, color: AppColors.textMuted),
+            Icon(Icons.arrow_forward_ios_rounded,
+                size: 14, color: AppColors.getTextMuted(context)),
           ],
         ),
       ),

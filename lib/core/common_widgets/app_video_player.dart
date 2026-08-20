@@ -82,9 +82,30 @@ class _AppVideoPlayerDialogState extends State<_AppVideoPlayerDialog> {
       }
     } catch (e) {
       if (mounted) {
+        String message = 'Unable to stream this video.';
+        final errStr = e.toString().toLowerCase();
+        if (errStr.contains('404') ||
+            errStr.contains('source error') ||
+            errStr.contains('nosuchkey')) {
+          message =
+              'This video file is unavailable or missing from the media server (404).';
+        } else if (errStr.contains('connection') ||
+            errStr.contains('failed to connect') ||
+            errStr.contains('refused') ||
+            errStr.contains('socket')) {
+          message =
+              'Could not connect to media server. Ensure media service & port 6006 are running.';
+        } else if (errStr.contains('channel-error') ||
+            errStr.contains('pigeon')) {
+          message =
+              'Restart the app process (flutter run) to compile the native video player plugin.';
+        } else {
+          message = 'Failed to load video: $e';
+        }
+
         setState(() {
           _hasError = true;
-          _errorMessage = 'Failed to load video: $e';
+          _errorMessage = message;
         });
       }
     }
