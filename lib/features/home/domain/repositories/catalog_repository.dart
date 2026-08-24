@@ -47,19 +47,42 @@ abstract class CatalogRepository {
     String? endDate,
   });
 
+  Future<List<EventCategory>> getEventCategories();
+
   Future<List<PublicEvent>> getEvents({
     String? search,
     String? city,
     String? categoryId,
+    String? mode,
     int page = 1,
     int limit = 20,
   });
 
   Future<PublicEvent?> getEventById(String idOrSlug);
+
+  Future<FeeBreakdownModel?> calculateEventFee({
+    required String categoryId,
+    required double price,
+  });
+
   Future<Map<String, dynamic>> registerForEvent({
     required String eventId,
     String? ticketTypeId,
     int quantity = 1,
+    String? attendeeNote,
     String? couponCode,
+  });
+
+  Future<TicketOrderResponse> createTicketOrder({
+    required String eventId,
+    required String ticketTypeId,
+    int quantity = 1,
+    String? attendeeNote,
+  });
+
+  Future<Map<String, dynamic>> verifyPayment({
+    required String gatewayOrderId,
+    required String gatewayPaymentId,
+    required String gatewaySignature,
   });
 }

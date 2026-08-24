@@ -77,7 +77,7 @@ class CartCheckoutScreen extends HookConsumerWidget {
       ),
       body: cart.items.isEmpty
           ? const AppEmptyView(
-              icon: Icons.shopping_bag_outlined,
+              icon: Icons.shopping_cart_outlined,
               title: 'Your Cart is Empty',
               subtitle: 'Add curated packages or individual services to begin booking.',
             )

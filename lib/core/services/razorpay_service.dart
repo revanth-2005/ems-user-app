@@ -99,6 +99,51 @@ class RazorpayService {
     }
   }
 
+  /// Directly launches Razorpay checkout for a pre-created Event Ticket Order.
+  Future<void> startEventTicketPaymentFlow({
+    required String key,
+    required String gatewayOrderId,
+    required int amountInPaise,
+    String? userEmail,
+    String? userPhone,
+    String? userName,
+    String? eventTitle,
+    required void Function(Map<String, dynamic> data) onSuccess,
+    required void Function(String message, bool isCancelled) onError,
+  }) async {
+    _onSuccessCallback = onSuccess;
+    _onErrorCallback = onError;
+
+    try {
+      final options = <String, dynamic>{
+        'key': key.isNotEmpty ? key : 'rzp_test_YourKeyId',
+        'amount': amountInPaise,
+        'name': 'EMS Events',
+        'order_id': gatewayOrderId,
+        'description': eventTitle != null ? 'Ticket Pass: $eventTitle' : 'Event Ticket Booking',
+        'prefill': {
+          if (userPhone != null && userPhone.isNotEmpty) 'contact': userPhone,
+          if (userEmail != null && userEmail.isNotEmpty) 'email': userEmail,
+          if (userName != null && userName.isNotEmpty) 'name': userName,
+        },
+        'theme': {
+          'color': '#F05537', // Coral Brand Primary
+        },
+        'retry': {
+          'enabled': true,
+          'max_count': 3,
+        },
+        'send_sms_hash': true,
+      };
+
+      debugPrint('💳 [RAZORPAY EVENT] Launching Checkout for Ticket Order: $gatewayOrderId, Amount: $amountInPaise paise');
+      _razorpay.open(options);
+    } catch (e) {
+      debugPrint('❌ [RAZORPAY EVENT ERROR] Failed to open checkout: $e');
+      _onErrorCallback?.call(e.toString().replaceAll('Exception: ', ''), false);
+    }
+  }
+
   // ── SDK Event Callbacks ──────────────────────────────────────────────────
 
   Future<void> _handlePaymentSuccess(PaymentSuccessResponse response) async {
@@ -149,11 +194,7 @@ class RazorpayService {
 }
 
 /// Provider for the singleton RazorpayService instance.
-final razorpayServiceProvider = Provider.autoDispose<RazorpayService>((ref) {
+final razorpayServiceProvider = Provider<RazorpayService>((ref) {
   final repo = ref.watch(bookingRepositoryProvider);
-  final service = RazorpayService(repo);
-  ref.onDispose(() {
-    service.dispose();
-  });
-  return service;
+  return RazorpayService(repo);
 });

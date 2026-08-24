@@ -1,74 +1,82 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-import '../../../../app/app_router.dart';
 import '../../../../core/common_widgets/app_button.dart';
 import '../../../../core/common_widgets/app_loader.dart';
 import '../../../../core/common_widgets/app_network_image.dart';
 import '../../../../core/common_widgets/app_snackbar.dart';
-import '../../../../core/common_widgets/app_status_badge.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
+import '../../../bookings/domain/entities/booking_entities.dart';
+import '../../../bookings/presentation/providers/booking_providers.dart';
+import '../../../bookings/presentation/widgets/entry_qr_dialog.dart';
 import '../../domain/entities/catalog_entities.dart';
 import '../providers/catalog_providers.dart';
+import '../widgets/ticket_selection_bottom_sheet.dart';
 
 class EventDetailScreen extends HookConsumerWidget {
   final String eventId;
 
   const EventDetailScreen({super.key, required this.eventId});
 
+  Future<void> _openMap(String address) async {
+    final query = Uri.encodeComponent(address);
+    final url = Uri.parse('https://www.google.com/maps/search/?api=1&query=$query');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  Future<void> _addToCalendar(PublicEvent event) async {
+    final startTimeStr = '${event.startDatetime.toUtc().toIso8601String().replaceAll(RegExp(r'[-:]'), '').split('.').first}Z';
+    final endTime = event.endDatetime ?? event.startDatetime.add(const Duration(hours: 3));
+    final endTimeStr = '${endTime.toUtc().toIso8601String().replaceAll(RegExp(r'[-:]'), '').split('.').first}Z';
+
+    final calUrl = Uri.parse(
+      'https://calendar.google.com/calendar/render?action=TEMPLATE'
+      '&text=${Uri.encodeComponent(event.title)}'
+      '&dates=$startTimeStr/$endTimeStr'
+      '&details=${Uri.encodeComponent(event.description ?? "Event on EMS")}'
+      '&location=${Uri.encodeComponent(event.venueAddress ?? event.venueName ?? "Online")}',
+    );
+
+    if (await canLaunchUrl(calUrl)) {
+      await launchUrl(calUrl, mode: LaunchMode.externalApplication);
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final eventAsync = ref.watch(eventDetailProvider(eventId));
-    final selectedTicket = useState<TicketType?>(null);
-    final isRegistering = useState(false);
-
-    Future<void> handleRegister() async {
-      if (selectedTicket.value == null) return;
-      isRegistering.value = true;
-      try {
-        final repo = ref.read(catalogRepositoryProvider);
-        await repo.registerForEvent(
-          eventId: eventId,
-          ticketTypeId: selectedTicket.value?.id,
-          quantity: 1,
-        );
-        isRegistering.value = false;
-
-        if (context.mounted) {
-          AppSnackbar.show(
-            context,
-            message: 'Ticket confirmed! Added to your passes.',
-            type: SnackbarType.success,
-          );
-          context.go(AppRoutes.bookings);
-        }
-      } catch (e) {
-        isRegistering.value = false;
-        if (context.mounted) {
-          AppSnackbar.show(
-            context,
-            message: 'Failed to register ticket: $e',
-            type: SnackbarType.error,
-          );
-        }
-      }
-    }
 
     return Scaffold(
       backgroundColor: AppColors.getBg(context),
       body: eventAsync.when(
-        loading: () => const Center(child: AppLoader(message: 'Loading event…')),
+        loading: () => const Center(child: AppLoader(message: 'Loading event details…')),
         error: (e, _) => Center(
-          child: Text(
-            e.toString(),
-            style: GoogleFonts.plusJakartaSans(
-              color: AppColors.getTextPrimary(context),
-            ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline_rounded, size: 48, color: Color(0xFFEF4444)),
+              const SizedBox(height: 12),
+              Text(
+                'Failed to load event',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.getTextPrimary(context),
+                ),
+              ),
+              const SizedBox(height: 8),
+              AppPrimaryButton(
+                text: 'Retry',
+                onPressed: () => ref.refresh(eventDetailProvider(eventId)),
+              ),
+            ],
           ),
         ),
         data: (event) {
@@ -83,18 +91,11 @@ class EventDetailScreen extends HookConsumerWidget {
             );
           }
 
-          if (selectedTicket.value == null && event.ticketTypes.isNotEmpty) {
-            selectedTicket.value = event.ticketTypes.first;
-          }
-
-          final currentTicket = selectedTicket.value ??
-              (event.ticketTypes.isNotEmpty ? event.ticketTypes.first : null);
-
           return CustomScrollView(
             slivers: [
-              // ── Hero Header ──────────────────────────────────────────────
+              // ── Hero App Bar ─────────────────────────────────────────────
               SliverAppBar(
-                expandedHeight: 280,
+                expandedHeight: 300,
                 pinned: true,
                 backgroundColor: AppColors.getSurface(context),
                 elevation: 0,
@@ -111,13 +112,34 @@ class EventDetailScreen extends HookConsumerWidget {
                     onPressed: () => context.pop(),
                   ),
                 ),
+                actions: [
+                  Container(
+                    margin: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.getSurface(context).withValues(alpha: 0.9),
+                      shape: BoxShape.circle,
+                      boxShadow: AppColors.getCardShadow(context),
+                    ),
+                    child: IconButton(
+                      icon: Icon(Icons.share_rounded,
+                          size: 18, color: AppColors.getTextPrimary(context)),
+                      onPressed: () {
+                        AppSnackbar.show(
+                          context,
+                          message: 'Link copied to clipboard!',
+                          type: SnackbarType.success,
+                        );
+                      },
+                    ),
+                  ),
+                ],
                 flexibleSpace: FlexibleSpaceBar(
                   background: Stack(
                     fit: StackFit.expand,
                     children: [
                       AppNetworkImage(
                         url: event.coverImageUrl,
-                        categoryHint: event.category?.name ?? 'Live Event',
+                        categoryHint: event.category?.name ?? 'Event',
                         titleHint: event.title,
                         fit: BoxFit.cover,
                       ),
@@ -128,9 +150,65 @@ class EventDetailScreen extends HookConsumerWidget {
                             end: Alignment.bottomCenter,
                             colors: [
                               Colors.transparent,
-                              Colors.black.withValues(alpha: 0.7),
+                              Colors.black.withValues(alpha: 0.85),
                             ],
                           ),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 16,
+                        left: 20,
+                        right: 20,
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: event.isOnline
+                                    ? const Color(0xFF3B82F6)
+                                    : AppColors.primary,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    event.isOnline ? Icons.wifi_rounded : Icons.location_on_rounded,
+                                    color: Colors.white,
+                                    size: 12,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    event.isOnline ? 'VIRTUAL EVENT' : 'IN-PERSON',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (event.category != null) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  event.category!.name,
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                     ],
@@ -138,87 +216,245 @@ class EventDetailScreen extends HookConsumerWidget {
                 ),
               ),
 
-              // ── Content ──────────────────────────────────────────────────
+              // ── Main Details Content ─────────────────────────────────────
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Badge row
-                      Row(
-                        children: [
-                          AppStatusBadge(
-                            label: event.mode == EventMode.ONLINE
-                                ? 'Virtual Experience'
-                                : 'Live In-Person',
-                            status: BadgeStatus.accepted,
-                          ),
-                          const SizedBox(width: 8),
-                          AppStatusBadge(
-                            label: event.approvalMode == ApprovalMode.INSTANT
-                                ? 'Instant Confirmation'
-                                : 'Host Approval Required',
-                            status: BadgeStatus.pending,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-
+                      // Title
                       Text(
                         event.title,
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 22,
                           fontWeight: FontWeight.w800,
                           color: AppColors.getTextPrimary(context),
+                          height: 1.25,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 14),
 
-                      Text(
-                        'Hosted by ${event.hostName}',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
+                      // Host Info Card
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.getCardAlt(context),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: AppColors.getBorder(context)),
+                        ),
+                        child: Row(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(20),
+                              child: SizedBox(
+                                width: 40,
+                                height: 40,
+                                child: (event.hostProfilePhoto != null && event.hostProfilePhoto!.isNotEmpty)
+                                    ? AppNetworkImage(
+                                        url: event.hostProfilePhoto,
+                                        titleHint: event.hostName,
+                                        fit: BoxFit.cover,
+                                      )
+                                    : Container(
+                                        color: AppColors.primary.withValues(alpha: 0.15),
+                                        child: Center(
+                                          child: Text(
+                                            event.hostName.isNotEmpty ? event.hostName[0].toUpperCase() : 'H',
+                                            style: GoogleFonts.plusJakartaSans(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w800,
+                                              color: AppColors.primary,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Hosted by',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 11,
+                                      color: AppColors.getTextSecondary(context),
+                                    ),
+                                  ),
+                                  Text(
+                                    event.hostName,
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.getTextPrimary(context),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.verified_rounded, size: 12, color: Color(0xFF059669)),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Verified Host',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      color: const Color(0xFF059669),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+
                       const SizedBox(height: 20),
 
-                      // Info card
+                      // Date & Time Box with Add to Calendar
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: AppColors.getSurface(context),
-                          borderRadius: BorderRadius.circular(18),
+                          borderRadius: BorderRadius.circular(16),
                           border: Border.all(color: AppColors.getBorder(context)),
                           boxShadow: AppColors.getCardShadow(context),
                         ),
                         child: Column(
                           children: [
-                            _InfoRow(
-                              icon: Icons.calendar_today_rounded,
-                              title: DateFormatter.formatEventDate(
-                                  event.startDatetime),
-                              subtitle: DateFormatter.formatEventTime(
-                                  event.startDatetime),
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Icon(Icons.calendar_month_rounded, color: AppColors.primary, size: 20),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        DateFormatter.formatEventDate(event.startDatetime),
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.getTextPrimary(context),
+                                        ),
+                                      ),
+                                      Text(
+                                        '${DateFormatter.formatEventTime(event.startDatetime)} IST',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 12,
+                                          color: AppColors.getTextSecondary(context),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                OutlinedButton.icon(
+                                  icon: const Icon(Icons.add_rounded, size: 14),
+                                  label: Text(
+                                    'Calendar',
+                                    style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w700),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                    foregroundColor: AppColors.primary,
+                                    side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  ),
+                                  onPressed: () => _addToCalendar(event),
+                                ),
+                              ],
                             ),
-                            Divider(
-                                height: 20, color: AppColors.getBorder(context)),
-                            _InfoRow(
-                              icon: Icons.location_on_rounded,
-                              title: event.venueName ?? 'Online Link',
-                              subtitle: event.venueAddress ??
-                                  event.venueCity ??
-                                  'Shared upon confirmation',
+
+                            const Divider(height: 24),
+
+                            // Venue / Location Row
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: (event.isOnline ? const Color(0xFF3B82F6) : AppColors.primary).withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Icon(
+                                    event.isOnline ? Icons.laptop_mac_rounded : Icons.location_on_rounded,
+                                    color: event.isOnline ? const Color(0xFF2563EB) : AppColors.primary,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        event.isOnline ? 'Online Virtual Event' : (event.venueName ?? 'Venue Location'),
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.getTextPrimary(context),
+                                        ),
+                                      ),
+                                      Text(
+                                        event.isOnline
+                                            ? 'Meeting link shared on pass upon booking'
+                                            : (event.venueAddress ?? event.venueCity ?? 'Location details provided on pass'),
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 12,
+                                          color: AppColors.getTextSecondary(context),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (!event.isOnline && (event.venueAddress != null || event.venueName != null)) ...[
+                                  OutlinedButton.icon(
+                                    icon: const Icon(Icons.map_rounded, size: 14),
+                                    label: Text(
+                                      'Map',
+                                      style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w700),
+                                    ),
+                                    style: OutlinedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                      minimumSize: Size.zero,
+                                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                      foregroundColor: AppColors.primary,
+                                      side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                    ),
+                                    onPressed: () => _openMap(event.venueAddress ?? event.venueName!),
+                                  ),
+                                ],
+                              ],
                             ),
                           ],
                         ),
                       ),
+
                       const SizedBox(height: 24),
 
-                      // Description
-                      if (event.description != null) ...[
+                      // About Description
+                      if (event.description != null && event.description!.isNotEmpty) ...[
                         Text(
                           'About this Event',
                           style: GoogleFonts.plusJakartaSans(
@@ -227,22 +463,22 @@ class EventDetailScreen extends HookConsumerWidget {
                             color: AppColors.getTextPrimary(context),
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 10),
                         Text(
                           event.description!,
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 13,
                             color: AppColors.getTextSecondary(context),
-                            height: 1.5,
+                            height: 1.6,
                           ),
                         ),
                         const SizedBox(height: 24),
                       ],
 
-                      // Ticket Types Selector
+                      // Ticket Tiers Section
                       if (event.ticketTypes.isNotEmpty) ...[
                         Text(
-                          'Select Pass',
+                          'Available Ticket Passes',
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
@@ -250,75 +486,77 @@ class EventDetailScreen extends HookConsumerWidget {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        ...event.ticketTypes.map((t) {
-                          final isSelected = currentTicket?.id == t.id;
-                          return GestureDetector(
-                            onTap: () => selectedTicket.value = t,
-                            child: Container(
-                              margin: const EdgeInsets.only(bottom: 10),
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? AppColors.primary.withValues(alpha: 0.06)
-                                    : AppColors.getSurface(context),
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: isSelected
-                                      ? AppColors.primary
-                                      : AppColors.getBorder(context),
-                                  width: isSelected ? 2 : 1,
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    isSelected
-                                        ? Icons.radio_button_checked_rounded
-                                        : Icons.radio_button_off_rounded,
-                                    color: isSelected
-                                        ? AppColors.primary
-                                        : AppColors.getTextMuted(context),
-                                    size: 20,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
+                        ...event.ticketTypes.map((tier) {
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: AppColors.getSurface(context),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: AppColors.getBorder(context)),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        tier.name,
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.getTextPrimary(context),
+                                        ),
+                                      ),
+                                      if (tier.description != null) ...[
+                                        const SizedBox(height: 4),
                                         Text(
-                                          t.name,
+                                          tier.description!,
                                           style: GoogleFonts.plusJakartaSans(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w700,
-                                            color: AppColors.getTextPrimary(context),
+                                            fontSize: 11,
+                                            color: AppColors.getTextSecondary(context),
                                           ),
                                         ),
-                                        if (t.description != null)
-                                          Text(
-                                            t.description!,
-                                            style:
-                                                GoogleFonts.plusJakartaSans(
-                                              fontSize: 11,
-                                              color: AppColors.getTextSecondary(context),
-                                            ),
-                                          ),
                                       ],
-                                    ),
+                                      if (tier.remainingCount != null && tier.remainingCount! > 0) ...[
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          '⚡ ${tier.remainingCount} passes available',
+                                          style: GoogleFonts.plusJakartaSans(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w700,
+                                            color: const Color(0xFF059669),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
                                   ),
-                                  Text(
-                                    t.isFree
-                                        ? 'FREE'
-                                        : CurrencyFormatter.formatPaise(
-                                            t.priceInPaise),
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w800,
-                                      color: AppColors.primary,
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      tier.isFree
+                                          ? 'FREE'
+                                          : CurrencyFormatter.formatPaise(tier.priceInPaise),
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w800,
+                                        color: tier.isFree ? const Color(0xFF10B981) : AppColors.primary,
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
+                                    if (!tier.isFree)
+                                      Text(
+                                        '+ taxes',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 10,
+                                          color: AppColors.getTextMuted(context),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ],
                             ),
                           );
                         }),
@@ -339,72 +577,62 @@ class EventDetailScreen extends HookConsumerWidget {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: AppColors.getSurface(context),
-                border: Border(
-                  top: BorderSide(color: AppColors.getBorder(context)),
-                ),
+                border: Border(top: BorderSide(color: AppColors.getBorder(context))),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, -4),
+                  ),
+                ],
               ),
               child: SafeArea(
-                child: AppPrimaryButton(
-                  text: isRegistering.value
-                      ? 'Confirming…'
-                      : 'Register Now — ${selectedTicket.value?.isFree == true ? "FREE" : (selectedTicket.value != null ? CurrencyFormatter.formatPaise(selectedTicket.value!.priceInPaise) : "")}',
-                  isLoading: isRegistering.value,
-                  onPressed: isRegistering.value ? null : handleRegister,
+                child: Consumer(
+                  builder: (context, ref, _) {
+                    final event = eventAsync.valueOrNull!;
+                    final myTickets = ref.watch(myTicketsProvider).valueOrNull ?? [];
+                    final userPass = myTickets.firstWhere(
+                      (t) => t.eventId == event.id || t.eventTitle.toLowerCase() == event.title.toLowerCase(),
+                      orElse: () => EventTicketPass(
+                        id: '',
+                        registrationId: '',
+                        createdAt: DateTime.now(),
+                      ),
+                    );
+
+                    final hasPass = (userPass.id.isNotEmpty) || event.hasUserRegistered;
+
+                    if (hasPass) {
+                      return AppPrimaryButton(
+                        text: 'View My Pass & Entry QR Code',
+                        backgroundColor: const Color(0xFF10B981),
+                        onPressed: () {
+                          final passToView = userPass.id.isNotEmpty
+                              ? userPass
+                              : EventTicketPass.fromJson({
+                                  'registrationId': event.userRegistration?.id ?? 'reg_${event.id}',
+                                  'quantity': event.userRegistration?.quantity ?? 1,
+                                  'status': event.userRegistration?.status ?? 'CONFIRMED',
+                                  'event': event.toJson(),
+                                  'qrCodeData': event.userRegistration?.qrCodeToken ?? 'EMS-PASS-${event.id}',
+                                  'accessLink': event.userRegistration?.accessLink ?? event.meetingUrl,
+                                });
+
+                          EntryQrDialog.show(context, passToView);
+                        },
+                      );
+                    }
+
+                    return AppPrimaryButton(
+                      text: 'Select Tickets — ${event.effectivePriceLabel}',
+                      onPressed: () {
+                        TicketSelectionBottomSheet.show(context, event);
+                      },
+                    );
+                  },
                 ),
               ),
             ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-
-  const _InfoRow({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, color: AppColors.primary, size: 18),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.getTextPrimary(context),
-                ),
-              ),
-              Text(
-                subtitle,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 11,
-                  color: AppColors.getTextSecondary(context),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

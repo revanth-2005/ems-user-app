@@ -242,12 +242,31 @@ class CatalogRemoteDataSource {
     }
   }
 
+  // ── Event Categories (GET /master/event-categories) ─────────────────────────
+
+  Future<List<EventCategory>> getEventCategories() async {
+    try {
+      final res = await _dio.get(ApiConstants.masterEventCategories);
+      if (res.statusCode == 200) {
+        final list = _extractList(res.data, ['eventCategories', 'categories', 'data', 'items']);
+        return list
+            .whereType<Map<String, dynamic>>()
+            .map(EventCategory.fromJson)
+            .toList();
+      }
+      return const [];
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
   // ── Public Events (GET /catalog/events & /catalog/events/:idOrSlug) ──────────
 
   Future<List<PublicEvent>> getEvents({
     String? search,
     String? city,
     String? categoryId,
+    String? mode,
     int page = 1,
     int limit = 20,
   }) async {
@@ -259,6 +278,7 @@ class CatalogRemoteDataSource {
       if (search?.trim().isNotEmpty == true) params['search'] = search!.trim();
       if (city?.trim().isNotEmpty == true && city != 'All') params['city'] = city!.trim();
       if (categoryId?.trim().isNotEmpty == true) params['categoryId'] = categoryId!.trim();
+      if (mode?.trim().isNotEmpty == true && mode != 'ALL') params['mode'] = mode!.trim();
 
       final res = await _dio.get(
         ApiConstants.catalogEvents,
@@ -286,16 +306,57 @@ class CatalogRemoteDataSource {
           return PublicEvent.fromJson(data);
         }
       }
+      // Fallback: If single event returns 401 (requires auth) or not found, lookup via public catalog
+      final list = await getEvents(limit: 50);
+      for (final item in list) {
+        if (item.id == idOrSlug || item.slug == idOrSlug) {
+          return item;
+        }
+      }
+      return null;
+    } on DioException catch (e) {
+      try {
+        final list = await getEvents(limit: 50);
+        for (final item in list) {
+          if (item.id == idOrSlug || item.slug == idOrSlug) {
+            return item;
+          }
+        }
+      } catch (_) {}
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  // ── Calculate Ticket Fee & Taxes (GET /catalog/events/calculate-fee) ─────────
+
+  Future<FeeBreakdownModel?> calculateEventFee({
+    required String categoryId,
+    required double price,
+  }) async {
+    try {
+      final res = await _dio.get(
+        ApiConstants.calculateEventFee,
+        queryParameters: {
+          'categoryId': categoryId,
+          'price': price,
+        },
+      );
+      if (res.statusCode == 200 && res.data is Map<String, dynamic>) {
+        return FeeBreakdownModel.fromJson(res.data as Map<String, dynamic>);
+      }
       return null;
     } on DioException catch (e) {
       throw NetworkException.fromDioError(e);
     }
   }
 
+  // ── Register for Free Ticket (POST /catalog/events/:id/register) ─────────────
+
   Future<Map<String, dynamic>> registerForEvent({
     required String eventId,
     String? ticketTypeId,
     int quantity = 1,
+    String? attendeeNote,
     String? couponCode,
   }) async {
     try {
@@ -304,11 +365,64 @@ class CatalogRemoteDataSource {
         data: {
           if (ticketTypeId != null) 'ticketTypeId': ticketTypeId,
           'quantity': quantity,
-          if (couponCode != null) 'couponCode': couponCode,
+          if (attendeeNote != null && attendeeNote.isNotEmpty) 'attendeeNote': attendeeNote,
+          if (couponCode != null && couponCode.isNotEmpty) 'couponCode': couponCode,
         },
       );
       if ((res.statusCode == 200 || res.statusCode == 201) &&
           res.data is Map<String, dynamic>) {
+        return res.data as Map<String, dynamic>;
+      }
+      return const {};
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  // ── Create Paid Ticket Order (POST /catalog/events/:id/create-ticket-order) ──
+
+  Future<TicketOrderResponse> createTicketOrder({
+    required String eventId,
+    required String ticketTypeId,
+    int quantity = 1,
+    String? attendeeNote,
+  }) async {
+    try {
+      final res = await _dio.post(
+        '${ApiConstants.catalogEvents}/$eventId/create-ticket-order',
+        data: {
+          'ticketTypeId': ticketTypeId,
+          'quantity': quantity,
+          if (attendeeNote != null && attendeeNote.isNotEmpty) 'attendeeNote': attendeeNote,
+        },
+      );
+      if ((res.statusCode == 200 || res.statusCode == 201) &&
+          res.data is Map<String, dynamic>) {
+        return TicketOrderResponse.fromJson(res.data as Map<String, dynamic>);
+      }
+      throw const NetworkException('Invalid response from ticket order server');
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  // ── Verify Payment Post-Checkout (POST /payments/verify) ────────────────────
+
+  Future<Map<String, dynamic>> verifyPayment({
+    required String gatewayOrderId,
+    required String gatewayPaymentId,
+    required String gatewaySignature,
+  }) async {
+    try {
+      final res = await _dio.post(
+        ApiConstants.verifyPayment,
+        data: {
+          'gatewayOrderId': gatewayOrderId,
+          'gatewayPaymentId': gatewayPaymentId,
+          'gatewaySignature': gatewaySignature,
+        },
+      );
+      if (res.statusCode == 200 && res.data is Map<String, dynamic>) {
         return res.data as Map<String, dynamic>;
       }
       return const {};

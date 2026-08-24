@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:qr_flutter/qr_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/common_widgets/app_button.dart';
 import '../../../../core/common_widgets/app_error_view.dart';
@@ -14,6 +14,7 @@ import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../domain/entities/booking_entities.dart';
 import '../providers/booking_providers.dart';
+import '../widgets/entry_qr_dialog.dart';
 
 enum BookingViewTab { BOOKINGS, TICKETS }
 
@@ -545,6 +546,21 @@ class _TicketPassCard extends StatelessWidget {
 
   const _TicketPassCard({required this.ticket});
 
+  Future<void> _launchMeetingUrl(BuildContext context, String urlStr) async {
+    final url = Uri.tryParse(urlStr);
+    if (url != null && await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } else {
+      if (context.mounted) {
+        AppSnackbar.show(
+          context,
+          message: 'Could not launch meeting link: $urlStr',
+          type: SnackbarType.error,
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -558,26 +574,74 @@ class _TicketPassCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header Row: Tier & Status Badge
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                ticket.ticketTypeName,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.primary,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  ticket.ticketTypeName,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.primary,
+                  ),
                 ),
               ),
-              AppStatusBadge(
-                label: ticket.isCheckedIn ? 'Checked In' : 'Valid Pass',
-                status: ticket.isCheckedIn
-                    ? BadgeStatus.completed
-                    : BadgeStatus.accepted,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: ticket.isCheckedIn
+                      ? const Color(0xFF3B82F6).withValues(alpha: 0.12)
+                      : (ticket.isConfirmed
+                          ? const Color(0xFF10B981).withValues(alpha: 0.12)
+                          : const Color(0xFFF59E0B).withValues(alpha: 0.12)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      ticket.isCheckedIn
+                          ? Icons.verified_user_rounded
+                          : (ticket.isConfirmed
+                              ? Icons.check_circle_rounded
+                              : Icons.hourglass_top_rounded),
+                      size: 13,
+                      color: ticket.isCheckedIn
+                          ? const Color(0xFF2563EB)
+                          : (ticket.isConfirmed
+                              ? const Color(0xFF059669)
+                              : const Color(0xFFD97706)),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      ticket.isCheckedIn
+                          ? 'CHECKED IN'
+                          : (ticket.isConfirmed ? 'CONFIRMED PASS' : 'PENDING REVIEW'),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
+                        color: ticket.isCheckedIn
+                            ? const Color(0xFF2563EB)
+                            : (ticket.isConfirmed
+                                ? const Color(0xFF059669)
+                                : const Color(0xFFD97706)),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
+
+          // Event Title
           Text(
             ticket.eventTitle,
             style: GoogleFonts.plusJakartaSans(
@@ -586,42 +650,128 @@ class _TicketPassCard extends StatelessWidget {
               color: AppColors.getTextPrimary(context),
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            ticket.venueName,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 12,
-              color: AppColors.getTextSecondary(context),
-            ),
+          const SizedBox(height: 8),
+
+          // Date & Time Row
+          Row(
+            children: [
+              const Icon(Icons.calendar_today_rounded, size: 14, color: AppColors.primary),
+              const SizedBox(width: 6),
+              Text(
+                DateFormatter.formatEventDate(ticket.eventDate),
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.getTextSecondary(context),
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Icon(Icons.access_time_rounded, size: 14, color: AppColors.primary),
+              const SizedBox(width: 6),
+              Text(
+                '${DateFormatter.formatEventTime(ticket.eventDate)} IST',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.getTextSecondary(context),
+                ),
+              ),
+            ],
           ),
+          const SizedBox(height: 6),
+
+          // Venue / Mode Row
+          Row(
+            children: [
+              Icon(
+                ticket.isOnline ? Icons.laptop_mac_rounded : Icons.location_on_rounded,
+                size: 14,
+                color: ticket.isOnline ? const Color(0xFF3B82F6) : AppColors.primary,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  ticket.venueName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    color: AppColors.getTextSecondary(context),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
           const SizedBox(height: 16),
-          Center(
-            child: Container(
+          Divider(height: 1, color: AppColors.getBorder(context)),
+          const SizedBox(height: 14),
+
+          // Action Buttons
+          if (ticket.isPending) ...[
+            Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.getBorder(context)),
+                color: const Color(0xFFF59E0B).withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.2)),
               ),
-              child: QrImageView(
-                data: ticket.qrCodeData,
-                version: QrVersions.auto,
-                size: 140,
-                backgroundColor: Colors.white,
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline_rounded, size: 18, color: Color(0xFFD97706)),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Your registration is under host review. Pass QR code will be generated once approved.',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.getTextPrimary(context),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-          const SizedBox(height: 12),
-          Center(
-            child: Text(
-              'Show this QR code at the entrance',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 11,
-                color: AppColors.getTextMuted(context),
-                fontWeight: FontWeight.w600,
-              ),
+          ] else ...[
+            Row(
+              children: [
+                if (ticket.isOnline && ticket.accessLink != null && ticket.accessLink!.isNotEmpty) ...[
+                  Expanded(
+                    child: AppPrimaryButton(
+                      text: 'Join Meeting',
+                      icon: Icons.video_call_rounded,
+                      backgroundColor: const Color(0xFF2563EB),
+                      onPressed: () => _launchMeetingUrl(context, ticket.accessLink!),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  OutlinedButton.icon(
+                    icon: const Icon(Icons.qr_code_2_rounded, size: 16),
+                    label: Text(
+                      'QR',
+                      style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      foregroundColor: AppColors.primary,
+                      side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () => EntryQrDialog.show(context, ticket),
+                  ),
+                ] else ...[
+                  Expanded(
+                    child: AppPrimaryButton(
+                      text: 'Show Entry QR Code',
+                      icon: Icons.qr_code_2_rounded,
+                      onPressed: () => EntryQrDialog.show(context, ticket),
+                    ),
+                  ),
+                ],
+              ],
             ),
-          ),
+          ],
         ],
       ),
     );

@@ -39,9 +39,10 @@ class BookingRemoteDataSource {
     try {
       final res = await _dio.get(ApiConstants.myTickets);
       if (res.statusCode == 200) {
-        final list = _extractList(res.data, ['tickets', 'data', 'items']);
+        final list = _extractList(res.data, ['tickets', 'data', 'items', 'registrations', 'passes']);
         return list
-            .map((e) => EventTicketPass.fromJson(e as Map<String, dynamic>))
+            .whereType<Map<String, dynamic>>()
+            .map(EventTicketPass.fromJson)
             .toList();
       }
       return const [];

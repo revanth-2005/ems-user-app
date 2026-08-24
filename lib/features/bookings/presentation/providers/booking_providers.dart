@@ -1,6 +1,8 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/network/dio_client.dart';
+import '../../../../core/utils/date_formatter.dart';
 import '../../../home/domain/entities/catalog_entities.dart';
+import '../../../home/presentation/providers/catalog_providers.dart';
 import '../../data/datasources/booking_remote_datasource.dart';
 import '../../data/repositories/booking_repository_impl.dart';
 import '../../domain/entities/booking_entities.dart';
@@ -202,6 +204,58 @@ class CartNotifier extends Notifier<CartState> {
       endTime: endTime ?? '14:00',
       quantity: quantity,
       organizer: srv.organizer,
+    );
+
+    state = state.copyWith(items: [...state.items, item]);
+  }
+
+  Future<void> addEvent(
+    PublicEvent event, {
+    TicketType? ticketType,
+    int quantity = 1,
+  }) async {
+    final selectedTier = ticketType ??
+        (event.ticketTypes.isNotEmpty ? event.ticketTypes.first : null);
+    final price = selectedTier?.priceInPaise ?? event.minPricePaise;
+    final tierName = selectedTier?.name ?? 'General Pass';
+
+    String cartItemId = 'cart_evt_${DateTime.now().millisecondsSinceEpoch}';
+
+    // 1. If it's a free pass or registration, hit the register API
+    try {
+      if (selectedTier != null && selectedTier.isFree) {
+        final catalogRepo = ref.read(catalogRepositoryProvider);
+        final res = await catalogRepo.registerForEvent(
+          eventId: event.id,
+          ticketTypeId: selectedTier.id,
+          quantity: quantity,
+        );
+        if (res.containsKey('id') || res.containsKey('registrationId')) {
+          cartItemId = (res['registrationId'] ?? res['id']).toString();
+        }
+        ref.invalidate(myTicketsProvider);
+      }
+    } catch (_) {}
+
+    final item = CartItem(
+      id: cartItemId,
+      itemName: '${event.title}${selectedTier != null ? " ($tierName)" : ""}',
+      coverImageUrl: event.coverImageUrl,
+      priceInPaise: price,
+      depositRequiredPaise: price,
+      balanceDuePaise: 0,
+      eventDate: event.startDatetime,
+      startTime: DateFormatter.formatTime(event.startDatetime),
+      endTime: event.endDatetime != null
+          ? DateFormatter.formatTime(event.endDatetime!)
+          : '23:00',
+      quantity: quantity,
+      organizer: OrganizerSummary(
+        id: event.id,
+        businessName: event.hostName,
+        displayName: event.hostName,
+        city: event.venueCity ?? '',
+      ),
     );
 
     state = state.copyWith(items: [...state.items, item]);

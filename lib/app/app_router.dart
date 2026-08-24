@@ -6,6 +6,7 @@ import '../features/auth/presentation/providers/auth_providers.dart';
 import '../features/auth/presentation/views/login_screen.dart';
 import '../features/auth/presentation/views/signup_screen.dart';
 import '../features/auth/presentation/views/verify_otp_screen.dart';
+import '../features/home/presentation/views/events_discovery_view.dart';
 import '../features/home/presentation/views/home_discovery_screen.dart';
 import '../features/home/presentation/views/search_filter_screen.dart';
 import '../features/home/presentation/views/event_detail_screen.dart';
@@ -23,6 +24,7 @@ import '../features/organizer/presentation/views/kyc_registration_screen.dart';
 import '../features/organizer/presentation/views/onboarding_wizard_screen.dart';
 import '../features/host/presentation/views/host_dashboard_screen.dart';
 import '../features/host/presentation/views/create_event_screen.dart';
+import '../features/host/presentation/views/event_management_hub_screen.dart';
 import '../features/host/presentation/views/attendee_queue_screen.dart';
 import '../features/host/presentation/views/qr_scanner_screen.dart';
 import '../features/profile/presentation/views/customer_profile_screen.dart';
@@ -41,6 +43,7 @@ abstract class AppRoutes {
   static const search = '/search';
   static const bookings = '/bookings';
   static const profile = '/profile';
+  static const eventsDiscovery = '/events';
 
   // Detail screens
   static const eventDetail = '/detail/event/:id';
@@ -54,8 +57,10 @@ abstract class AppRoutes {
   // Host
   static const hostDashboard = '/host';
   static const createEvent = '/host/create-event';
-  static const attendeeQueue = '/host/attendees/:eventId';
-  static const qrScanner = '/host/scanner/:eventId';
+  static const hostCreateEvent = '/host/create-event';
+  static const hostManagementHub = '/host/manage/:id';
+  static const attendeeQueue = '/host/attendees/:id';
+  static const qrScanner = '/host/scanner/:id';
 
   // Organizer
   static const organizerDashboard = '/organizer';
@@ -146,6 +151,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       // ── Detail Screens ────────────────────────────────────────────────────
       GoRoute(
+        path: AppRoutes.eventsDiscovery,
+        builder: (_, __) => const EventsDiscoveryView(),
+      ),
+      GoRoute(
         path: AppRoutes.eventDetail,
         builder: (_, state) =>
             EventDetailScreen(eventId: state.pathParameters['id']!),
@@ -172,6 +181,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // ── Host ──────────────────────────────────────────────────────────────
       GoRoute(path: AppRoutes.hostDashboard, builder: (_, __) => const HostDashboardScreen()),
       GoRoute(path: AppRoutes.createEvent, builder: (_, __) => const CreateEventScreen()),
+      GoRoute(
+        path: AppRoutes.hostManagementHub,
+        builder: (_, state) =>
+            EventManagementHubScreen(eventId: state.pathParameters['id']!),
+      ),
       GoRoute(
         path: AppRoutes.attendeeQueue,
         builder: (_, state) =>

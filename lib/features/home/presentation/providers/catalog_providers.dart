@@ -122,17 +122,41 @@ final organizersProvider = FutureProvider<List<OrganizerSummary>>((ref) async {
   );
 });
 
+// ── Event Specific Filters & State ────────────────────────────────────────
+
+final selectedEventModeProvider = StateProvider<String>((_) => 'ALL'); // 'ALL' | 'OFFLINE' | 'ONLINE'
+
+final selectedEventCategoryProvider = StateProvider<String?>((_) => null);
+
+final eventSearchQueryProvider = StateProvider<String>((_) => '');
+
+final eventCategoriesProvider = FutureProvider<List<EventCategory>>((ref) async {
+  final repo = ref.watch(catalogRepositoryProvider);
+  return repo.getEventCategories();
+});
+
 final eventsProvider = FutureProvider<List<PublicEvent>>((ref) async {
   final repo = ref.watch(catalogRepositoryProvider);
   final rawCity = ref.watch(selectedCityProvider);
   final city = (rawCity.isEmpty || rawCity == 'All') ? null : rawCity;
-  final categoryId = ref.watch(selectedCategoryFilterProvider);
-  final search = ref.watch(catalogSearchQueryProvider);
+  final categoryId = ref.watch(selectedEventCategoryProvider);
+  final mode = ref.watch(selectedEventModeProvider);
+  final search = ref.watch(eventSearchQueryProvider);
 
   return repo.getEvents(
     city: city,
     categoryId: categoryId,
-    search: search,
+    mode: mode == 'ALL' ? null : mode,
+    search: search.isNotEmpty ? search : null,
+  );
+});
+
+final eventFeeCalculatorProvider =
+    FutureProvider.autoDispose.family<FeeBreakdownModel?, ({String categoryId, double price})>((ref, args) async {
+  final repo = ref.watch(catalogRepositoryProvider);
+  return repo.calculateEventFee(
+    categoryId: args.categoryId,
+    price: args.price,
   );
 });
 
@@ -165,7 +189,16 @@ final organizerAvailabilityProvider =
 final eventDetailProvider =
     FutureProvider.autoDispose.family<PublicEvent?, String>((ref, idOrSlug) async {
   final repo = ref.watch(catalogRepositoryProvider);
-  return repo.getEventById(idOrSlug);
+  final direct = await repo.getEventById(idOrSlug);
+  if (direct != null) return direct;
+
+  final cachedEvents = ref.watch(eventsProvider).valueOrNull ?? [];
+  for (final e in cachedEvents) {
+    if (e.id == idOrSlug || e.slug == idOrSlug) {
+      return e;
+    }
+  }
+  return null;
 });
 
 // ── Home Feed State ───────────────────────────────────────────────────────

@@ -6,22 +6,21 @@ class HostLocalDataSource {
     HostEventItem(
       id: 'evt_tech_fest_2026',
       title: 'Sunburn Arena: Neon Horizons',
-      eventDate: DateTime.now().add(const Duration(days: 5, hours: 18)),
-      venue: 'Mahalaxmi Racecourse Arena, Mumbai',
-      totalRegistrations: 1420,
-      checkedInCount: 680,
-      totalCapacity: 2000,
-      revenueInPaise: 709858000,
-      isLive: true,
+      startDatetime: DateTime.now().add(const Duration(days: 5, hours: 18)),
+      venueName: 'Mahalaxmi Racecourse Arena, Mumbai',
+      registeredCount: 1420,
+      maxCapacity: 2000,
+      status: 'PUBLISHED',
       coverImageUrl:
           'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&auto=format&fit=crop',
-      ticketTiers: const [
+      ticketTypes: const [
         TicketType(
           id: 'tkt_vip_01',
           name: 'VIP Elevated Deck + 2 Drinks',
           priceInPaise: 499900,
           description: 'Access to premium elevated viewing deck.',
           quantity: 45,
+          soldCount: 40,
         ),
         TicketType(
           id: 'tkt_ga_01',
@@ -29,28 +28,28 @@ class HostLocalDataSource {
           priceInPaise: 199900,
           description: 'Standard arena floor access.',
           quantity: 120,
+          soldCount: 110,
         ),
       ],
     ),
     HostEventItem(
       id: 'evt_design_summit',
       title: 'Apex Global Design & AI Summit',
-      eventDate: DateTime.now().add(const Duration(days: 20)),
-      venue: 'Jio World Convention Centre, BKC',
-      totalRegistrations: 450,
-      checkedInCount: 0,
-      totalCapacity: 500,
-      revenueInPaise: 225000000,
-      isLive: true,
+      startDatetime: DateTime.now().add(const Duration(days: 20)),
+      venueName: 'Jio World Convention Centre, BKC',
+      registeredCount: 450,
+      maxCapacity: 500,
+      status: 'PUBLISHED',
       coverImageUrl:
           'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&auto=format&fit=crop',
-      ticketTiers: const [
+      ticketTypes: const [
         TicketType(
           id: 'tkt_summit_01',
           name: 'All-Access Pass',
           priceInPaise: 500000,
           description: 'Access to mainstage and workshop rooms.',
           quantity: 50,
+          soldCount: 45,
         ),
       ],
     ),
@@ -114,14 +113,6 @@ class HostLocalDataSource {
       checkedInAt: DateTime.now(),
     );
     list[idx] = updated;
-
-    // Update checkedInCount
-    final eventIdx = _events.indexWhere((e) => e.id == eventId);
-    if (eventIdx != -1) {
-      _events[eventIdx] = _events[eventIdx].copyWith(
-        checkedInCount: _events[eventIdx].checkedInCount + 1,
-      );
-    }
 
     return QrCheckInResult(
       status: CheckInResultStatus.VALID,

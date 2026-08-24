@@ -90,6 +90,9 @@ class AppColors {
   static Color getBg(BuildContext context) =>
       isDark(context) ? darkBg : whiteBg;
 
+  static Color getBackground(BuildContext context) =>
+      isDark(context) ? darkBg : whiteBg;
+
   static Color getSurface(BuildContext context) =>
       isDark(context) ? darkSurface : whiteSurface;
 

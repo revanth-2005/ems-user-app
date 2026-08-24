@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -6,9 +7,9 @@ import '../constants/app_colors.dart';
 import 'app_loader.dart';
 
 /// Project-level wrapper for images with:
-/// 1. Automatic URL normalization (routing MinIO/LAN URLs via ApiConstants serverHost:6006)
-/// 2. Live HTTP decoding using Image.network so live API images render immediately
-/// 3. Curated aesthetic fallbacks when URL is null or unreachable
+/// 1. Automatic URL normalization — MinIO URLs are passed through unchanged (host preserved from API)
+/// 2. Disk-cached decoding via CachedNetworkImage (background thread, no ANR on low-end devices)
+/// 3. Letter-initial placeholder when URL is null or unreachable
 class AppNetworkImage extends StatelessWidget {
   final String? url;
   final double? width;
@@ -31,39 +32,54 @@ class AppNetworkImage extends StatelessWidget {
     this.titleHint,
   });
 
-  /// Normalizes any backend-provided media URL, routing MinIO URLs through
-  /// the local ADB reverse proxy (port 6008) so connected mobile devices can fetch them.
+  /// Cache-bust version — increment this whenever MinIO files are re-uploaded
+  /// to force CachedNetworkImage to download fresh copies.
+  static const String _cacheV = 'v=6';
+
+  /// Normalizes any backend-provided media URL.
+  /// For MinIO URLs (port 6006 or /ems-media/ paths), strips stale query params
+  /// and appends [_cacheV] so stale disk-cached images are never served.
+  /// The MinIO host from the API response is preserved as-is — do NOT rewrite
+  /// it, as the API's MinIO host is the authoritative source of media files.
   static String? normalizeUrl(String? rawUrl) {
     if (rawUrl == null || rawUrl.trim().isEmpty) return null;
     final trimmed = rawUrl.trim();
 
-    // MinIO endpoint (port 6006 or /ems-media/ path) -> route via reverse proxy on port 6008
+    // MinIO endpoint — strip old query params and append fresh cache-bust version
     if (trimmed.contains(':6006') || trimmed.contains('/ems-media/')) {
-      final emsMediaIndex = trimmed.indexOf('/ems-media/');
-      if (emsMediaIndex != -1) {
-        final path = trimmed.substring(emsMediaIndex);
-        return 'http://${ApiConstants.serverHost}:6008$path';
-      }
+      final cleanPath = trimmed.split('?').first;
+      return '$cleanPath?$_cacheV';
     }
 
-    // Relative paths
+    // Relative /ems-media/ paths — prepend active MinIO host
     if (trimmed.startsWith('/ems-media/')) {
-      return 'http://${ApiConstants.serverHost}:6008$trimmed';
+      final path = trimmed.split('?').first;
+      return 'http://${ApiConstants.serverHost}:6006$path?$_cacheV';
     }
     if (trimmed.startsWith('ems-media/')) {
-      return 'http://${ApiConstants.serverHost}:6008/$trimmed';
+      final path = trimmed.split('?').first;
+      return 'http://${ApiConstants.serverHost}:6006/$path?$_cacheV';
     }
     if (trimmed.startsWith('packages/') ||
         trimmed.startsWith('services/') ||
-        trimmed.startsWith('events/')) {
-      return 'http://${ApiConstants.serverHost}:6008/ems-media/$trimmed';
+        trimmed.startsWith('events/') ||
+        trimmed.startsWith('categories/') ||
+        trimmed.startsWith('organizers/') ||
+        trimmed.startsWith('users/')) {
+      final path = trimmed.split('?').first;
+      return 'http://${ApiConstants.serverHost}:6006/ems-media/$path?$_cacheV';
+    }
+    if (trimmed.startsWith('/packages/') ||
+        trimmed.startsWith('/services/') ||
+        trimmed.startsWith('/events/') ||
+        trimmed.startsWith('/categories/') ||
+        trimmed.startsWith('/organizers/') ||
+        trimmed.startsWith('/users/')) {
+      final path = trimmed.split('?').first;
+      return 'http://${ApiConstants.serverHost}:6006/ems-media$path?$_cacheV';
     }
 
-    // External CDN / Cloud images (Unsplash, Cloudinary, Google, etc.)
-    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
-      return trimmed;
-    }
-
+    // Pass all other absolute URLs through unchanged
     return trimmed;
   }
 
@@ -133,25 +149,21 @@ class AppNetworkImage extends StatelessWidget {
         ),
       );
     } else if (hasUrl) {
-      imageWidget = Image.network(
-        normalized,
+      imageWidget = CachedNetworkImage(
+        imageUrl: normalized,
         width: width,
         height: height,
         fit: fit,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return AppShimmerBox(
-            width: width ?? double.infinity,
-            height: height ?? 120,
-            borderRadius: borderRadius,
-          );
-        },
-        errorBuilder: (context, error, stackTrace) {
-          return errorWidget ?? _buildPlaceholder(width, height);
-        },
+        placeholder: (context, url) => AppShimmerBox(
+          width: width ?? double.infinity,
+          height: height ?? 120,
+          borderRadius: borderRadius,
+        ),
+        errorWidget: (context, url, error) =>
+            errorWidget ?? _buildLetterPlaceholder(width, height),
       );
     } else {
-      imageWidget = errorWidget ?? _buildPlaceholder(width, height);
+      imageWidget = errorWidget ?? _buildLetterPlaceholder(width, height);
     }
 
     if (borderRadius > 0) {
@@ -161,43 +173,6 @@ class AppNetworkImage extends StatelessWidget {
       );
     }
     return imageWidget;
-  }
-
-  /// Curated high-resolution aesthetic event imagery matched to event categories
-  static String getCategoryStockFallback(String? categoryHint, String? titleHint) {
-    final hint = '${categoryHint ?? ''} ${titleHint ?? ''}'.toLowerCase();
-    if (hint.contains('wedding') || hint.contains('marriage')) {
-      return 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80';
-    } else if (hint.contains('cater') || hint.contains('food') || hint.contains('dining')) {
-      return 'https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=800&q=80';
-    } else if (hint.contains('corporate') || hint.contains('conference') || hint.contains('business') || hint.contains('workshop')) {
-      return 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=800&q=80';
-    } else if (hint.contains('birthday') || hint.contains('party') || hint.contains('cake')) {
-      return 'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?auto=format&fit=crop&w=800&q=80';
-    } else if (hint.contains('music') || hint.contains('concert') || hint.contains('dj') || hint.contains('band')) {
-      return 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80';
-    } else if (hint.contains('decor') || hint.contains('stage') || hint.contains('floral')) {
-      return 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=800&q=80';
-    } else if (hint.contains('photo') || hint.contains('shoot') || hint.contains('video')) {
-      return 'https://images.unsplash.com/photo-1537633552985-df8429e8048b?auto=format&fit=crop&w=800&q=80';
-    }
-    return 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80';
-  }
-
-  Widget _buildPlaceholder(double? w, double? h) {
-    // For card cover images & banners, show a themed high-res stock photo
-    if (w == null || w >= 80 || h == null || h >= 80) {
-      final stockUrl = getCategoryStockFallback(categoryHint, titleHint);
-      return Image.network(
-        stockUrl,
-        width: w,
-        height: h,
-        fit: fit,
-        errorBuilder: (_, __, ___) => _buildLetterPlaceholder(w, h),
-      );
-    }
-
-    return _buildLetterPlaceholder(w, h);
   }
 
   Widget _buildLetterPlaceholder(double? w, double? h) {

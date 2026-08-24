@@ -23,234 +23,272 @@ class PackageCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cityName = package.city?.isNotEmpty == true ? package.city! : 'India';
+    final cityName =
+        package.city?.isNotEmpty == true ? package.city! : 'Coimbatore';
+    const cardBg = Color(0xFF131418);
+    final originalPricePaise = (package.priceInPaise * 1.5).round();
+    const discountPct = 33;
+
+    final descriptionText = (package.description?.isNotEmpty == true)
+        ? package.description!
+        : (package.inclusions.isNotEmpty
+            ? package.inclusions.join(' • ')
+            : 'Everything you need to launch & grow your event.');
 
     return GestureDetector(
       onTap: onTap ?? () => context.push('/detail/package/${package.id}'),
       child: Container(
+        height: 195,
         decoration: BoxDecoration(
-          color: AppColors.getSurface(context),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.getBorder(context)),
-          boxShadow: AppColors.getCardShadow(context),
+          color: cardBg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.12),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.45),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
           children: [
-            // ── Top Cover Image ──────────────────────────────────────────────
-            Stack(
-              children: [
-                AspectRatio(
-                  aspectRatio: 16 / 9,
-                  child: AppNetworkImage(
-                    url: package.coverImageUrl,
-                    categoryHint: package.categoryName,
-                    titleHint: package.name,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                Positioned(
-                  top: 12,
-                  right: 12,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.65),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.18),
-                        width: 1,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.location_on_rounded,
-                            size: 12, color: Color(0xFFE50914)),
-                        const SizedBox(width: 4),
-                        Text(
-                          cityName.toUpperCase(),
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.6,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+            // ── 1. Full-bleed Background Image ──────────────────────────────
+            Positioned.fill(
+              child: AppNetworkImage(
+                url: package.coverImageUrl,
+                categoryHint: package.categoryName,
+                titleHint: package.name,
+                fit: BoxFit.cover,
+              ),
             ),
 
-            // ── Body Information ─────────────────────────────────────────────
+            // ── 2. Horizontal Dark Gradient for Text Contrast ──────────────
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    stops: const [0.0, 0.42, 0.72, 1.0],
+                    colors: [
+                      const Color(0xFF0C0D12).withValues(alpha: 0.95),
+                      const Color(0xFF0C0D12).withValues(alpha: 0.82),
+                      const Color(0xFF0C0D12).withValues(alpha: 0.35),
+                      const Color(0xFF0C0D12).withValues(alpha: 0.08),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // ── 3. Vertical Vignette Gradient (Top & Bottom Edge Darkening) ─
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    stops: const [0.0, 0.40, 0.70, 1.0],
+                    colors: [
+                      Colors.black.withValues(alpha: 0.45),
+                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.35),
+                      Colors.black.withValues(alpha: 0.85),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // ── 4. Card Content ─────────────────────────────────────────────
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Title
-                  Text(
-                    package.name,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.getTextPrimary(context),
-                      height: 1.25,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 6),
-
-                  // 1. Organizer Byline & Category
-                  Row(
+                  // Top section: FEATURED badge + Title + Description + Location
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
-                        Icons.storefront_outlined,
-                        size: 14,
-                        color: AppColors.getTextSecondary(context),
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
+                      // 1. FEATURED badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3.5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF500F14).withValues(alpha: 0.92),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                            color: const Color(0xFF7A1820),
+                            width: 0.8,
+                          ),
+                        ),
                         child: Text(
-                          package.categoryName.isNotEmpty
-                              ? 'by ${package.organizerName}  ·  ${package.categoryName}'
-                              : 'by ${package.organizerName}',
+                          'FEATURED',
                           style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.getTextSecondary(context),
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.6,
+                            color: const Color(0xFFFF5C5C),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 7),
+
+                      // 2. Title
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 220),
+                        child: Text(
+                          package.name,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 17.5,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            letterSpacing: -0.3,
+                            height: 1.15,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withValues(alpha: 0.7),
+                                blurRadius: 4,
+                              ),
+                            ],
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      const SizedBox(height: 4),
+
+                      // 3. Subtitle / Description
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 210),
+                        child: Text(
+                          descriptionText,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.white.withValues(alpha: 0.75),
+                            height: 1.25,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withValues(alpha: 0.6),
+                                blurRadius: 3,
+                              ),
+                            ],
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // 4. Location Badge Capsule
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3.5),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.60),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.16),
+                            width: 0.8,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.location_on_rounded,
+                              size: 10.5,
+                              color: Color(0xFFE50914),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              cityName.toUpperCase(),
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.5,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 6),
 
-                  // 2. Guests capacity info
-                  if (package.effectiveMaxGuests > 0) ...[
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.people_alt_outlined,
-                          size: 14,
-                          color: AppColors.getTextSecondary(context),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            'Up to ${package.effectiveMaxGuests} guests',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.getTextSecondary(context),
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                  ],
-
-                  // 3. Inclusions info
-                  if (package.inclusions.isNotEmpty) ...[
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.task_alt_rounded,
-                          size: 14,
-                          color: AppColors.getTextSecondary(context),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            package.inclusions.take(3).join('  ·  '),
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.getTextSecondary(context),
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-
-                  Divider(height: 1, color: AppColors.getBorder(context)),
-                  const SizedBox(height: 12),
-
-                  // Price and View Details Footer
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                  // Bottom section: Starts at + Price + Strikethrough + Discount %
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      Text(
+                        'Starts at',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white.withValues(alpha: 0.65),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Text(
-                            'PACKAGE TOTAL',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.5,
-                              color: AppColors.getTextMuted(context),
-                            ),
-                          ),
-                          const SizedBox(height: 2),
                           Text(
                             CurrencyFormatter.formatPaise(package.priceInPaise),
                             style: GoogleFonts.plusJakartaSans(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.getTextPrimary(context),
+                              fontSize: 17.5,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                              letterSpacing: -0.3,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black.withValues(alpha: 0.7),
+                                  blurRadius: 4,
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (originalPricePaise > package.priceInPaise) ...[
+                            const SizedBox(width: 6),
+                            Text(
+                              CurrencyFormatter.formatPaise(originalPricePaise),
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white.withValues(alpha: 0.45),
+                                decoration: TextDecoration.lineThrough,
+                                decorationColor:
+                                    Colors.white.withValues(alpha: 0.45),
+                              ),
+                            ),
+                          ],
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2.5),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF8A141C),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              '$discountPct% OFF',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                                letterSpacing: 0.2,
+                              ),
                             ),
                           ),
                         ],
-                      ),
-                      GestureDetector(
-                        onTap: onTap ?? () => context.push('/detail/package/${package.id}'),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                'View Details',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              const Icon(Icons.arrow_forward_rounded,
-                                  size: 14, color: Colors.white),
-                            ],
-                          ),
-                        ),
                       ),
                     ],
                   ),
@@ -265,6 +303,7 @@ class PackageCard extends StatelessWidget {
 }
 
 // ── 2. Standalone Service Card ───────────────────────────────────────────────
+
 
 class ServiceCard extends StatelessWidget {
   final StandaloneService service;

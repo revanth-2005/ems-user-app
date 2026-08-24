@@ -13,8 +13,97 @@ class HostRepositoryImpl implements HostRepository {
   }
 
   @override
-  Future<HostEventItem> createEvent(HostEventItem event) async {
-    return _remote.createEvent(event);
+  Future<HostEventItem?> getEventDetails(String id) async {
+    return _remote.getEventDetails(id);
+  }
+
+  @override
+  Future<HostEventItem> createEvent(CreateEventRequest req) async {
+    return _remote.createEvent(req);
+  }
+
+  @override
+  Future<HostEventItem> updateEvent(String id, Map<String, dynamic> data) async {
+    return _remote.updateEvent(id, data);
+  }
+
+  @override
+  Future<HostEventItem> publishEvent(String id) async {
+    return _remote.publishEvent(id);
+  }
+
+  @override
+  Future<GenerateMeetResponse> generateMeetRoom(String title) async {
+    return _remote.generateMeetRoom(title);
+  }
+
+  @override
+  Future<Map<String, dynamic>> createTicketTier(
+    String eventId,
+    CreateTicketTierRequest tier,
+  ) async {
+    return _remote.createTicketTier(eventId, tier);
+  }
+
+  @override
+  Future<Map<String, dynamic>> updateTicketTier(
+    String ticketTypeId,
+    Map<String, dynamic> data,
+  ) async {
+    return _remote.updateTicketTier(ticketTypeId, data);
+  }
+
+  @override
+  Future<bool> deleteTicketTier(String ticketTypeId) async {
+    return _remote.deleteTicketTier(ticketTypeId);
+  }
+
+  @override
+  Future<List<HostRegistration>> getAttendeeQueue(
+    String eventId, {
+    String? status,
+  }) async {
+    return _remote.getAttendeeQueue(eventId, status: status);
+  }
+
+  @override
+  Future<bool> approveRegistration(
+    String registrationId, {
+    String? hostMessage,
+  }) async {
+    return _remote.approveRegistration(registrationId, hostMessage: hostMessage);
+  }
+
+  @override
+  Future<bool> declineRegistration(
+    String registrationId, {
+    String? hostMessage,
+  }) async {
+    return _remote.declineRegistration(registrationId, hostMessage: hostMessage);
+  }
+
+  @override
+  Future<CheckInResponse> checkInAttendee(String eventId, String qrCode) async {
+    return _remote.checkInAttendee(eventId, qrCode);
+  }
+
+  @override
+  Future<BulkCheckInResponse> bulkCheckIn(
+    String eventId, {
+    required String registrationId,
+    int? count,
+  }) async {
+    return _remote.bulkCheckIn(eventId, registrationId: registrationId, count: count);
+  }
+
+  @override
+  Future<GateCheckInStats> getCheckInStats(String eventId) async {
+    return _remote.getCheckInStats(eventId);
+  }
+
+  @override
+  Future<Map<String, dynamic>> getCalendarLinks(String eventId) async {
+    return _remote.getCalendarLink(eventId);
   }
 
   @override
@@ -32,3 +121,4 @@ class HostRepositoryImpl implements HostRepository {
     return _remote.manualCheckIn(eventId, attendeeId);
   }
 }
+

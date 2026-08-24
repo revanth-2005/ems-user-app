@@ -15,14 +15,18 @@ class AppPrimaryButton extends StatelessWidget {
   final IconData? icon;
   final bool isLoading;
   final double? width;
+  final Color? backgroundColor;
+  final Gradient? gradient;
 
   const AppPrimaryButton({
     super.key,
-    required this.text,
+    this.text = '',
     this.onPressed,
     this.icon,
     this.isLoading = false,
     this.width,
+    this.backgroundColor,
+    this.gradient,
   });
 
   @override
@@ -32,16 +36,19 @@ class AppPrimaryButton extends StatelessWidget {
       height: 52,
       child: DecoratedBox(
         decoration: BoxDecoration(
+          color: (gradient == null && backgroundColor != null && onPressed != null)
+              ? backgroundColor
+              : null,
           gradient: onPressed == null
               ? LinearGradient(
                   colors: [Colors.grey.shade300, Colors.grey.shade400])
-              : AppColors.primaryGradient,
+              : (gradient ?? (backgroundColor == null ? AppColors.primaryGradient : null)),
           borderRadius: BorderRadius.circular(50),
           boxShadow: onPressed == null
               ? []
               : [
                   BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.35),
+                    color: (backgroundColor ?? AppColors.primary).withValues(alpha: 0.35),
                     blurRadius: 16,
                     offset: const Offset(0, 6),
                   ),
@@ -97,7 +104,7 @@ class AppSecondaryButton extends StatelessWidget {
 
   const AppSecondaryButton({
     super.key,
-    required this.text,
+    this.text = '',
     this.onPressed,
     this.icon,
     this.isLoading = false,
@@ -154,3 +161,4 @@ class AppSecondaryButton extends StatelessWidget {
     );
   }
 }
+

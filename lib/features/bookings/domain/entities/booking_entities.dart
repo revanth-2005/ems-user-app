@@ -157,55 +157,149 @@ class VendorBooking {
 
 class EventTicketPass {
   final String id;
-  final String eventId;
-  final String eventTitle;
-  final DateTime eventDate;
-  final String venueName;
-  final String ticketTypeName;
-  final int pricePaidPaise;
-  final String qrCodeData;
+  final String registrationId;
+  final int quantity;
+  final int totalAmountPaise;
+  final String status; // 'CONFIRMED' | 'PENDING' | 'CANCELLED' | 'REJECTED'
+  final DateTime createdAt;
+  final DateTime? approvedAt;
+  final String? hostMessage;
+  final PublicEvent? event;
+  final TicketType? ticketType;
+  final List<IndividualTicketModel> tickets;
+  final String? accessLink;
+  final String? qrCodeToken;
   final String attendeeName;
-  final bool isCheckedIn;
 
   const EventTicketPass({
     required this.id,
-    required this.eventId,
-    required this.eventTitle,
-    required this.eventDate,
-    required this.venueName,
-    required this.ticketTypeName,
-    required this.pricePaidPaise,
-    required this.qrCodeData,
-    required this.attendeeName,
-    this.isCheckedIn = false,
+    required this.registrationId,
+    this.quantity = 1,
+    this.totalAmountPaise = 0,
+    this.status = 'CONFIRMED',
+    required this.createdAt,
+    this.approvedAt,
+    this.hostMessage,
+    this.event,
+    this.ticketType,
+    this.tickets = const [],
+    this.accessLink,
+    this.qrCodeToken,
+    this.attendeeName = 'Attendee',
   });
 
+  // ── Backward-compatible & convenience getters ────────────────────────────
+  String get eventId => event?.id ?? '';
+  String get eventTitle => event?.title ?? 'Event Pass';
+  String? get coverImageUrl => event?.coverImageUrl;
+  DateTime get eventDate => event?.startDatetime ?? createdAt;
+  DateTime? get eventEndDate => event?.endDatetime;
+  String get venueName => event?.venueName ?? (event?.isOnline == true ? 'Online Live Stream' : (event?.venueCity ?? 'Venue'));
+  String? get venueAddress => event?.venueAddress;
+  String? get venueCity => event?.venueCity;
+  String get ticketTypeName => ticketType?.name ?? 'General Access Pass';
+  int get pricePaidPaise => totalAmountPaise;
+  bool get isOnline => event?.isOnline == true || (accessLink != null && accessLink!.isNotEmpty);
+  bool get isOffline => !isOnline;
+  bool get isConfirmed => status.toUpperCase() == 'CONFIRMED';
+  bool get isPending => status.toUpperCase() == 'PENDING' || status.toUpperCase() == 'PENDING REVIEW';
+  bool get isCheckedIn => tickets.isNotEmpty ? tickets.every((t) => t.isCheckedIn) : false;
+
+  String get qrCodeData {
+    if (qrCodeToken != null && qrCodeToken!.isNotEmpty) return qrCodeToken!;
+    if (tickets.isNotEmpty && tickets.first.qrCode != null) return tickets.first.qrCode!;
+    return 'EMS-PASS-$registrationId';
+  }
+
   factory EventTicketPass.fromJson(Map<String, dynamic> json) {
+    final regId = json['registrationId']?.toString() ?? json['id']?.toString() ?? '';
+
+    PublicEvent? evt;
+    if (json['event'] is Map<String, dynamic>) {
+      evt = PublicEvent.fromJson(json['event'] as Map<String, dynamic>);
+    } else {
+      evt = PublicEvent(
+        id: json['eventId']?.toString() ?? '',
+        title: json['eventTitle'] ?? json['title'] ?? 'Event Pass',
+        slug: json['slug']?.toString() ?? '',
+        coverImageUrl: json['coverImageUrl']?.toString(),
+        venueName: json['venueName'] ?? json['venue_name'],
+        venueAddress: json['venueAddress'] ?? json['venue_address'],
+        venueCity: json['venueCity'] ?? json['venue_city'],
+        startDatetime: json['eventDate'] != null
+            ? DateTime.tryParse(json['eventDate'].toString()) ?? DateTime.now()
+            : DateTime.now(),
+      );
+    }
+
+    TicketType? tt;
+    if (json['ticketType'] is Map<String, dynamic>) {
+      tt = TicketType.fromJson(json['ticketType'] as Map<String, dynamic>);
+    } else if (json['ticketTypeName'] != null) {
+      tt = TicketType(
+        id: 'tt_def',
+        name: json['ticketTypeName'].toString(),
+        priceInPaise: (json['pricePaidPaise'] ?? 0) as int,
+      );
+    }
+
+    final ticketObj = json['ticket'] is Map<String, dynamic>
+        ? IndividualTicketModel.fromJson(json['ticket'] as Map<String, dynamic>)
+        : null;
+
+    final ticketsList = json['tickets'] is List
+        ? (json['tickets'] as List)
+            .whereType<Map<String, dynamic>>()
+            .map(IndividualTicketModel.fromJson)
+            .toList()
+        : (ticketObj != null
+            ? [ticketObj]
+            : [
+                IndividualTicketModel(
+                  id: 't_1',
+                  ticketNumber: 1,
+                  qrCode: json['qrCodeData'] ?? json['qrCodeToken'] ?? 'EMSQR-$regId-1',
+                  isCheckedIn: json['isCheckedIn'] == true,
+                )
+              ]);
+
     return EventTicketPass(
-      id: json['id']?.toString() ?? '',
-      eventId: json['eventId']?.toString() ?? json['event_id']?.toString() ?? '',
-      eventTitle: json['eventTitle'] ?? json['event_title'] ?? json['title'] ?? 'Event Pass',
-      eventDate: json['eventDate'] != null ? DateTime.tryParse(json['eventDate'].toString()) ?? DateTime.now() : DateTime.now(),
-      venueName: json['venueName'] ?? json['venue_name'] ?? json['venue'] ?? 'City Arena',
-      ticketTypeName: json['ticketTypeName'] ?? json['ticket_type'] ?? 'General Access',
-      pricePaidPaise: (json['pricePaidPaise'] ?? json['price_paid_paise'] ?? json['priceInPaise'] ?? 0) as int,
-      qrCodeData: json['qrCodeData'] ?? json['qrCode'] ?? json['qr_code'] ?? 'EMS-PASS-${json['id']}',
-      attendeeName: json['attendeeName'] ?? json['attendee_name'] ?? 'Attendee',
-      isCheckedIn: json['isCheckedIn'] ?? json['is_checked_in'] ?? false,
+      id: regId,
+      registrationId: regId,
+      quantity: (json['quantity'] as num?)?.toInt() ?? ticketsList.length,
+      totalAmountPaise: (json['totalAmountPaise'] ?? json['pricePaidPaise'] ?? 0) as int,
+      status: json['status']?.toString().toUpperCase() ?? 'CONFIRMED',
+      createdAt: json['createdAt'] != null
+          ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()
+          : DateTime.now(),
+      approvedAt: json['approvedAt'] != null
+          ? DateTime.tryParse(json['approvedAt'].toString())
+          : null,
+      hostMessage: json['hostMessage']?.toString(),
+      event: evt,
+      ticketType: tt,
+      tickets: ticketsList,
+      accessLink: json['accessLink']?.toString() ?? json['access_link']?.toString() ?? json['meetingUrl']?.toString(),
+      qrCodeToken: json['qrCodeToken']?.toString() ?? json['qrCodeData']?.toString(),
+      attendeeName: json['attendeeName']?.toString() ?? 'Attendee',
     );
   }
 
   Map<String, dynamic> toJson() => {
         'id': id,
-        'eventId': eventId,
-        'eventTitle': eventTitle,
-        'eventDate': eventDate.toIso8601String(),
-        'venueName': venueName,
-        'ticketTypeName': ticketTypeName,
-        'pricePaidPaise': pricePaidPaise,
-        'qrCodeData': qrCodeData,
+        'registrationId': registrationId,
+        'quantity': quantity,
+        'totalAmountPaise': totalAmountPaise,
+        'status': status,
+        'createdAt': createdAt.toIso8601String(),
+        if (approvedAt != null) 'approvedAt': approvedAt!.toIso8601String(),
+        if (hostMessage != null) 'hostMessage': hostMessage,
+        if (event != null) 'event': event!.toJson(),
+        if (ticketType != null) 'ticketType': ticketType!.toJson(),
+        'tickets': tickets.map((t) => t.toJson()).toList(),
+        if (accessLink != null) 'accessLink': accessLink,
+        if (qrCodeToken != null) 'qrCodeToken': qrCodeToken,
         'attendeeName': attendeeName,
-        'isCheckedIn': isCheckedIn,
       };
 }
 

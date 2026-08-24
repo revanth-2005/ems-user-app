@@ -97,10 +97,15 @@ class CatalogRepositoryImpl implements CatalogRepository {
       _remote.getOrganizerAvailability(id, startDate: startDate, endDate: endDate);
 
   @override
+  Future<List<EventCategory>> getEventCategories() =>
+      _remote.getEventCategories();
+
+  @override
   Future<List<PublicEvent>> getEvents({
     String? search,
     String? city,
     String? categoryId,
+    String? mode,
     int page = 1,
     int limit = 20,
   }) =>
@@ -108,6 +113,7 @@ class CatalogRepositoryImpl implements CatalogRepository {
         search: search,
         city: city,
         categoryId: categoryId,
+        mode: mode,
         page: page,
         limit: limit,
       );
@@ -117,16 +123,54 @@ class CatalogRepositoryImpl implements CatalogRepository {
       _remote.getEventDetails(idOrSlug);
 
   @override
+  Future<FeeBreakdownModel?> calculateEventFee({
+    required String categoryId,
+    required double price,
+  }) =>
+      _remote.calculateEventFee(
+        categoryId: categoryId,
+        price: price,
+      );
+
+  @override
   Future<Map<String, dynamic>> registerForEvent({
     required String eventId,
     String? ticketTypeId,
     int quantity = 1,
+    String? attendeeNote,
     String? couponCode,
   }) =>
       _remote.registerForEvent(
         eventId: eventId,
         ticketTypeId: ticketTypeId,
         quantity: quantity,
+        attendeeNote: attendeeNote,
         couponCode: couponCode,
+      );
+
+  @override
+  Future<TicketOrderResponse> createTicketOrder({
+    required String eventId,
+    required String ticketTypeId,
+    int quantity = 1,
+    String? attendeeNote,
+  }) =>
+      _remote.createTicketOrder(
+        eventId: eventId,
+        ticketTypeId: ticketTypeId,
+        quantity: quantity,
+        attendeeNote: attendeeNote,
+      );
+
+  @override
+  Future<Map<String, dynamic>> verifyPayment({
+    required String gatewayOrderId,
+    required String gatewayPaymentId,
+    required String gatewaySignature,
+  }) =>
+      _remote.verifyPayment(
+        gatewayOrderId: gatewayOrderId,
+        gatewayPaymentId: gatewayPaymentId,
+        gatewaySignature: gatewaySignature,
       );
 }

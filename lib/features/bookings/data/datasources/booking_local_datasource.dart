@@ -52,15 +52,26 @@ class BookingLocalDataSource {
   final List<EventTicketPass> _mockTickets = [
     EventTicketPass(
       id: 'tkt_pass_001',
-      eventId: 'evt_tech_fest_2026',
-      eventTitle: 'Sunburn Arena: Neon Horizons',
-      eventDate: DateTime.now().add(const Duration(days: 5, hours: 18)),
-      venueName: 'Mahalaxmi Racecourse Arena, Mumbai',
-      ticketTypeName: 'VIP Elevated Deck + 2 Drinks',
-      pricePaidPaise: 499900,
-      qrCodeData: 'ES-PASS-2026-SUNBURN-ROHITH-001',
+      registrationId: 'reg_mock_001',
+      quantity: 1,
+      totalAmountPaise: 499900,
+      status: 'CONFIRMED',
+      createdAt: DateTime.now(),
+      event: PublicEvent(
+        id: 'evt_tech_fest_2026',
+        title: 'Sunburn Arena: Neon Horizons',
+        slug: 'sunburn-arena-neon-horizons',
+        startDatetime: DateTime.now().add(const Duration(days: 5, hours: 18)),
+        venueName: 'Mahalaxmi Racecourse Arena, Mumbai',
+        venueCity: 'Mumbai',
+      ),
+      ticketType: const TicketType(
+        id: 'tier_vip',
+        name: 'VIP Elevated Deck + 2 Drinks',
+        priceInPaise: 499900,
+      ),
+      qrCodeToken: 'ES-PASS-2026-SUNBURN-ROHITH-001',
       attendeeName: 'Rohith Kumar',
-      isCheckedIn: false,
     ),
   ];
 

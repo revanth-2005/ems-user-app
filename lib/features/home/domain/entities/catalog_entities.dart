@@ -633,7 +633,246 @@ class StandaloneService {
   }
 }
 
-// ── TicketType ──────────────────────────────────────────────────────────────
+// ── EventCategory (GET /master/event-categories) ────────────────────────────
+
+class EventCategory {
+  final String id;
+  final String name;
+  final String slug;
+  final String? description;
+  final String? icon;
+  final String? iconUrl;
+  final bool isActive;
+  final int sortOrder;
+  final int eventCount;
+
+  const EventCategory({
+    required this.id,
+    required this.name,
+    required this.slug,
+    this.description,
+    this.icon,
+    this.iconUrl,
+    this.isActive = true,
+    this.sortOrder = 0,
+    this.eventCount = 0,
+  });
+
+  factory EventCategory.fromJson(Map<String, dynamic> json) {
+    int count = 0;
+    if (json['_count'] is Map<String, dynamic>) {
+      count = json['_count']['events'] as int? ?? 0;
+    } else if (json['eventCount'] != null) {
+      count = (json['eventCount'] as num).toInt();
+    }
+
+    return EventCategory(
+      id: json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      slug: json['slug']?.toString() ?? '',
+      description: json['description']?.toString(),
+      icon: json['icon']?.toString(),
+      iconUrl: json['iconUrl']?.toString() ?? json['icon_url']?.toString(),
+      isActive: json['isActive'] == true || json['is_active'] == true,
+      sortOrder: (json['sortOrder'] ?? json['sort_order'] ?? 0) as int,
+      eventCount: count,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'slug': slug,
+        if (description != null) 'description': description,
+        if (icon != null) 'icon': icon,
+        if (iconUrl != null) 'iconUrl': iconUrl,
+        'isActive': isActive,
+        'sortOrder': sortOrder,
+      };
+}
+
+// ── FeeBreakdownModel (Dynamic Fee & Tax Breakdown) ─────────────────────────
+
+class FeeBreakdownModel {
+  final double ticketPrice;
+  final double gstRate;
+  final double gstAmount;
+  final double ticketPriceWithGst;
+  final double convenienceFee;
+  final double convenienceFeeGst;
+  final double totalConvenienceFee;
+  final double totalAmountPaidByBuyer;
+  final double? organizerPayout;
+  final double? adminRevenue;
+
+  const FeeBreakdownModel({
+    required this.ticketPrice,
+    required this.gstRate,
+    required this.gstAmount,
+    this.ticketPriceWithGst = 0,
+    required this.convenienceFee,
+    this.convenienceFeeGst = 0,
+    required this.totalConvenienceFee,
+    required this.totalAmountPaidByBuyer,
+    this.organizerPayout,
+    this.adminRevenue,
+  });
+
+  factory FeeBreakdownModel.fromJson(Map<String, dynamic> json) {
+    double parseNum(dynamic val, [double def = 0.0]) {
+      if (val == null) return def;
+      if (val is num) return val.toDouble();
+      return double.tryParse(val.toString()) ?? def;
+    }
+
+    final ticketPrice = parseNum(json['ticketPrice'] ?? json['ticketSellingPrice'] ?? json['basePrice']);
+    final gstRate = parseNum(json['gstRate'] ?? json['gstPercentage'], 18.0);
+    final gstAmount = parseNum(json['gstAmount'] ?? json['ticketGst']);
+    final ticketPriceWithGst = parseNum(json['ticketPriceWithGst'], ticketPrice + gstAmount);
+    final convenienceFee = parseNum(json['convenienceFee'] ?? json['platformCommission']);
+    final convenienceFeeGst = parseNum(json['convenienceFeeGst'] ?? json['commissionTax']);
+    final totalConvenienceFee = parseNum(json['totalConvenienceFee'], convenienceFee + convenienceFeeGst);
+    final totalAmountPaidByBuyer = parseNum(json['totalAmountPaidByBuyer'], ticketPriceWithGst + totalConvenienceFee);
+
+    return FeeBreakdownModel(
+      ticketPrice: ticketPrice,
+      gstRate: gstRate,
+      gstAmount: gstAmount,
+      ticketPriceWithGst: ticketPriceWithGst,
+      convenienceFee: convenienceFee,
+      convenienceFeeGst: convenienceFeeGst,
+      totalConvenienceFee: totalConvenienceFee,
+      totalAmountPaidByBuyer: totalAmountPaidByBuyer,
+      organizerPayout: parseNum(json['organizerPayout']),
+      adminRevenue: parseNum(json['adminRevenue']),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'ticketPrice': ticketPrice,
+        'gstRate': gstRate,
+        'gstAmount': gstAmount,
+        'ticketPriceWithGst': ticketPriceWithGst,
+        'convenienceFee': convenienceFee,
+        'convenienceFeeGst': convenienceFeeGst,
+        'totalConvenienceFee': totalConvenienceFee,
+        'totalAmountPaidByBuyer': totalAmountPaidByBuyer,
+        if (organizerPayout != null) 'organizerPayout': organizerPayout,
+        if (adminRevenue != null) 'adminRevenue': adminRevenue,
+      };
+}
+
+// ── IndividualTicketModel ───────────────────────────────────────────────────
+
+class IndividualTicketModel {
+  final String id;
+  final int ticketNumber;
+  final String? qrCode;
+  final String? accessToken;
+  final bool isCheckedIn;
+  final DateTime? checkedInAt;
+
+  const IndividualTicketModel({
+    required this.id,
+    required this.ticketNumber,
+    this.qrCode,
+    this.accessToken,
+    this.isCheckedIn = false,
+    this.checkedInAt,
+  });
+
+  factory IndividualTicketModel.fromJson(Map<String, dynamic> json) {
+    return IndividualTicketModel(
+      id: json['id']?.toString() ?? '',
+      ticketNumber: (json['ticketNumber'] ?? json['ticket_number'] ?? 1) as int,
+      qrCode: json['qrCode']?.toString() ?? json['qr_code']?.toString(),
+      accessToken: json['accessToken']?.toString() ?? json['access_token']?.toString(),
+      isCheckedIn: json['isCheckedIn'] == true || json['is_checked_in'] == true,
+      checkedInAt: json['checkedInAt'] != null
+          ? DateTime.tryParse(json['checkedInAt'].toString())
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'ticketNumber': ticketNumber,
+        if (qrCode != null) 'qrCode': qrCode,
+        if (accessToken != null) 'accessToken': accessToken,
+        'isCheckedIn': isCheckedIn,
+        if (checkedInAt != null) 'checkedInAt': checkedInAt!.toIso8601String(),
+      };
+}
+
+// ── UserRegistrationModel ───────────────────────────────────────────────────
+
+class UserRegistrationModel {
+  final String id;
+  final int quantity;
+  final String status; // 'CONFIRMED' | 'PENDING' | 'CANCELLED'
+  final IndividualTicketModel? ticket;
+  final List<IndividualTicketModel> tickets;
+  final String? accessLink;
+  final String? qrCodeToken;
+  final bool approvalRequired;
+  final String? message;
+
+  const UserRegistrationModel({
+    required this.id,
+    this.quantity = 1,
+    this.status = 'CONFIRMED',
+    this.ticket,
+    this.tickets = const [],
+    this.accessLink,
+    this.qrCodeToken,
+    this.approvalRequired = false,
+    this.message,
+  });
+
+  bool get isConfirmed => status.toUpperCase() == 'CONFIRMED';
+  bool get isPending => status.toUpperCase() == 'PENDING';
+
+  factory UserRegistrationModel.fromJson(Map<String, dynamic> json) {
+    final ticketObj = json['ticket'] is Map<String, dynamic>
+        ? IndividualTicketModel.fromJson(json['ticket'] as Map<String, dynamic>)
+        : null;
+
+    final ticketsList = json['tickets'] is List
+        ? (json['tickets'] as List)
+            .whereType<Map<String, dynamic>>()
+            .map(IndividualTicketModel.fromJson)
+            .toList()
+        : (ticketObj != null ? [ticketObj] : <IndividualTicketModel>[]);
+
+    return UserRegistrationModel(
+      id: json['id']?.toString() ?? json['registrationId']?.toString() ?? '',
+      quantity: (json['quantity'] as num?)?.toInt() ?? 1,
+      status: json['status']?.toString().toUpperCase() ?? 'CONFIRMED',
+      ticket: ticketObj,
+      tickets: ticketsList,
+      accessLink: json['accessLink']?.toString() ?? json['access_link']?.toString(),
+      qrCodeToken: json['qrCodeToken']?.toString() ??
+          json['qr_code_token']?.toString() ??
+          ticketObj?.qrCode,
+      approvalRequired: json['approvalRequired'] == true || json['approval_required'] == true,
+      message: json['message']?.toString(),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'quantity': quantity,
+        'status': status,
+        if (ticket != null) 'ticket': ticket!.toJson(),
+        'tickets': tickets.map((t) => t.toJson()).toList(),
+        if (accessLink != null) 'accessLink': accessLink,
+        if (qrCodeToken != null) 'qrCodeToken': qrCodeToken,
+        'approvalRequired': approvalRequired,
+        if (message != null) 'message': message,
+      };
+}
+
+// ── TicketType / TicketTierModel ────────────────────────────────────────────
 
 class TicketType {
   final String id;
@@ -641,8 +880,11 @@ class TicketType {
   final String? description;
   final int priceInPaise;
   final int platformFeePaise;
-  final int quantity;
+  final int? quantity;
   final int soldCount;
+  final int? remainingCount;
+  final bool isSoldOut;
+  final FeeBreakdownModel? feeBreakdown;
 
   const TicketType({
     required this.id,
@@ -650,23 +892,49 @@ class TicketType {
     this.description,
     required this.priceInPaise,
     this.platformFeePaise = 0,
-    required this.quantity,
+    this.quantity,
     this.soldCount = 0,
+    this.remainingCount,
+    this.isSoldOut = false,
+    this.feeBreakdown,
   });
 
   bool get isFree => priceInPaise == 0;
   double get priceInRupees => priceInPaise / 100.0;
 
+  int get availableQuantity {
+    if (remainingCount != null) return remainingCount!;
+    if (quantity != null) {
+      final rem = quantity! - soldCount;
+      return rem > 0 ? rem : 0;
+    }
+    return 100;
+  }
+
   factory TicketType.fromJson(Map<String, dynamic> json) {
+    final rawPrice = json['priceInPaise'] ?? json['price_in_paise'] ?? 0;
+    final parsedPrice = rawPrice is num ? rawPrice.toInt() : (int.tryParse(rawPrice.toString()) ?? 0);
+    final qty = json['quantity'] as int?;
+    final sold = (json['soldCount'] ?? json['sold_count'] ?? 0) as int;
+    final rem = json['remainingCount'] as int? ?? (qty != null ? (qty - sold) : null);
+    final soldOut = json['isSoldOut'] == true || (rem != null && rem <= 0);
+
+    final feeObj = json['feeBreakdown'] is Map<String, dynamic>
+        ? FeeBreakdownModel.fromJson(json['feeBreakdown'] as Map<String, dynamic>)
+        : null;
+
     return TicketType(
       id: json['id']?.toString() ?? '',
       name: json['name']?.toString() ?? 'General Admission',
       description: json['description']?.toString(),
-      priceInPaise: json['priceInPaise'] ?? json['price_in_paise'] ?? 0,
+      priceInPaise: parsedPrice,
       platformFeePaise:
           json['platformFeePaise'] ?? json['platform_fee_paise'] ?? 0,
-      quantity: json['quantity'] ?? 100,
-      soldCount: json['soldCount'] ?? json['sold_count'] ?? 0,
+      quantity: qty,
+      soldCount: sold,
+      remainingCount: rem,
+      isSoldOut: soldOut,
+      feeBreakdown: feeObj,
     );
   }
 
@@ -676,60 +944,94 @@ class TicketType {
         if (description != null) 'description': description,
         'priceInPaise': priceInPaise,
         'platformFeePaise': platformFeePaise,
-        'quantity': quantity,
+        if (quantity != null) 'quantity': quantity,
         'soldCount': soldCount,
+        if (remainingCount != null) 'remainingCount': remainingCount,
+        'isSoldOut': isSoldOut,
+        if (feeBreakdown != null) 'feeBreakdown': feeBreakdown!.toJson(),
       };
 }
 
-// ── PublicEvent ─────────────────────────────────────────────────────────────
+// ── PublicEvent / EventModel ────────────────────────────────────────────────
 
 class PublicEvent {
   final String id;
   final String title;
-  final String? slug;
+  final String slug;
   final String? description;
   final String? coverImageUrl;
   final String? categoryId;
   final Category? category;
   final EventMode mode;
   final ApprovalMode approvalMode;
+  final String visibility;
+  final String capacityType;
   final String? venueName;
   final String? venueAddress;
   final String? venueCity;
+  final double? venueLat;
+  final double? venueLng;
   final String? meetingUrl;
   final DateTime startDatetime;
-  final DateTime endDatetime;
+  final DateTime? endDatetime;
+  final String timezone;
   final int maxCapacity;
   final int minPricePaise;
   final int maxPricePaise;
   final String hostName;
+  final String? hostProfilePhoto;
   final List<TicketType> ticketTypes;
+  final UserRegistrationModel? userRegistration;
 
   const PublicEvent({
     required this.id,
     required this.title,
-    this.slug,
+    required this.slug,
     this.description,
     this.coverImageUrl,
     this.categoryId,
     this.category,
     this.mode = EventMode.OFFLINE,
     this.approvalMode = ApprovalMode.INSTANT,
+    this.visibility = 'PUBLIC',
+    this.capacityType = 'LIMITED',
     this.venueName,
     this.venueAddress,
     this.venueCity,
+    this.venueLat,
+    this.venueLng,
     this.meetingUrl,
     required this.startDatetime,
-    required this.endDatetime,
+    this.endDatetime,
+    this.timezone = 'Asia/Kolkata',
     this.maxCapacity = 300,
     this.minPricePaise = 0,
     this.maxPricePaise = 0,
     this.hostName = 'Host Community',
+    this.hostProfilePhoto,
     this.ticketTypes = const [],
+    this.userRegistration,
   });
+
+  bool get isOnline => mode == EventMode.ONLINE;
+  bool get isOffline => mode == EventMode.OFFLINE;
 
   double get minPriceInRupees => minPricePaise / 100.0;
   double get maxPriceInRupees => maxPricePaise / 100.0;
+
+  bool get hasUserRegistered => userRegistration != null;
+
+  String get effectivePriceLabel {
+    if (ticketTypes.isEmpty) {
+      return minPricePaise == 0 ? 'Free Pass' : 'From ₹${(minPricePaise / 100).toStringAsFixed(0)}';
+    }
+    final freeTiers = ticketTypes.where((t) => t.isFree);
+    final paidTiers = ticketTypes.where((t) => !t.isFree).toList();
+    if (paidTiers.isEmpty) return 'Free Pass';
+    if (freeTiers.isNotEmpty) return 'Free — ₹${paidTiers.map((t) => t.priceInRupees).reduce((a, b) => a > b ? a : b).toStringAsFixed(0)}';
+    final minPaid = paidTiers.map((t) => t.priceInRupees).reduce((a, b) => a < b ? a : b);
+    return 'From ₹${minPaid.toStringAsFixed(0)}';
+  }
 
   factory PublicEvent.fromJson(Map<String, dynamic> json) {
     final hostObj = json['host'] is Map<String, dynamic> ? json['host'] : null;
@@ -741,10 +1043,22 @@ class PublicEvent {
     final rawMin = json['minPricePaise'] ?? json['min_price_paise'] ?? 0;
     final rawMax = json['maxPricePaise'] ?? json['max_price_paise'] ?? 0;
 
+    final regObj = json['userRegistration'] is Map<String, dynamic>
+        ? UserRegistrationModel.fromJson(json['userRegistration'] as Map<String, dynamic>)
+        : (json['registration'] is Map<String, dynamic>
+            ? UserRegistrationModel.fromJson(json['registration'] as Map<String, dynamic>)
+            : null);
+
+    final ticketsList = (json['ticketTypes'] as List<dynamic>?)
+            ?.whereType<Map<String, dynamic>>()
+            .map(TicketType.fromJson)
+            .toList() ??
+        const [];
+
     return PublicEvent(
       id: json['id']?.toString() ?? '',
       title: json['title']?.toString() ?? '',
-      slug: json['slug']?.toString(),
+      slug: json['slug']?.toString() ?? '',
       description: json['description']?.toString(),
       coverImageUrl:
           json['coverImageUrl']?.toString() ?? json['cover_image_url']?.toString(),
@@ -754,31 +1068,101 @@ class PublicEvent {
           ? EventMode.ONLINE
           : EventMode.OFFLINE,
       approvalMode:
-          (json['approvalMode']?.toString().toUpperCase() == 'APPROVAL_REQUIRED')
+          (json['approvalMode']?.toString().toUpperCase().contains('APPROVAL') == true ||
+                  json['approval_mode']?.toString().toUpperCase().contains('APPROVAL') == true)
               ? ApprovalMode.APPROVAL_REQUIRED
               : ApprovalMode.INSTANT,
+      visibility: json['visibility']?.toString().toUpperCase() ?? 'PUBLIC',
+      capacityType: json['capacityType']?.toString().toUpperCase() ?? 'LIMITED',
       venueName: json['venueName']?.toString() ?? json['venue_name']?.toString(),
       venueAddress:
           json['venueAddress']?.toString() ?? json['venue_address']?.toString(),
       venueCity: json['venueCity']?.toString() ?? json['venue_city']?.toString(),
+      venueLat: (json['venueLat'] as num?)?.toDouble() ?? (json['venue_lat'] as num?)?.toDouble(),
+      venueLng: (json['venueLng'] as num?)?.toDouble() ?? (json['venue_lng'] as num?)?.toDouble(),
       meetingUrl: json['meetingUrl']?.toString() ?? json['meeting_url']?.toString(),
       startDatetime: json['startDatetime'] != null
           ? DateTime.tryParse(json['startDatetime']) ?? DateTime.now()
           : DateTime.now().add(const Duration(days: 3)),
       endDatetime: json['endDatetime'] != null
-          ? DateTime.tryParse(json['endDatetime']) ?? DateTime.now()
-          : DateTime.now().add(const Duration(days: 3, hours: 4)),
+          ? DateTime.tryParse(json['endDatetime'])
+          : null,
+      timezone: json['timezone']?.toString() ?? 'Asia/Kolkata',
       maxCapacity: json['maxCapacity'] ?? json['max_capacity'] ?? 300,
       minPricePaise: rawMin is num ? rawMin.toInt() : (int.tryParse(rawMin.toString()) ?? 0),
       maxPricePaise: rawMax is num ? rawMax.toInt() : (int.tryParse(rawMax.toString()) ?? 0),
-      hostName: hostObj?['name'] ??
+      hostName: hostObj?['name']?.toString() ??
           json['hostName']?.toString() ??
           json['host_name']?.toString() ??
           'Host Community',
-      ticketTypes: (json['ticketTypes'] as List<dynamic>?)
-              ?.map((e) => TicketType.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          const [],
+      hostProfilePhoto: hostObj?['profilePhoto']?.toString() ??
+          hostObj?['profile_photo']?.toString(),
+      ticketTypes: ticketsList,
+      userRegistration: regObj,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'title': title,
+        'slug': slug,
+        if (description != null) 'description': description,
+        if (coverImageUrl != null) 'coverImageUrl': coverImageUrl,
+        if (categoryId != null) 'categoryId': categoryId,
+        'mode': mode.name,
+        'approvalMode': approvalMode.name,
+        'visibility': visibility,
+        if (venueName != null) 'venueName': venueName,
+        if (venueAddress != null) 'venueAddress': venueAddress,
+        if (venueCity != null) 'venueCity': venueCity,
+        if (meetingUrl != null) 'meetingUrl': meetingUrl,
+        'startDatetime': startDatetime.toIso8601String(),
+        if (endDatetime != null) 'endDatetime': endDatetime!.toIso8601String(),
+        'ticketTypes': ticketTypes.map((t) => t.toJson()).toList(),
+        if (userRegistration != null) 'userRegistration': userRegistration!.toJson(),
+      };
+}
+
+// ── TicketOrderResponse (POST /catalog/events/:id/create-ticket-order) ───────
+
+class TicketOrderResponse {
+  final String registrationId;
+  final int quantity;
+  final String? paymentId;
+  final String gatewayOrderId;
+  final int amountInPaise;
+  final String currency;
+  final String key;
+  final FeeBreakdownModel? feeBreakdown;
+  final bool approvalRequired;
+
+  const TicketOrderResponse({
+    required this.registrationId,
+    required this.quantity,
+    this.paymentId,
+    required this.gatewayOrderId,
+    required this.amountInPaise,
+    required this.currency,
+    required this.key,
+    this.feeBreakdown,
+    this.approvalRequired = false,
+  });
+
+  factory TicketOrderResponse.fromJson(Map<String, dynamic> json) {
+    final feeObj = json['feeBreakdown'] is Map<String, dynamic>
+        ? FeeBreakdownModel.fromJson(json['feeBreakdown'] as Map<String, dynamic>)
+        : null;
+
+    return TicketOrderResponse(
+      registrationId: json['registrationId']?.toString() ?? '',
+      quantity: (json['quantity'] as num?)?.toInt() ?? 1,
+      paymentId: json['paymentId']?.toString(),
+      gatewayOrderId: json['gatewayOrderId']?.toString() ?? '',
+      amountInPaise: (json['amountInPaise'] as num?)?.toInt() ?? 0,
+      currency: json['currency']?.toString() ?? 'INR',
+      key: json['key']?.toString() ?? '',
+      feeBreakdown: feeObj,
+      approvalRequired: json['approvalRequired'] == true || json['approval_required'] == true,
     );
   }
 }

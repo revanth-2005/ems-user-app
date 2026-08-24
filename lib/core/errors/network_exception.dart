@@ -6,6 +6,12 @@ class NetworkException implements Exception {
   final int? statusCode;
   final Failure failure;
 
+  const NetworkException(
+    this.message, {
+    this.statusCode,
+    this.failure = const UnknownFailure(),
+  });
+
   const NetworkException._({
     required this.message,
     required this.failure,
