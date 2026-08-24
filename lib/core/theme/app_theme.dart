@@ -190,6 +190,183 @@ class AppTheme {
         ),
         surfaceTintColor: Colors.transparent,
       ),
+
+      // ── Dialog Theme ──────────────────────────────────────────────────────
+      dialogTheme: DialogTheme(
+        backgroundColor: AppColors.darkCard,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: const BorderSide(color: AppColors.darkBorder),
+        ),
+      ),
+
+      // ── Time Picker Theme ─────────────────────────────────────────────────
+      timePickerTheme: TimePickerThemeData(
+        backgroundColor: const Color(0xFF1E1E1E),
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: const BorderSide(color: AppColors.darkBorder),
+        ),
+        hourMinuteShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        hourMinuteColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.primary;
+          }
+          return const Color(0xFF2C2C2C);
+        }),
+        hourMinuteTextColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return Colors.white;
+          }
+          return AppColors.darkTextPrimary;
+        }),
+        hourMinuteTextStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 32,
+          fontWeight: FontWeight.w700,
+        ),
+        dayPeriodColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.primary;
+          }
+          return Colors.transparent;
+        }),
+        dayPeriodTextColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return Colors.white;
+          }
+          return AppColors.darkTextSecondary;
+        }),
+        dayPeriodTextStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+        ),
+        dayPeriodBorderSide: const BorderSide(color: AppColors.darkBorder),
+        dayPeriodShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        dialHandColor: AppColors.primary,
+        dialBackgroundColor: const Color(0xFF282828),
+        dialTextColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return Colors.white;
+          }
+          return AppColors.darkTextPrimary;
+        }),
+        dialTextStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
+        entryModeIconColor: AppColors.darkTextSecondary,
+        timeSelectorSeparatorColor: WidgetStateColor.resolveWith(
+          (states) => Colors.transparent,
+        ),
+        timeSelectorSeparatorTextStyle: WidgetStateProperty.all(
+          GoogleFonts.plusJakartaSans(
+            fontSize: 28,
+            fontWeight: FontWeight.w700,
+            color: AppColors.darkTextPrimary,
+          ),
+        ),
+        cancelButtonStyle: TextButton.styleFrom(
+          foregroundColor: AppColors.darkTextSecondary,
+          textStyle: GoogleFonts.plusJakartaSans(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        confirmButtonStyle: TextButton.styleFrom(
+          foregroundColor: AppColors.primary,
+          textStyle: GoogleFonts.plusJakartaSans(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        helpTextStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: AppColors.darkTextSecondary,
+        ),
+      ),
+
+      // ── Date Picker Theme ─────────────────────────────────────────────────
+      datePickerTheme: DatePickerThemeData(
+        backgroundColor: const Color(0xFF1E1E1E),
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: const BorderSide(color: AppColors.darkBorder),
+        ),
+        headerBackgroundColor: const Color(0xFF141414),
+        headerForegroundColor: Colors.white,
+        headerHeadlineStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+        ),
+        headerHelpStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: AppColors.darkTextSecondary,
+        ),
+        dayBackgroundColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.primary;
+          }
+          return Colors.transparent;
+        }),
+        dayForegroundColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return Colors.white;
+          }
+          if (states.contains(WidgetState.disabled)) {
+            return AppColors.darkTextMuted;
+          }
+          return AppColors.darkTextPrimary;
+        }),
+        todayBackgroundColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.primary;
+          }
+          return Colors.transparent;
+        }),
+        todayForegroundColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return Colors.white;
+          }
+          return AppColors.primary;
+        }),
+        todayBorder: const BorderSide(color: AppColors.primary, width: 1.5),
+        yearBackgroundColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.primary;
+          }
+          return Colors.transparent;
+        }),
+        yearForegroundColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return Colors.white;
+          }
+          return AppColors.darkTextPrimary;
+        }),
+        cancelButtonStyle: TextButton.styleFrom(
+          foregroundColor: AppColors.darkTextSecondary,
+          textStyle: GoogleFonts.plusJakartaSans(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        confirmButtonStyle: TextButton.styleFrom(
+          foregroundColor: AppColors.primary,
+          textStyle: GoogleFonts.plusJakartaSans(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
     );
   }
 
@@ -379,6 +556,183 @@ class AppTheme {
           borderRadius: BorderRadius.circular(20),
         ),
         surfaceTintColor: Colors.transparent,
+      ),
+
+      // ── Dialog Theme ──────────────────────────────────────────────────────
+      dialogTheme: DialogTheme(
+        backgroundColor: AppColors.whiteCard,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: const BorderSide(color: AppColors.whiteBorder),
+        ),
+      ),
+
+      // ── Time Picker Theme ─────────────────────────────────────────────────
+      timePickerTheme: TimePickerThemeData(
+        backgroundColor: AppColors.whiteCard,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: const BorderSide(color: AppColors.whiteBorder),
+        ),
+        hourMinuteShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        hourMinuteColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.primary;
+          }
+          return const Color(0xFFF3F4F6);
+        }),
+        hourMinuteTextColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return Colors.white;
+          }
+          return AppColors.whiteTextPrimary;
+        }),
+        hourMinuteTextStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 32,
+          fontWeight: FontWeight.w700,
+        ),
+        dayPeriodColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.primary;
+          }
+          return Colors.transparent;
+        }),
+        dayPeriodTextColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return Colors.white;
+          }
+          return AppColors.whiteTextSecondary;
+        }),
+        dayPeriodTextStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+        ),
+        dayPeriodBorderSide: const BorderSide(color: AppColors.whiteBorder),
+        dayPeriodShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        dialHandColor: AppColors.primary,
+        dialBackgroundColor: const Color(0xFFF3F4F6),
+        dialTextColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return Colors.white;
+          }
+          return AppColors.whiteTextPrimary;
+        }),
+        dialTextStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
+        entryModeIconColor: AppColors.whiteTextSecondary,
+        timeSelectorSeparatorColor: WidgetStateColor.resolveWith(
+          (states) => Colors.transparent,
+        ),
+        timeSelectorSeparatorTextStyle: WidgetStateProperty.all(
+          GoogleFonts.plusJakartaSans(
+            fontSize: 28,
+            fontWeight: FontWeight.w700,
+            color: AppColors.whiteTextPrimary,
+          ),
+        ),
+        cancelButtonStyle: TextButton.styleFrom(
+          foregroundColor: AppColors.whiteTextSecondary,
+          textStyle: GoogleFonts.plusJakartaSans(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        confirmButtonStyle: TextButton.styleFrom(
+          foregroundColor: AppColors.primary,
+          textStyle: GoogleFonts.plusJakartaSans(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        helpTextStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: AppColors.whiteTextSecondary,
+        ),
+      ),
+
+      // ── Date Picker Theme ─────────────────────────────────────────────────
+      datePickerTheme: DatePickerThemeData(
+        backgroundColor: AppColors.whiteCard,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: const BorderSide(color: AppColors.whiteBorder),
+        ),
+        headerBackgroundColor: AppColors.whiteSurface,
+        headerForegroundColor: AppColors.whiteTextPrimary,
+        headerHeadlineStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+          color: AppColors.whiteTextPrimary,
+        ),
+        headerHelpStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: AppColors.whiteTextSecondary,
+        ),
+        dayBackgroundColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.primary;
+          }
+          return Colors.transparent;
+        }),
+        dayForegroundColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return Colors.white;
+          }
+          if (states.contains(WidgetState.disabled)) {
+            return AppColors.whiteTextMuted;
+          }
+          return AppColors.whiteTextPrimary;
+        }),
+        todayBackgroundColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.primary;
+          }
+          return Colors.transparent;
+        }),
+        todayForegroundColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return Colors.white;
+          }
+          return AppColors.primary;
+        }),
+        todayBorder: const BorderSide(color: AppColors.primary, width: 1.5),
+        yearBackgroundColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.primary;
+          }
+          return Colors.transparent;
+        }),
+        yearForegroundColor: WidgetStateColor.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return Colors.white;
+          }
+          return AppColors.whiteTextPrimary;
+        }),
+        cancelButtonStyle: TextButton.styleFrom(
+          foregroundColor: AppColors.whiteTextSecondary,
+          textStyle: GoogleFonts.plusJakartaSans(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        confirmButtonStyle: TextButton.styleFrom(
+          foregroundColor: AppColors.primary,
+          textStyle: GoogleFonts.plusJakartaSans(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
       ),
     );
   }

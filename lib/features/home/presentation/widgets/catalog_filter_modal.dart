@@ -31,6 +31,10 @@ class _CatalogFilterSheet extends HookConsumerWidget {
     final currentSort = ref.watch(catalogSortByProvider);
     final categoriesAsync = ref.watch(categoriesProvider);
 
+    final currentUnit = ref.watch(selectedPricingUnitFilterProvider);
+    final currentEventMode = ref.watch(selectedEventModeProvider);
+    final currentRadius = ref.watch(searchRadiusKmProvider);
+
     final tempCategory = useState(currentCategory);
     final tempCity = useState(currentCity);
     final tempMinPrice = useState(currentMinPrice);
@@ -38,6 +42,9 @@ class _CatalogFilterSheet extends HookConsumerWidget {
     final tempDate = useState(currentDate);
     final tempRating = useState(currentRating);
     final tempSort = useState(currentSort);
+    final tempUnit = useState(currentUnit);
+    final tempEventMode = useState(currentEventMode);
+    final tempRadius = useState(currentRadius);
 
     final cities = const [
       'All',
@@ -51,10 +58,26 @@ class _CatalogFilterSheet extends HookConsumerWidget {
     ];
 
     final sortOptions = const [
-      {'label': 'Newest First', 'value': 'createdAt_desc'},
-      {'label': 'Price: Low to High', 'value': 'price_asc'},
-      {'label': 'Price: High to Low', 'value': 'price_desc'},
-      {'label': 'Top Rated', 'value': 'rating_desc'},
+      {'label': '⚡ Recommended (Priority Boost)', 'value': 'priority'},
+      {'label': '📍 Nearest Distance', 'value': 'distance'},
+      {'label': '💰 Price: Low to High', 'value': 'price_asc'},
+      {'label': '💎 Price: High to Low', 'value': 'price_desc'},
+      {'label': '⭐ Highest Rated', 'value': 'rating'},
+      {'label': '🔥 Most Popular', 'value': 'popularity'},
+      {'label': '📅 Newest First', 'value': 'created_at'},
+    ];
+
+    final pricingUnitOptions = const [
+      {'label': 'All Types', 'value': null},
+      {'label': 'Fixed Price', 'value': 'FIXED'},
+      {'label': 'Per Head / Plate', 'value': 'PER_HEAD'},
+      {'label': 'Per Hour', 'value': 'PER_HOUR'},
+    ];
+
+    final eventModeOptions = const [
+      {'label': 'All Modes', 'value': 'ALL'},
+      {'label': '🏢 In-Person (Offline)', 'value': 'OFFLINE'},
+      {'label': '💻 Virtual (Online)', 'value': 'ONLINE'},
     ];
 
     final ratingOptions = const [
@@ -113,7 +136,10 @@ class _CatalogFilterSheet extends HookConsumerWidget {
                     tempMaxPrice.value = null;
                     tempDate.value = null;
                     tempRating.value = null;
-                    tempSort.value = 'createdAt_desc';
+                    tempSort.value = 'priority';
+                    tempUnit.value = null;
+                    tempEventMode.value = 'ALL';
+                    tempRadius.value = 50.0;
                   },
                   child: Text(
                     'Reset All',
@@ -207,9 +233,9 @@ class _CatalogFilterSheet extends HookConsumerWidget {
             ),
             const SizedBox(height: 20),
 
-            // ── 1. City Filter ─────────────────────────────────────────────
+            // ── 1. City / Region ──────────────────────────────────────────────
             Text(
-              'Location / City',
+              'City / Region',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
@@ -223,7 +249,7 @@ class _CatalogFilterSheet extends HookConsumerWidget {
               children: cities.map((city) {
                 final isSelected = tempCity.value == city;
                 return ChoiceChip(
-                  label: Text(city == 'All' ? 'All Cities' : city),
+                  label: Text(city),
                   selected: isSelected,
                   labelStyle: GoogleFonts.plusJakartaSans(
                     fontSize: 12,
@@ -246,9 +272,9 @@ class _CatalogFilterSheet extends HookConsumerWidget {
             ),
             const SizedBox(height: 20),
 
-            // ── 2. Event Date Filter ────────────────────────────────────────
+            // ── 1.1 Target Event Date ──────────────────────────────────────
             Text(
-              'Event Date',
+              'Target Event Date',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
@@ -256,25 +282,18 @@ class _CatalogFilterSheet extends HookConsumerWidget {
               ),
             ),
             const SizedBox(height: 8),
-            InkWell(
+            GestureDetector(
               onTap: () async {
                 final picked = await showDatePicker(
                   context: context,
                   initialDate: tempDate.value ?? DateTime.now(),
                   firstDate: DateTime.now(),
                   lastDate: DateTime.now().add(const Duration(days: 365)),
-                  builder: (context, child) {
-                    return Theme(
-                      data: Theme.of(context),
-                      child: child!,
-                    );
-                  },
                 );
                 if (picked != null) {
                   tempDate.value = picked;
                 }
               },
-              borderRadius: BorderRadius.circular(12),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 decoration: BoxDecoration(
@@ -287,22 +306,19 @@ class _CatalogFilterSheet extends HookConsumerWidget {
                     const Icon(Icons.calendar_today_rounded,
                         size: 16, color: AppColors.primary),
                     const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        tempDate.value != null
-                            ? DateFormatter.formatDate(tempDate.value!)
-                            : 'Select preferred event date…',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 13,
-                          fontWeight: tempDate.value != null
-                              ? FontWeight.w700
-                              : FontWeight.w500,
-                          color: tempDate.value != null
-                              ? AppColors.getTextPrimary(context)
-                              : AppColors.getTextMuted(context),
-                        ),
+                    Text(
+                      tempDate.value != null
+                          ? DateFormatter.formatDate(tempDate.value!)
+                          : 'Select preferred event date',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: tempDate.value != null
+                            ? AppColors.getTextPrimary(context)
+                            : AppColors.getTextMuted(context),
                       ),
                     ),
+                    const Spacer(),
                     if (tempDate.value != null)
                       GestureDetector(
                         onTap: () => tempDate.value = null,
@@ -315,7 +331,85 @@ class _CatalogFilterSheet extends HookConsumerWidget {
             ),
             const SizedBox(height: 20),
 
-            // ── 3. Price / Budget Range ─────────────────────────────────────
+            // ── 2. Pricing Unit Filter ─────────────────────────────────────
+            Text(
+              'Service Pricing Unit',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: AppColors.getTextPrimary(context),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: pricingUnitOptions.map((opt) {
+                final isSelected = tempUnit.value == opt['value'];
+                return ChoiceChip(
+                  label: Text(opt['label']!),
+                  selected: isSelected,
+                  labelStyle: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                    color: isSelected ? Colors.white : AppColors.getTextSecondary(context),
+                  ),
+                  selectedColor: AppColors.accentTeal,
+                  backgroundColor: AppColors.getCardAlt(context),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    side: BorderSide(
+                      color: isSelected ? AppColors.accentTeal : AppColors.getBorder(context),
+                    ),
+                  ),
+                  onSelected: (val) {
+                    tempUnit.value = opt['value'];
+                  },
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 20),
+
+            // ── 3. Event Mode Filter ───────────────────────────────────────
+            Text(
+              'Public Event Mode',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: AppColors.getTextPrimary(context),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: eventModeOptions.map((opt) {
+                final isSelected = tempEventMode.value == opt['value'];
+                return ChoiceChip(
+                  label: Text(opt['label']!),
+                  selected: isSelected,
+                  labelStyle: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                    color: isSelected ? Colors.white : AppColors.getTextSecondary(context),
+                  ),
+                  selectedColor: AppColors.accentIndigo,
+                  backgroundColor: AppColors.getCardAlt(context),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    side: BorderSide(
+                      color: isSelected ? AppColors.accentIndigo : AppColors.getBorder(context),
+                    ),
+                  ),
+                  onSelected: (val) {
+                    tempEventMode.value = opt['value']!;
+                  },
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 20),
+
+            // ── 4. Budget Range ─────────────────────────────────────────────
             Text(
               'Budget Range',
               style: GoogleFonts.plusJakartaSans(
@@ -331,42 +425,6 @@ class _CatalogFilterSheet extends HookConsumerWidget {
               children: [
                 _budgetChip(
                   context: context,
-                  label: 'Under ₹50k',
-                  isSelected: tempMinPrice.value == null && tempMaxPrice.value == 5000000,
-                  onTap: () {
-                    tempMinPrice.value = null;
-                    tempMaxPrice.value = 5000000;
-                  },
-                ),
-                _budgetChip(
-                  context: context,
-                  label: '₹50k - ₹1.5L',
-                  isSelected: tempMinPrice.value == 5000000 && tempMaxPrice.value == 15000000,
-                  onTap: () {
-                    tempMinPrice.value = 5000000;
-                    tempMaxPrice.value = 15000000;
-                  },
-                ),
-                _budgetChip(
-                  context: context,
-                  label: '₹1.5L - ₹5L',
-                  isSelected: tempMinPrice.value == 15000000 && tempMaxPrice.value == 50000000,
-                  onTap: () {
-                    tempMinPrice.value = 15000000;
-                    tempMaxPrice.value = 50000000;
-                  },
-                ),
-                _budgetChip(
-                  context: context,
-                  label: '₹5L+',
-                  isSelected: tempMinPrice.value == 50000000 && tempMaxPrice.value == null,
-                  onTap: () {
-                    tempMinPrice.value = 50000000;
-                    tempMaxPrice.value = null;
-                  },
-                ),
-                _budgetChip(
-                  context: context,
                   label: 'Any Budget',
                   isSelected: tempMinPrice.value == null && tempMaxPrice.value == null,
                   onTap: () {
@@ -374,11 +432,56 @@ class _CatalogFilterSheet extends HookConsumerWidget {
                     tempMaxPrice.value = null;
                   },
                 ),
+                _budgetChip(
+                  context: context,
+                  label: 'Under ₹25k',
+                  isSelected: tempMinPrice.value == null && tempMaxPrice.value == 2500000,
+                  onTap: () {
+                    tempMinPrice.value = null;
+                    tempMaxPrice.value = 2500000;
+                  },
+                ),
+                _budgetChip(
+                  context: context,
+                  label: '₹25k - ₹50k',
+                  isSelected: tempMinPrice.value == 2500000 && tempMaxPrice.value == 5000000,
+                  onTap: () {
+                    tempMinPrice.value = 2500000;
+                    tempMaxPrice.value = 5000000;
+                  },
+                ),
+                _budgetChip(
+                  context: context,
+                  label: '₹50k - ₹1L',
+                  isSelected: tempMinPrice.value == 5000000 && tempMaxPrice.value == 10000000,
+                  onTap: () {
+                    tempMinPrice.value = 5000000;
+                    tempMaxPrice.value = 10000000;
+                  },
+                ),
+                _budgetChip(
+                  context: context,
+                  label: '₹1L - ₹3L',
+                  isSelected: tempMinPrice.value == 10000000 && tempMaxPrice.value == 30000000,
+                  onTap: () {
+                    tempMinPrice.value = 10000000;
+                    tempMaxPrice.value = 30000000;
+                  },
+                ),
+                _budgetChip(
+                  context: context,
+                  label: '₹3L+',
+                  isSelected: tempMinPrice.value == 30000000 && tempMaxPrice.value == null,
+                  onTap: () {
+                    tempMinPrice.value = 30000000;
+                    tempMaxPrice.value = null;
+                  },
+                ),
               ],
             ),
             const SizedBox(height: 20),
 
-            // ── 4. Minimum Rating ──────────────────────────────────────────
+            // ── 5. Minimum Rating ──────────────────────────────────────────
             Text(
               'Minimum Rating',
               style: GoogleFonts.plusJakartaSans(
@@ -390,10 +493,11 @@ class _CatalogFilterSheet extends HookConsumerWidget {
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
+              runSpacing: 8,
               children: ratingOptions.map((opt) {
                 final isSelected = tempRating.value == opt['value'];
                 return ChoiceChip(
-                  label: Text(opt['label'] as String),
+                  label: Text((opt['label'] as String?) ?? 'All'),
                   selected: isSelected,
                   labelStyle: GoogleFonts.plusJakartaSans(
                     fontSize: 12,
@@ -416,9 +520,9 @@ class _CatalogFilterSheet extends HookConsumerWidget {
             ),
             const SizedBox(height: 20),
 
-            // ── 5. Sorting ─────────────────────────────────────────────────
+            // ── 6. Sorting & Ranking Engine ────────────────────────────────
             Text(
-              'Sort By',
+              'Sort By & Ranking',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
@@ -477,6 +581,9 @@ class _CatalogFilterSheet extends HookConsumerWidget {
                       ref.read(maxPriceFilterProvider.notifier).state = tempMaxPrice.value;
                       ref.read(selectedDateFilterProvider.notifier).state = tempDate.value;
                       ref.read(minRatingFilterProvider.notifier).state = tempRating.value;
+                      ref.read(selectedPricingUnitFilterProvider.notifier).state = tempUnit.value;
+                      ref.read(selectedEventModeProvider.notifier).state = tempEventMode.value;
+                      ref.read(searchRadiusKmProvider.notifier).state = tempRadius.value;
                       ref.read(catalogSortByProvider.notifier).state = tempSort.value;
                       Navigator.pop(context);
                     },

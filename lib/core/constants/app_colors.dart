@@ -75,6 +75,8 @@ class AppColors {
   static const Color accentAmber      = Color(0xFFF59E0B);
   static const Color accentRose       = Color(0xFFE50914);
   static const Color accentCyan       = Color(0xFF06B6D4);
+  static const Color accentTeal       = Color(0xFF14B8A6);
+  static const Color accentIndigo     = Color(0xFF6366F1);
 
   static const Color statusCompleted  = Color(0xFF10B981);
   static const Color statusRescheduled= Color(0xFFF59E0B);

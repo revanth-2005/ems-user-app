@@ -28,6 +28,7 @@ import '../features/host/presentation/views/event_management_hub_screen.dart';
 import '../features/host/presentation/views/attendee_queue_screen.dart';
 import '../features/host/presentation/views/qr_scanner_screen.dart';
 import '../features/profile/presentation/views/customer_profile_screen.dart';
+import '../features/profile/presentation/views/followed_organizers_screen.dart';
 import 'app_shell.dart';
 
 // ── Named Route Paths ──────────────────────────────────────────────────────
@@ -44,6 +45,7 @@ abstract class AppRoutes {
   static const bookings = '/bookings';
   static const profile = '/profile';
   static const eventsDiscovery = '/events';
+  static const following = '/following';
 
   // Detail screens
   static const eventDetail = '/detail/event/:id';
@@ -173,6 +175,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.organizerProfile,
         builder: (_, state) =>
             OrganizerProfileScreen(organizerId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: AppRoutes.following,
+        builder: (_, __) => const FollowedOrganizersScreen(),
       ),
 
       // ── Cart ──────────────────────────────────────────────────────────────

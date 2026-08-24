@@ -85,4 +85,44 @@ abstract class CatalogRepository {
     required String gatewayPaymentId,
     required String gatewaySignature,
   });
+
+  // ── 🔍 Search & Multi-Dimensional Discovery ─────────────────────────────────
+
+  Future<AutocompleteResult> getAutocompleteSuggestions(
+    String query, {
+    double? lat,
+    double? lng,
+    int limit = 5,
+  });
+
+  Future<UnifiedSearchResult> searchUnified(SearchQuery query);
+
+  Future<List<EventPackage>> searchPackages(SearchQuery query);
+
+  Future<List<StandaloneService>> searchServices(SearchQuery query);
+
+  Future<List<OrganizerSummary>> searchOrganizers(SearchQuery query);
+
+  Future<List<PublicEvent>> searchEvents(SearchQuery query);
+
+  // ── ⭐ Follow / Unfollow Organizers ─────────────────────────────────────────
+
+  Future<FollowToggleResponse> toggleFollowOrganizer(
+    String organizerId,
+    bool currentFollowState,
+  );
+
+  Future<bool> getFollowStatus(String organizerId);
+
+  Future<List<OrganizerSummary>> getFollowedOrganizers({
+    int page = 1,
+    int limit = 20,
+    String? search,
+  });
+
+  Future<List<Map<String, dynamic>>> getOrganizerFollowers(
+    String organizerId, {
+    int page = 1,
+    int limit = 20,
+  });
 }

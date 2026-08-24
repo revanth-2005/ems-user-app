@@ -173,4 +173,69 @@ class CatalogRepositoryImpl implements CatalogRepository {
         gatewayPaymentId: gatewayPaymentId,
         gatewaySignature: gatewaySignature,
       );
+
+  // ── 🔍 Search & Multi-Dimensional Discovery ─────────────────────────────────
+
+  @override
+  Future<AutocompleteResult> getAutocompleteSuggestions(
+    String query, {
+    double? lat,
+    double? lng,
+    int limit = 5,
+  }) =>
+      _remote.getAutocompleteSuggestions(
+        query,
+        lat: lat,
+        lng: lng,
+        limit: limit,
+      );
+
+  @override
+  Future<UnifiedSearchResult> searchUnified(SearchQuery query) =>
+      _remote.searchUnified(query);
+
+  @override
+  Future<List<EventPackage>> searchPackages(SearchQuery query) =>
+      _remote.searchPackages(query);
+
+  @override
+  Future<List<StandaloneService>> searchServices(SearchQuery query) =>
+      _remote.searchServices(query);
+
+  @override
+  Future<List<OrganizerSummary>> searchOrganizers(SearchQuery query) =>
+      _remote.searchOrganizers(query);
+
+  @override
+  Future<List<PublicEvent>> searchEvents(SearchQuery query) =>
+      _remote.searchEvents(query);
+
+  // ── ⭐ Follow / Unfollow Organizers ─────────────────────────────────────────
+
+  @override
+  Future<FollowToggleResponse> toggleFollowOrganizer(
+    String organizerId,
+    bool currentFollowState,
+  ) =>
+      _remote.toggleFollowOrganizer(organizerId, currentFollowState);
+
+  @override
+  Future<bool> getFollowStatus(String organizerId) =>
+      _remote.getFollowStatus(organizerId);
+
+  @override
+  Future<List<OrganizerSummary>> getFollowedOrganizers({
+    int page = 1,
+    int limit = 20,
+    String? search,
+  }) =>
+      _remote.getFollowedOrganizers(page: page, limit: limit, search: search);
+
+  @override
+  Future<List<Map<String, dynamic>>> getOrganizerFollowers(
+    String organizerId, {
+    int page = 1,
+    int limit = 20,
+  }) =>
+      _remote.getOrganizerFollowers(organizerId, page: page, limit: limit);
 }

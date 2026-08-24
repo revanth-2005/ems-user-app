@@ -74,6 +74,17 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> logout() => _local.clearSession();
 
   @override
+  Future<UserEntity> signInWithGoogle() async {
+    final result = await _remote.signInWithGoogle();
+    await _local.saveSession(
+      userDto: result.user,
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+    );
+    return result.user.toEntity();
+  }
+
+  @override
   Future<UserEntity> updateKycStatus(KycStatus status) async {
     final current = await _local.getSession();
     if (current == null) throw Exception('Not authenticated');

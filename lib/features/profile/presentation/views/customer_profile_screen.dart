@@ -241,6 +241,13 @@ class CustomerProfileScreen extends HookConsumerWidget {
                   const SizedBox(height: 12),
 
                   _ActionTile(
+                    title: 'Followed Studios & Organizers',
+                    icon: Icons.favorite_border_rounded,
+                    onTap: () => context.push(AppRoutes.following),
+                  ),
+                  const SizedBox(height: 10),
+
+                  _ActionTile(
                     title: 'Business KYC Verification',
                     icon: Icons.verified_user_outlined,
                     onTap: () => context.push(AppRoutes.kycRegistration),

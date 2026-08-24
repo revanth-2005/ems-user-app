@@ -14,6 +14,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../domain/entities/catalog_entities.dart';
 import '../providers/catalog_providers.dart';
 import '../widgets/catalog_cards.dart';
+import '../widgets/follow_button.dart';
 
 /// Public Organizer Profile Screen displaying the organizer's studio details,
 /// active packages, standalone services, portfolio gallery, and reviews.
@@ -171,7 +172,7 @@ class OrganizerProfileScreen extends HookConsumerWidget {
                               ],
                             ),
                             if (org.bio != null && org.bio!.isNotEmpty) ...[
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 14),
                               Text(
                                 org.bio!,
                                 style: GoogleFonts.plusJakartaSans(
@@ -181,6 +182,61 @@ class OrganizerProfileScreen extends HookConsumerWidget {
                                 ),
                               ),
                             ],
+                            const SizedBox(height: 16),
+                            Divider(height: 1, color: AppColors.getBorder(context)),
+                            const SizedBox(height: 12),
+                            Consumer(
+                              builder: (context, ref, _) {
+                                final followState = ref.watch(
+                                  organizerFollowProvider(OrganizerFollowArgs(
+                                    id: org.id,
+                                    initialFollow: org.isFollowed,
+                                    initialFollowerCount: org.followerCount,
+                                  )),
+                                );
+
+                                return Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.people_alt_rounded,
+                                          size: 16,
+                                          color: AppColors.primary,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          '${followState.followerCount} Followers',
+                                          style: GoogleFonts.plusJakartaSans(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w700,
+                                            color: AppColors.getTextPrimary(context),
+                                          ),
+                                        ),
+                                        if (org.bookingCount > 0) ...[
+                                          const SizedBox(width: 12),
+                                          Text(
+                                            '•  ${org.bookingCount} Bookings',
+                                            style: GoogleFonts.plusJakartaSans(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: AppColors.getTextMuted(context),
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                    FollowButton(
+                                      organizerId: org.id,
+                                      organizerName: org.effectiveName,
+                                      initialIsFollowed: org.isFollowed,
+                                      initialFollowerCount: org.followerCount,
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
                           ],
                         ),
                       ),

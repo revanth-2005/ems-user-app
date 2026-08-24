@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../app/app_router.dart';
 import '../../../../core/common_widgets/app_network_image.dart';
@@ -8,6 +9,8 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../domain/entities/catalog_entities.dart';
+import '../providers/catalog_providers.dart';
+import 'follow_button.dart';
 
 // ── 1. Bundled Package Card ──────────────────────────────────────────────────
 
@@ -514,7 +517,7 @@ class ServiceCard extends StatelessWidget {
 
 // ── 3. Organizer Directory Card ─────────────────────────────────────────────
 
-class OrganizerCard extends StatelessWidget {
+class OrganizerCard extends ConsumerWidget {
   final OrganizerSummary organizer;
   final VoidCallback? onTap;
 
@@ -525,12 +528,20 @@ class OrganizerCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final cityName =
         organizer.city?.isNotEmpty == true ? organizer.city! : 'India';
     final hasBio = organizer.bio?.isNotEmpty == true &&
         organizer.bio!.trim().toLowerCase() !=
             organizer.effectiveName.trim().toLowerCase();
+
+    final followState = ref.watch(
+      organizerFollowProvider(OrganizerFollowArgs(
+        id: organizer.id,
+        initialFollow: organizer.isFollowed,
+        initialFollowerCount: organizer.followerCount,
+      )),
+    );
 
     return GestureDetector(
       onTap: onTap ??
@@ -541,7 +552,11 @@ class OrganizerCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.getSurface(context),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppColors.getBorder(context)),
+          border: Border.all(
+            color: followState.isFollowed
+                ? AppColors.primary.withValues(alpha: 0.3)
+                : AppColors.getBorder(context),
+          ),
           boxShadow: AppColors.getCardShadow(context),
         ),
         child: Column(
@@ -612,15 +627,19 @@ class OrganizerCard extends StatelessWidget {
                           const Icon(Icons.location_on_rounded,
                               size: 13, color: AppColors.accentRose),
                           const SizedBox(width: 3),
-                          Text(
-                            cityName,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.getTextSecondary(context),
+                          Flexible(
+                            child: Text(
+                              cityName,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.getTextSecondary(context),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          const SizedBox(width: 10),
+                          const SizedBox(width: 6),
                           const Icon(Icons.star_rounded,
                               size: 14, color: AppColors.accentAmber),
                           const SizedBox(width: 2),
@@ -630,6 +649,23 @@ class OrganizerCard extends StatelessWidget {
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
                               color: AppColors.getTextPrimary(context),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              '${followState.followerCount} followers${organizer.distanceKm != null ? " • ${organizer.distanceKm!.toStringAsFixed(1)} km" : ""}',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.getTextMuted(context),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
@@ -649,6 +685,16 @@ class OrganizerCard extends StatelessWidget {
                       ],
                     ],
                   ),
+                ),
+
+                // Follow / Unfollow Action Button
+                const SizedBox(width: 8),
+                FollowButton(
+                  organizerId: organizer.id,
+                  organizerName: organizer.effectiveName,
+                  initialIsFollowed: organizer.isFollowed,
+                  initialFollowerCount: organizer.followerCount,
+                  isCompact: true,
                 ),
               ],
             ),

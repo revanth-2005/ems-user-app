@@ -121,6 +121,22 @@ class AuthNotifier extends AsyncNotifier<UserEntity?> {
     state = const AsyncData(null);
   }
 
+  /// Initiates Google OAuth flow via Chrome Custom Tab.
+  /// Returns an error string on failure, or null on success.
+  Future<String?> signInWithGoogle() async {
+    try {
+      state = const AsyncLoading();
+      final repo = await ref.read(authRepositoryProvider.future);
+      final user = await repo.signInWithGoogle();
+      state = AsyncData(user);
+      return null;
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      final msg = e.toString().replaceAll('Exception: ', '').trim();
+      return msg.isNotEmpty ? msg : 'Google sign-in failed';
+    }
+  }
+
   Future<void> updateKycStatus(KycStatus status) async {
     final repo = await ref.read(authRepositoryProvider.future);
     final updated = await repo.updateKycStatus(status);

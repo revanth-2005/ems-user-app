@@ -32,5 +32,7 @@ abstract class AuthRepository {
 
   Future<void> logout();
 
+  Future<UserEntity> signInWithGoogle();
+
   Future<UserEntity> updateKycStatus(KycStatus status);
 }

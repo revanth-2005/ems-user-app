@@ -30,7 +30,7 @@ final selectedPricingUnitFilterProvider = StateProvider<String?>((_) => null);
 
 final catalogSearchQueryProvider = StateProvider<String>((_) => '');
 
-final catalogSortByProvider = StateProvider<String>((_) => 'createdAt_desc');
+final catalogSortByProvider = StateProvider<String>((_) => 'priority');
 
 final minPriceFilterProvider = StateProvider<int?>((_) => null);
 
@@ -40,10 +40,16 @@ final selectedDateFilterProvider = StateProvider<DateTime?>((_) => null);
 
 final minRatingFilterProvider = StateProvider<double?>((_) => null);
 
-enum CatalogTab { PACKAGES, SERVICES, ORGANIZERS, EVENTS }
+final searchRadiusKmProvider = StateProvider<double>((_) => 50.0);
+
+final userLatProvider = StateProvider<double?>((_) => null);
+
+final userLngProvider = StateProvider<double?>((_) => null);
+
+enum CatalogTab { ALL, PACKAGES, SERVICES, ORGANIZERS, EVENTS }
 
 final activeCatalogTabProvider =
-    StateProvider<CatalogTab>((_) => CatalogTab.PACKAGES);
+    StateProvider<CatalogTab>((_) => CatalogTab.ALL);
 
 // ── Data Providers ────────────────────────────────────────────────────────
 
@@ -52,6 +58,58 @@ final categoriesProvider = FutureProvider<List<Category>>((ref) async {
   return repo.getCategories();
 });
 
+// ── 🌐 Unified Overview Search Provider ───────────────────────────────────────
+
+final unifiedSearchProvider = FutureProvider<UnifiedSearchResult>((ref) async {
+  final repo = ref.watch(catalogRepositoryProvider);
+  final rawCity = ref.watch(selectedCityProvider);
+  final city = (rawCity.isEmpty || rawCity == 'All') ? null : rawCity;
+  final search = ref.watch(catalogSearchQueryProvider);
+  final categoryId = ref.watch(selectedCategoryFilterProvider);
+  final subCategoryId = ref.watch(selectedSubCategoryFilterProvider);
+  final pricingUnit = ref.watch(selectedPricingUnitFilterProvider);
+  final eventMode = ref.watch(selectedEventModeProvider);
+  final sortBy = SearchSortBy.fromString(ref.watch(catalogSortByProvider));
+  final minPrice = ref.watch(minPriceFilterProvider);
+  final maxPrice = ref.watch(maxPriceFilterProvider);
+  final minRating = ref.watch(minRatingFilterProvider);
+  final radiusKm = ref.watch(searchRadiusKmProvider);
+  final lat = ref.watch(userLatProvider);
+  final lng = ref.watch(userLngProvider);
+
+  final query = SearchQuery(
+    search: search.isNotEmpty ? search : null,
+    city: city,
+    lat: lat,
+    lng: lng,
+    radiusKm: radiusKm,
+    categoryId: categoryId,
+    subCategoryId: subCategoryId,
+    pricingUnit: pricingUnit,
+    eventMode: eventMode == 'ALL' ? null : eventMode,
+    sortBy: sortBy,
+    minPrice: minPrice,
+    maxPrice: maxPrice,
+    minRating: minRating,
+    limit: 10,
+  );
+
+  return repo.searchUnified(query);
+});
+
+// ── 🔍 Instant Autocomplete / Typeahead Provider ─────────────────────────────
+
+final autocompleteSuggestionsProvider =
+    FutureProvider.autoDispose.family<AutocompleteResult, String>((ref, query) async {
+  if (query.trim().length < 2) return const AutocompleteResult();
+  final repo = ref.watch(catalogRepositoryProvider);
+  final lat = ref.watch(userLatProvider);
+  final lng = ref.watch(userLngProvider);
+  return repo.getAutocompleteSuggestions(query, lat: lat, lng: lng, limit: 5);
+});
+
+// ── Bundled Packages Provider ────────────────────────────────────────────────
+
 final packagesProvider = FutureProvider<List<EventPackage>>((ref) async {
   final repo = ref.watch(catalogRepositoryProvider);
   final rawCity = ref.watch(selectedCityProvider);
@@ -59,26 +117,32 @@ final packagesProvider = FutureProvider<List<EventPackage>>((ref) async {
   final categoryId = ref.watch(selectedCategoryFilterProvider);
   final subCategoryId = ref.watch(selectedSubCategoryFilterProvider);
   final search = ref.watch(catalogSearchQueryProvider);
-  final sortBy = ref.watch(catalogSortByProvider);
+  final sortBy = SearchSortBy.fromString(ref.watch(catalogSortByProvider));
   final minPrice = ref.watch(minPriceFilterProvider);
   final maxPrice = ref.watch(maxPriceFilterProvider);
   final minRating = ref.watch(minRatingFilterProvider);
+  final radiusKm = ref.watch(searchRadiusKmProvider);
+  final lat = ref.watch(userLatProvider);
+  final lng = ref.watch(userLngProvider);
 
-  final list = await repo.getPackages(
+  final query = SearchQuery(
+    search: search.isNotEmpty ? search : null,
     city: city,
+    lat: lat,
+    lng: lng,
+    radiusKm: radiusKm,
     categoryId: categoryId,
     subCategoryId: subCategoryId,
-    search: search,
     sortBy: sortBy,
     minPrice: minPrice,
     maxPrice: maxPrice,
+    minRating: minRating,
   );
 
-  if (minRating != null) {
-    return list.where((p) => p.organizer.rating >= minRating).toList();
-  }
-  return list;
+  return repo.searchPackages(query);
 });
+
+// ── Standalone Services Provider ─────────────────────────────────────────────
 
 final servicesProvider = FutureProvider<List<StandaloneService>>((ref) async {
   final repo = ref.watch(catalogRepositoryProvider);
@@ -88,38 +152,54 @@ final servicesProvider = FutureProvider<List<StandaloneService>>((ref) async {
   final subCategoryId = ref.watch(selectedSubCategoryFilterProvider);
   final pricingUnit = ref.watch(selectedPricingUnitFilterProvider);
   final search = ref.watch(catalogSearchQueryProvider);
-  final sortBy = ref.watch(catalogSortByProvider);
+  final sortBy = SearchSortBy.fromString(ref.watch(catalogSortByProvider));
   final minPrice = ref.watch(minPriceFilterProvider);
   final maxPrice = ref.watch(maxPriceFilterProvider);
   final minRating = ref.watch(minRatingFilterProvider);
+  final radiusKm = ref.watch(searchRadiusKmProvider);
+  final lat = ref.watch(userLatProvider);
+  final lng = ref.watch(userLngProvider);
 
-  final list = await repo.getServices(
+  final query = SearchQuery(
+    search: search.isNotEmpty ? search : null,
     city: city,
+    lat: lat,
+    lng: lng,
+    radiusKm: radiusKm,
     categoryId: categoryId,
     subCategoryId: subCategoryId,
     pricingUnit: pricingUnit,
-    search: search,
     sortBy: sortBy,
     minPrice: minPrice,
     maxPrice: maxPrice,
+    minRating: minRating,
   );
 
-  if (minRating != null) {
-    return list.where((s) => s.organizer.rating >= minRating).toList();
-  }
-  return list;
+  return repo.searchServices(query);
 });
+
+// ── Organizers Directory Provider ───────────────────────────────────────────
 
 final organizersProvider = FutureProvider<List<OrganizerSummary>>((ref) async {
   final repo = ref.watch(catalogRepositoryProvider);
   final rawCity = ref.watch(selectedCityProvider);
   final city = (rawCity.isEmpty || rawCity == 'All') ? null : rawCity;
   final search = ref.watch(catalogSearchQueryProvider);
+  final sortBy = SearchSortBy.fromString(ref.watch(catalogSortByProvider));
+  final radiusKm = ref.watch(searchRadiusKmProvider);
+  final lat = ref.watch(userLatProvider);
+  final lng = ref.watch(userLngProvider);
 
-  return repo.getOrganizers(
+  final query = SearchQuery(
+    search: search.isNotEmpty ? search : null,
     city: city,
-    search: search,
+    lat: lat,
+    lng: lng,
+    radiusKm: radiusKm,
+    sortBy: sortBy,
   );
+
+  return repo.searchOrganizers(query);
 });
 
 // ── Event Specific Filters & State ────────────────────────────────────────
@@ -142,13 +222,23 @@ final eventsProvider = FutureProvider<List<PublicEvent>>((ref) async {
   final categoryId = ref.watch(selectedEventCategoryProvider);
   final mode = ref.watch(selectedEventModeProvider);
   final search = ref.watch(eventSearchQueryProvider);
+  final sortBy = SearchSortBy.fromString(ref.watch(catalogSortByProvider));
+  final radiusKm = ref.watch(searchRadiusKmProvider);
+  final lat = ref.watch(userLatProvider);
+  final lng = ref.watch(userLngProvider);
 
-  return repo.getEvents(
-    city: city,
-    categoryId: categoryId,
-    mode: mode == 'ALL' ? null : mode,
+  final query = SearchQuery(
     search: search.isNotEmpty ? search : null,
+    city: city,
+    lat: lat,
+    lng: lng,
+    radiusKm: radiusKm,
+    categoryId: categoryId,
+    eventMode: mode == 'ALL' ? null : mode,
+    sortBy: sortBy,
   );
+
+  return repo.searchEvents(query);
 });
 
 final eventFeeCalculatorProvider =
@@ -201,6 +291,138 @@ final eventDetailProvider =
   return null;
 });
 
+// ── ⭐ Follow / Unfollow Organizers State & Providers ─────────────────────────
+
+class OrganizerFollowState {
+  final bool isFollowed;
+  final int followerCount;
+  final bool isLoading;
+
+  const OrganizerFollowState({
+    required this.isFollowed,
+    required this.followerCount,
+    this.isLoading = false,
+  });
+
+  OrganizerFollowState copyWith({
+    bool? isFollowed,
+    int? followerCount,
+    bool? isLoading,
+  }) {
+    return OrganizerFollowState(
+      isFollowed: isFollowed ?? this.isFollowed,
+      followerCount: followerCount ?? this.followerCount,
+      isLoading: isLoading ?? this.isLoading,
+    );
+  }
+}
+
+class OrganizerFollowArgs {
+  final String id;
+  final bool initialFollow;
+  final int initialFollowerCount;
+
+  const OrganizerFollowArgs({
+    required this.id,
+    this.initialFollow = false,
+    this.initialFollowerCount = 0,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is OrganizerFollowArgs &&
+          runtimeType == other.runtimeType &&
+          id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
+}
+
+class OrganizerFollowNotifier extends StateNotifier<OrganizerFollowState> {
+  final CatalogRepository _repo;
+  final String _organizerId;
+
+  OrganizerFollowNotifier(
+    this._repo,
+    this._organizerId, {
+    required bool initialFollow,
+    required int initialFollowerCount,
+  }) : super(OrganizerFollowState(
+          isFollowed: initialFollow,
+          followerCount: initialFollowerCount,
+        ));
+
+  Future<void> toggleFollow({
+    void Function(String message, {bool isError})? onMessage,
+  }) async {
+    if (state.isLoading) return;
+    final prev = state;
+    final nextFollow = !prev.isFollowed;
+    final nextCount = nextFollow
+        ? (prev.followerCount + 1)
+        : (prev.followerCount > 0 ? prev.followerCount - 1 : 0);
+
+    // 1. Immediate optimistic UI state update
+    state = state.copyWith(
+      isFollowed: nextFollow,
+      followerCount: nextCount,
+      isLoading: true,
+    );
+
+    // Provide immediate optimistic SnackBar feedback
+    if (onMessage != null) {
+      onMessage(
+        nextFollow ? 'Following organizer...' : 'Unfollowed organizer',
+        isError: false,
+      );
+    }
+
+    try {
+      final res = await _repo.toggleFollowOrganizer(_organizerId, prev.isFollowed);
+      state = OrganizerFollowState(
+        isFollowed: res.isFollowed,
+        followerCount: res.followerCount >= 0 ? res.followerCount : nextCount,
+        isLoading: false,
+      );
+      if (onMessage != null && res.message != null && res.message!.isNotEmpty) {
+        onMessage(res.message!, isError: false);
+      }
+    } catch (e) {
+      // Revert optimistic change on network failure
+      state = prev;
+      String errorMsg = 'Failed to update follow status';
+      final errStr = e.toString();
+      if (errStr.contains('401') || errStr.toLowerCase().contains('unauthorized')) {
+        errorMsg = 'Please log in to follow organizers';
+      } else if (errStr.isNotEmpty) {
+        errorMsg = errStr.replaceAll('Exception:', '').trim();
+      }
+      if (onMessage != null) {
+        onMessage(errorMsg, isError: true);
+      }
+    }
+  }
+}
+
+final organizerFollowProvider =
+    StateNotifierProvider.family<OrganizerFollowNotifier, OrganizerFollowState, OrganizerFollowArgs>(
+  (ref, args) {
+    final repo = ref.watch(catalogRepositoryProvider);
+    return OrganizerFollowNotifier(
+      repo,
+      args.id,
+      initialFollow: args.initialFollow,
+      initialFollowerCount: args.initialFollowerCount,
+    );
+  },
+);
+
+final followedOrganizersProvider = FutureProvider<List<OrganizerSummary>>((ref) async {
+  final repo = ref.watch(catalogRepositoryProvider);
+  return repo.getFollowedOrganizers();
+});
+
 // ── Home Feed State ───────────────────────────────────────────────────────
 
 class HomeFeedState {
@@ -234,3 +456,4 @@ final homeFeedProvider = FutureProvider<HomeFeedState>((ref) async {
     events: evts,
   );
 });
+

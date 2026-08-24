@@ -264,6 +264,83 @@ class SignupScreen extends HookConsumerWidget {
 
                 const SizedBox(height: 20),
 
+                // ── OR divider ───────────────────────────────────────────────
+                Row(
+                  children: [
+                    const Expanded(
+                        child: Divider(
+                            color: Color(0xFF333333), thickness: 1)),
+                    Padding(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text('OR',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w600,
+                          )),
+                    ),
+                    const Expanded(
+                        child: Divider(
+                            color: Color(0xFF333333), thickness: 1)),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // ── Google Sign-Up button ────────────────────────────────────
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: OutlinedButton(
+                    onPressed: isSubmitting.value
+                        ? null
+                        : () async {
+                            errorMessage.value = null;
+                            final error = await ref
+                                .read(authStateProvider.notifier)
+                                .signInWithGoogle();
+                            if (!context.mounted) return;
+                            if (error != null) {
+                              errorMessage.value = error;
+                              AppSnackbar.show(context,
+                                  message: error,
+                                  type: SnackbarType.error);
+                            } else {
+                              context.go(AppRoutes.home);
+                            }
+                          },
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      side: BorderSide(
+                          color: AppColors.textSecondary.withValues(alpha: 0.4),
+                          width: 1),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CustomPaint(
+                          size: const Size(22, 22),
+                          painter: _GoogleLogoPainterSignup(),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Sign up with Google',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -295,4 +372,46 @@ class SignupScreen extends HookConsumerWidget {
       ),
     );
   }
+}
+
+// ── Google 'G' logo painter (for signup screen) ──────────────────────────────
+class _GoogleLogoPainterSignup extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2;
+    final segments = [
+      (const Color(0xFF4285F4), -10.0, 85.0),
+      (const Color(0xFF34A853),  75.0, 90.0),
+      (const Color(0xFFFBBC05), 165.0, 90.0),
+      (const Color(0xFFEA4335), 255.0, 75.0),
+    ];
+    for (final (color, startDeg, sweepDeg) in segments) {
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius * 0.72),
+        startDeg * 3.14159265 / 180,
+        sweepDeg * 3.14159265 / 180,
+        false,
+        Paint()
+          ..color = color
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = size.width * 0.22
+          ..strokeCap = StrokeCap.butt,
+      );
+    }
+    canvas.drawRect(
+      Rect.fromLTWH(
+        center.dx - size.width * 0.04,
+        center.dy - size.height * 0.12,
+        size.width * 0.54,
+        size.height * 0.24,
+      ),
+      Paint()
+        ..color = Colors.transparent
+        ..blendMode = BlendMode.clear,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_GoogleLogoPainterSignup oldDelegate) => false;
 }

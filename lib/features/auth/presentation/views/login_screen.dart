@@ -48,6 +48,24 @@ class LoginScreen extends HookConsumerWidget {
       }
     }
 
+    Future<void> handleGoogleLogin() async {
+      loginError.value = null;
+      final error =
+          await ref.read(authStateProvider.notifier).signInWithGoogle();
+      if (!context.mounted) return;
+      if (error != null) {
+        loginError.value = error;
+        AppSnackbar.show(context,
+            message: error, type: SnackbarType.error);
+      } else {
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go(AppRoutes.home);
+        }
+      }
+    }
+
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
@@ -394,7 +412,70 @@ class LoginScreen extends HookConsumerWidget {
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(height: 24),
+                                   const SizedBox(height: 16),
+
+                                   // ── OR divider ───────────────────────────
+                                   Row(
+                                     children: [
+                                       const Expanded(
+                                           child: Divider(
+                                               color: Color(0xFF333333),
+                                               thickness: 1)),
+                                       Padding(
+                                         padding: const EdgeInsets.symmetric(
+                                             horizontal: 12),
+                                         child: Text('OR',
+                                             style: GoogleFonts.plusJakartaSans(
+                                               fontSize: 12,
+                                               color: const Color(0xFF666666),
+                                               fontWeight: FontWeight.w600,
+                                             )),
+                                       ),
+                                       const Expanded(
+                                           child: Divider(
+                                               color: Color(0xFF333333),
+                                               thickness: 1)),
+                                     ],
+                                   ),
+                                   const SizedBox(height: 16),
+
+                                   // ── Google Sign-In button ─────────────────
+                                   SizedBox(
+                                     width: double.infinity,
+                                     height: 50,
+                                     child: OutlinedButton(
+                                       onPressed:
+                                           isLoading ? null : handleGoogleLogin,
+                                       style: OutlinedButton.styleFrom(
+                                         backgroundColor:
+                                             const Color(0xFF1E1E1E),
+                                         side: const BorderSide(
+                                             color: Color(0xFF3A3A3A),
+                                             width: 1),
+                                         shape: RoundedRectangleBorder(
+                                           borderRadius:
+                                               BorderRadius.circular(10),
+                                         ),
+                                       ),
+                                       child: Row(
+                                         mainAxisAlignment:
+                                             MainAxisAlignment.center,
+                                         children: [
+                                           const _GoogleIcon(),
+                                           const SizedBox(width: 12),
+                                           Text(
+                                             'Continue with Google',
+                                             style: GoogleFonts.plusJakartaSans(
+                                               fontSize: 14,
+                                               fontWeight: FontWeight.w600,
+                                               color: Colors.white,
+                                             ),
+                                           ),
+                                         ],
+                                       ),
+                                     ),
+                                   ),
+                                   const SizedBox(height: 24),
 
                                   // Sign up link
                                   Center(
@@ -557,4 +638,65 @@ class _NetflixPasswordFieldState extends State<_NetflixPasswordField> {
       ),
     );
   }
+}
+
+// ── Google 'G' logo painted widget ───────────────────────────────────────────
+class _GoogleIcon extends StatelessWidget {
+  const _GoogleIcon();
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      size: const Size(22, 22),
+      painter: _GoogleLogoPainter(),
+    );
+  }
+}
+
+class _GoogleLogoPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2;
+
+    final segments = [
+      (const Color(0xFF4285F4), -10.0, 85.0),
+      (const Color(0xFF34A853),  75.0, 90.0),
+      (const Color(0xFFFBBC05), 165.0, 90.0),
+      (const Color(0xFFEA4335), 255.0, 75.0),
+    ];
+
+    for (final (color, startDeg, sweepDeg) in segments) {
+      final paint = Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = size.width * 0.22
+        ..strokeCap = StrokeCap.butt;
+
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius * 0.72),
+        startDeg * 3.14159265 / 180,
+        sweepDeg * 3.14159265 / 180,
+        false,
+        paint,
+      );
+    }
+
+    // White cutout rectangle for the horizontal bar of the 'G'
+    final barPaint = Paint()
+      ..color = const Color(0xFF1E1E1E)
+      ..style = PaintingStyle.fill;
+    canvas.drawRect(
+      Rect.fromLTWH(
+        center.dx - size.width * 0.04,
+        center.dy - size.height * 0.12,
+        size.width * 0.54,
+        size.height * 0.24,
+      ),
+      barPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_GoogleLogoPainter oldDelegate) => false;
 }

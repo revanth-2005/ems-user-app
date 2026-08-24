@@ -69,4 +69,19 @@ class ApiConstants {
   static const String registerEvent           = '/catalog/events/{id}/register';
   static const String createTicketOrder       = '/catalog/events/{id}/create-ticket-order';
   static const String eventCalendarLink       = '/catalog/events/{id}/calendar-link';
+
+  // ── 🔍 Multi-Dimensional Search & Discovery Endpoints ──────────────────────
+  static const String searchAutocomplete = '/search/autocomplete';
+  static const String searchUnified      = '/search/unified';
+  static const String searchPackages     = '/search/packages';
+  static const String searchServices     = '/search/services';
+  static const String searchOrganizers   = '/search/organizers';
+  static const String searchEvents       = '/search/events';
+
+  // ── ⭐ Follow / Unfollow Endpoints ──────────────────────────────────────────
+  static const String followOrganizer    = '/organizers/{id}/follow';
+  static const String unfollowOrganizer  = '/organizers/{id}/unfollow';
+  static const String followStatus       = '/organizers/{id}/follow-status';
+  static const String followedOrganizers = '/users/me/followed-organizers';
+  static const String organizerFollowers = '/organizers/{id}/followers';
 }

@@ -181,13 +181,22 @@ class OrganizerSummary {
   final String? displayName;
   final String? bio;
   final String? city;
+  final String? address;
+  final double? latitude;
+  final double? longitude;
   final String kycStatus;
   final double rating;
+  final int reviewCount;
   final String? avatarUrl;
   final OrganizerUser? user;
   final List<PortfolioItem> portfolioItems;
   final int packageCount;
   final int serviceCount;
+  final bool isFollowed;
+  final int followerCount;
+  final int bookingCount;
+  final double? distanceKm;
+  final int? priorityScore;
 
   const OrganizerSummary({
     required this.id,
@@ -195,13 +204,22 @@ class OrganizerSummary {
     this.displayName,
     this.bio,
     this.city,
+    this.address,
+    this.latitude,
+    this.longitude,
     this.kycStatus = 'APPROVED',
     this.rating = 4.8,
+    this.reviewCount = 0,
     this.avatarUrl,
     this.user,
     this.portfolioItems = const [],
     this.packageCount = 0,
     this.serviceCount = 0,
+    this.isFollowed = false,
+    this.followerCount = 0,
+    this.bookingCount = 0,
+    this.distanceKm,
+    this.priorityScore,
   });
 
   String get effectiveName =>
@@ -209,6 +227,54 @@ class OrganizerSummary {
 
   String? get effectiveAvatar =>
       avatarUrl ?? user?.profilePhoto;
+
+  OrganizerSummary copyWith({
+    String? id,
+    String? businessName,
+    String? displayName,
+    String? bio,
+    String? city,
+    String? address,
+    double? latitude,
+    double? longitude,
+    String? kycStatus,
+    double? rating,
+    int? reviewCount,
+    String? avatarUrl,
+    OrganizerUser? user,
+    List<PortfolioItem>? portfolioItems,
+    int? packageCount,
+    int? serviceCount,
+    bool? isFollowed,
+    int? followerCount,
+    int? bookingCount,
+    double? distanceKm,
+    int? priorityScore,
+  }) {
+    return OrganizerSummary(
+      id: id ?? this.id,
+      businessName: businessName ?? this.businessName,
+      displayName: displayName ?? this.displayName,
+      bio: bio ?? this.bio,
+      city: city ?? this.city,
+      address: address ?? this.address,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      kycStatus: kycStatus ?? this.kycStatus,
+      rating: rating ?? this.rating,
+      reviewCount: reviewCount ?? this.reviewCount,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      user: user ?? this.user,
+      portfolioItems: portfolioItems ?? this.portfolioItems,
+      packageCount: packageCount ?? this.packageCount,
+      serviceCount: serviceCount ?? this.serviceCount,
+      isFollowed: isFollowed ?? this.isFollowed,
+      followerCount: followerCount ?? this.followerCount,
+      bookingCount: bookingCount ?? this.bookingCount,
+      distanceKm: distanceKm ?? this.distanceKm,
+      priorityScore: priorityScore ?? this.priorityScore,
+    );
+  }
 
   factory OrganizerSummary.fromJson(Map<String, dynamic> json) {
     final userObj = json['user'] is Map<String, dynamic>
@@ -228,6 +294,7 @@ class OrganizerSummary {
         json['cover_image_url']?.toString() ??
         json['avatarUrl']?.toString() ??
         json['avatar_url']?.toString() ??
+        json['profilePhoto']?.toString() ??
         userObj?.profilePhoto;
 
     if ((foundAvatar == null || foundAvatar.isEmpty) && pkgs.isNotEmpty) {
@@ -250,6 +317,8 @@ class OrganizerSummary {
       foundAvatar = portfolio.first.mediaUrl;
     }
 
+    final rawRating = json['avgRating'] ?? json['rating'];
+
     return OrganizerSummary(
       id: json['id']?.toString() ?? '',
       businessName: json['businessName']?.toString() ??
@@ -259,15 +328,31 @@ class OrganizerSummary {
           json['displayName']?.toString() ?? json['display_name']?.toString(),
       bio: json['bio']?.toString(),
       city: json['city']?.toString(),
+      address: json['address']?.toString(),
+      latitude: (json['latitude'] as num?)?.toDouble() ??
+          (json['lat'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble() ??
+          (json['lng'] as num?)?.toDouble(),
       kycStatus: json['kycStatus']?.toString() ??
           json['kyc_status']?.toString() ??
           'APPROVED',
-      rating: (json['rating'] as num?)?.toDouble() ?? 4.8,
+      rating: (rawRating as num?)?.toDouble() ?? 4.8,
+      reviewCount: (json['reviewCount'] as num?)?.toInt() ?? 0,
       avatarUrl: foundAvatar,
       user: userObj,
       portfolioItems: portfolio,
       packageCount: pkgs.length,
       serviceCount: srvs.length,
+      isFollowed: json['isFollowed'] == true || json['is_followed'] == true,
+      followerCount: (json['followerCount'] as num?)?.toInt() ??
+          (json['followers'] as num?)?.toInt() ??
+          0,
+      bookingCount: (json['bookingCount'] as num?)?.toInt() ??
+          (json['bookings'] as num?)?.toInt() ??
+          0,
+      distanceKm: (json['distanceKm'] as num?)?.toDouble() ??
+          (json['distance'] as num?)?.toDouble(),
+      priorityScore: (json['priorityScore'] as num?)?.toInt(),
     );
   }
 
@@ -277,11 +362,20 @@ class OrganizerSummary {
         if (displayName != null) 'displayName': displayName,
         if (bio != null) 'bio': bio,
         if (city != null) 'city': city,
+        if (address != null) 'address': address,
+        if (latitude != null) 'latitude': latitude,
+        if (longitude != null) 'longitude': longitude,
         'kycStatus': kycStatus,
         'rating': rating,
+        'reviewCount': reviewCount,
         if (avatarUrl != null) 'avatarUrl': avatarUrl,
         if (user != null) 'user': user!.toJson(),
         'portfolioItems': portfolioItems.map((e) => e.toJson()).toList(),
+        'isFollowed': isFollowed,
+        'followerCount': followerCount,
+        'bookingCount': bookingCount,
+        if (distanceKm != null) 'distanceKm': distanceKm,
+        if (priorityScore != null) 'priorityScore': priorityScore,
       };
 }
 
@@ -1166,3 +1260,389 @@ class TicketOrderResponse {
     );
   }
 }
+
+// ── 🔍 Multi-Dimensional Search & Discovery Models ───────────────────────────
+
+enum SearchSortBy {
+  priority('priority', 'Recommended (Priority Boost)'),
+  distance('distance', 'Nearest Distance'),
+  priceAsc('price_asc', 'Price: Low to High'),
+  priceDesc('price_desc', 'Price: High to Low'),
+  rating('rating', 'Highest Rated'),
+  popularity('popularity', 'Most Popular'),
+  createdAt('created_at', 'Newest First');
+
+  final String value;
+  final String label;
+  const SearchSortBy(this.value, this.label);
+
+  static SearchSortBy fromString(String? val) {
+    if (val == null) return SearchSortBy.priority;
+    for (final s in SearchSortBy.values) {
+      if (s.value == val || s.name == val) return s;
+    }
+    return SearchSortBy.priority;
+  }
+}
+
+class SearchQuery {
+  final String? search;
+  final String? city;
+  final double? lat;
+  final double? lng;
+  final double radiusKm;
+  final String? categoryId;
+  final String? subCategoryId;
+  final int? minPrice; // In paise
+  final int? maxPrice; // In paise
+  final double? minRating;
+  final String? startDate; // YYYY-MM-DD
+  final String? endDate;   // YYYY-MM-DD
+  final String? pricingUnit; // FIXED, PER_HEAD, PER_HOUR
+  final String? eventMode;   // ONLINE, OFFLINE
+  final SearchSortBy sortBy;
+  final int page;
+  final int limit;
+
+  const SearchQuery({
+    this.search,
+    this.city,
+    this.lat,
+    this.lng,
+    this.radiusKm = 50.0,
+    this.categoryId,
+    this.subCategoryId,
+    this.minPrice,
+    this.maxPrice,
+    this.minRating,
+    this.startDate,
+    this.endDate,
+    this.pricingUnit,
+    this.eventMode,
+    this.sortBy = SearchSortBy.priority,
+    this.page = 1,
+    this.limit = 20,
+  });
+
+  SearchQuery copyWith({
+    String? search,
+    String? city,
+    double? lat,
+    double? lng,
+    double? radiusKm,
+    String? categoryId,
+    String? subCategoryId,
+    int? minPrice,
+    int? maxPrice,
+    double? minRating,
+    String? startDate,
+    String? endDate,
+    String? pricingUnit,
+    String? eventMode,
+    SearchSortBy? sortBy,
+    int? page,
+    int? limit,
+  }) {
+    return SearchQuery(
+      search: search ?? this.search,
+      city: city ?? this.city,
+      lat: lat ?? this.lat,
+      lng: lng ?? this.lng,
+      radiusKm: radiusKm ?? this.radiusKm,
+      categoryId: categoryId ?? this.categoryId,
+      subCategoryId: subCategoryId ?? this.subCategoryId,
+      minPrice: minPrice ?? this.minPrice,
+      maxPrice: maxPrice ?? this.maxPrice,
+      minRating: minRating ?? this.minRating,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      pricingUnit: pricingUnit ?? this.pricingUnit,
+      eventMode: eventMode ?? this.eventMode,
+      sortBy: sortBy ?? this.sortBy,
+      page: page ?? this.page,
+      limit: limit ?? this.limit,
+    );
+  }
+
+  Map<String, dynamic> toQueryParams() {
+    final map = <String, dynamic>{
+      'page': page,
+      'limit': limit,
+      'sortBy': sortBy.value,
+      'radiusKm': radiusKm,
+    };
+    if (search != null && search!.trim().isNotEmpty) map['search'] = search!.trim();
+    if (city != null && city!.trim().isNotEmpty && city != 'All') map['city'] = city!.trim();
+    if (lat != null && lng != null) {
+      map['lat'] = lat;
+      map['lng'] = lng;
+    }
+    if (categoryId != null && categoryId!.isNotEmpty && categoryId != 'All') {
+      map['categoryId'] = categoryId;
+    }
+    if (subCategoryId != null && subCategoryId!.isNotEmpty && subCategoryId != 'All') {
+      map['subCategoryId'] = subCategoryId;
+    }
+    if (minPrice != null && minPrice! > 0) map['minPrice'] = minPrice;
+    if (maxPrice != null && maxPrice! > 0) map['maxPrice'] = maxPrice;
+    if (minRating != null && minRating! > 0) map['minRating'] = minRating;
+    if (startDate != null && startDate!.isNotEmpty) map['startDate'] = startDate;
+    if (endDate != null && endDate!.isNotEmpty) map['endDate'] = endDate;
+    if (pricingUnit != null && pricingUnit!.isNotEmpty && pricingUnit != 'ALL') {
+      map['pricingUnit'] = pricingUnit;
+    }
+    if (eventMode != null && eventMode!.isNotEmpty && eventMode != 'ALL') {
+      map['eventMode'] = eventMode;
+    }
+    return map;
+  }
+}
+
+class AutocompleteResult {
+  final List<EventPackage> packages;
+  final List<StandaloneService> services;
+  final List<PublicEvent> events;
+  final List<OrganizerSummary> organizers;
+  final List<Category> categories;
+
+  const AutocompleteResult({
+    this.packages = const [],
+    this.services = const [],
+    this.events = const [],
+    this.organizers = const [],
+    this.categories = const [],
+  });
+
+  bool get isEmpty =>
+      packages.isEmpty &&
+      services.isEmpty &&
+      events.isEmpty &&
+      organizers.isEmpty &&
+      categories.isEmpty;
+
+  bool get isNotEmpty => !isEmpty;
+
+  int get totalCount =>
+      packages.length +
+      services.length +
+      events.length +
+      organizers.length +
+      categories.length;
+
+  factory AutocompleteResult.fromJson(Map<String, dynamic> json) {
+    final suggestions = json['suggestions'] is Map<String, dynamic>
+        ? json['suggestions'] as Map<String, dynamic>
+        : json;
+
+    return AutocompleteResult(
+      packages: (suggestions['packages'] as List?)
+              ?.whereType<Map<String, dynamic>>()
+              .map(EventPackage.fromJson)
+              .toList() ??
+          const [],
+      services: (suggestions['services'] as List?)
+              ?.whereType<Map<String, dynamic>>()
+              .map(StandaloneService.fromJson)
+              .toList() ??
+          const [],
+      events: (suggestions['events'] as List?)
+              ?.whereType<Map<String, dynamic>>()
+              .map(PublicEvent.fromJson)
+              .toList() ??
+          const [],
+      organizers: (suggestions['organizers'] as List?)
+              ?.whereType<Map<String, dynamic>>()
+              .map(OrganizerSummary.fromJson)
+              .toList() ??
+          const [],
+      categories: (suggestions['categories'] as List?)
+              ?.whereType<Map<String, dynamic>>()
+              .map(Category.fromJson)
+              .toList() ??
+          const [],
+    );
+  }
+}
+
+class UnifiedSearchResult {
+  final int totalPackages;
+  final int totalServices;
+  final int totalOrganizers;
+  final int totalEvents;
+  final List<EventPackage> packages;
+  final List<StandaloneService> services;
+  final List<OrganizerSummary> organizers;
+  final List<PublicEvent> events;
+
+  const UnifiedSearchResult({
+    this.totalPackages = 0,
+    this.totalServices = 0,
+    this.totalOrganizers = 0,
+    this.totalEvents = 0,
+    this.packages = const [],
+    this.services = const [],
+    this.organizers = const [],
+    this.events = const [],
+  });
+
+  bool get isEmpty =>
+      packages.isEmpty &&
+      services.isEmpty &&
+      organizers.isEmpty &&
+      events.isEmpty;
+
+  bool get isNotEmpty => !isEmpty;
+
+  factory UnifiedSearchResult.fromJson(Map<String, dynamic> json) {
+    final summary = json['summary'] as Map<String, dynamic>? ?? {};
+    final results = json['results'] as Map<String, dynamic>? ?? json;
+
+    final rawPkgs = results['packages'] ?? (results['data'] is Map ? results['data']['packages'] : null);
+    final rawSrvs = results['services'] ?? (results['data'] is Map ? results['data']['services'] : null);
+    final rawOrgs = results['organizers'] ?? (results['data'] is Map ? results['data']['organizers'] : null);
+    final rawEvts = results['events'] ?? (results['data'] is Map ? results['data']['events'] : null);
+
+    return UnifiedSearchResult(
+      totalPackages: (summary['totalPackages'] ?? summary['packages'] ?? (rawPkgs is List ? rawPkgs.length : 0)) as int,
+      totalServices: (summary['totalServices'] ?? summary['services'] ?? (rawSrvs is List ? rawSrvs.length : 0)) as int,
+      totalOrganizers: (summary['totalOrganizers'] ?? summary['organizers'] ?? (rawOrgs is List ? rawOrgs.length : 0)) as int,
+      totalEvents: (summary['totalEvents'] ?? summary['events'] ?? (rawEvts is List ? rawEvts.length : 0)) as int,
+      packages: (rawPkgs as List?)
+              ?.whereType<Map<String, dynamic>>()
+              .map(EventPackage.fromJson)
+              .toList() ??
+          const [],
+      services: (rawSrvs as List?)
+              ?.whereType<Map<String, dynamic>>()
+              .map(StandaloneService.fromJson)
+              .toList() ??
+          const [],
+      organizers: (rawOrgs as List?)
+              ?.whereType<Map<String, dynamic>>()
+              .map(OrganizerSummary.fromJson)
+              .toList() ??
+          const [],
+      events: (rawEvts as List?)
+              ?.whereType<Map<String, dynamic>>()
+              .map(PublicEvent.fromJson)
+              .toList() ??
+          const [],
+    );
+  }
+}
+
+class FollowToggleResponse {
+  final bool isFollowed;
+  final int followerCount;
+  final String? message;
+
+  const FollowToggleResponse({
+    required this.isFollowed,
+    required this.followerCount,
+    this.message,
+  });
+
+  factory FollowToggleResponse.fromJson(Map<String, dynamic> json) {
+    return FollowToggleResponse(
+      isFollowed: json['isFollowing'] == true ||
+          json['isFollowed'] == true ||
+          json['is_followed'] == true,
+      followerCount: (json['followerCount'] as num?)?.toInt() ??
+          (json['followers'] as num?)?.toInt() ??
+          0,
+      message: json['message']?.toString(),
+    );
+  }
+}
+
+class FollowedOrganizerItem {
+  final DateTime followedAt;
+  final String organizerProfileId;
+  final FollowedOrganizerDetail organizer;
+
+  const FollowedOrganizerItem({
+    required this.followedAt,
+    required this.organizerProfileId,
+    required this.organizer,
+  });
+
+  factory FollowedOrganizerItem.fromJson(Map<String, dynamic> json) {
+    return FollowedOrganizerItem(
+      followedAt: DateTime.tryParse(json['followedAt']?.toString() ?? '') ?? DateTime.now(),
+      organizerProfileId: json['organizerProfileId']?.toString() ?? json['id']?.toString() ?? '',
+      organizer: FollowedOrganizerDetail.fromJson(
+        json['organizer'] is Map<String, dynamic>
+            ? json['organizer'] as Map<String, dynamic>
+            : json,
+      ),
+    );
+  }
+}
+
+class FollowedOrganizerDetail {
+  final String id;
+  final String businessName;
+  final String? displayName;
+  final String? city;
+  final String? bio;
+  final String? organizerName;
+  final String? profilePhoto;
+  final int followerCount;
+  final int packageCount;
+  final int serviceCount;
+
+  const FollowedOrganizerDetail({
+    required this.id,
+    required this.businessName,
+    this.displayName,
+    this.city,
+    this.bio,
+    this.organizerName,
+    this.profilePhoto,
+    required this.followerCount,
+    required this.packageCount,
+    required this.serviceCount,
+  });
+
+  factory FollowedOrganizerDetail.fromJson(Map<String, dynamic> json) {
+    final user = json['user'] as Map<String, dynamic>?;
+    return FollowedOrganizerDetail(
+      id: json['id']?.toString() ?? '',
+      businessName: json['businessName']?.toString() ?? json['name']?.toString() ?? 'Organizer',
+      displayName: json['displayName']?.toString(),
+      city: json['city']?.toString(),
+      bio: json['bio']?.toString(),
+      organizerName: user?['name']?.toString() ?? json['name']?.toString(),
+      profilePhoto: user?['profilePhoto']?.toString() ??
+          user?['avatarUrl']?.toString() ??
+          json['avatarUrl']?.toString() ??
+          json['profilePhoto']?.toString(),
+      followerCount: (json['followerCount'] as num?)?.toInt() ??
+          (json['followers'] as num?)?.toInt() ??
+          0,
+      packageCount: (json['packageCount'] as num?)?.toInt() ??
+          (json['packages'] is List ? (json['packages'] as List).length : 0),
+      serviceCount: (json['serviceCount'] as num?)?.toInt() ??
+          (json['services'] is List ? (json['services'] as List).length : 0),
+    );
+  }
+
+  OrganizerSummary toSummary() {
+    return OrganizerSummary(
+      id: id,
+      businessName: businessName,
+      displayName: displayName,
+      city: city,
+      bio: bio,
+      kycStatus: 'APPROVED',
+      rating: 5.0,
+      reviewCount: 0,
+      avatarUrl: profilePhoto,
+      isFollowed: true,
+      followerCount: followerCount,
+      packageCount: packageCount,
+      serviceCount: serviceCount,
+    );
+  }
+}
+

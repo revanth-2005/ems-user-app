@@ -1,14 +1,20 @@
+import 'dart:io';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../app/app_providers.dart';
 import '../../../../core/common_widgets/app_button.dart';
 import '../../../../core/common_widgets/app_network_image.dart';
 import '../../../../core/common_widgets/app_snackbar.dart';
 import '../../../../core/common_widgets/app_text_field.dart';
+import '../../../../core/constants/api_constants.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../home/domain/entities/catalog_entities.dart';
 import '../../../home/presentation/providers/catalog_providers.dart';
@@ -38,6 +44,8 @@ class CreateEventScreen extends HookConsumerWidget {
     final selectedCategory = useState<EventCategory?>(null);
     final selectedCoverUrl = useState<String>(_coverPresets.first);
     final customCoverController = useTextEditingController();
+    final selectedLocalFile = useState<File?>(null);
+    final isUploadingCover = useState(false);
     final timezone = useState('Asia/Kolkata');
     final startDate = useState(DateTime.now().add(const Duration(days: 7, hours: 2)));
     final endDate = useState<DateTime?>(DateTime.now().add(const Duration(days: 7, hours: 6)));
@@ -122,6 +130,176 @@ class CreateEventScreen extends HookConsumerWidget {
       return true;
     }
 
+    // ── Local Image Picker & Upload ──────────────────────────────────────
+    Future<void> handlePickImage(ImageSource source) async {
+      try {
+        final picker = ImagePicker();
+        final pickedFile = await picker.pickImage(
+          source: source,
+          imageQuality: 85,
+          maxWidth: 1920,
+          maxHeight: 1080,
+        );
+        if (pickedFile == null) return;
+
+        final file = File(pickedFile.path);
+        selectedLocalFile.value = file;
+        isUploadingCover.value = true;
+
+        try {
+          final dioClient = ref.read(dioClientProvider);
+          final formData = FormData.fromMap({
+            'file': await MultipartFile.fromFile(
+              file.path,
+              filename: pickedFile.name.isNotEmpty ? pickedFile.name : 'event_cover.jpg',
+            ),
+          });
+
+          final uploadUrl = '${ApiConstants.baseUrl}${ApiConstants.organizerUpload}';
+          final response = await dioClient.dio.post(
+            uploadUrl,
+            data: formData,
+          );
+
+          if (response.data != null) {
+            final data = response.data;
+            final url = data is Map ? (data['url'] ?? data['fileUrl'] ?? data['location'] ?? data['key']) : null;
+            if (url != null && url.toString().isNotEmpty) {
+              customCoverController.text = url.toString();
+              selectedCoverUrl.value = url.toString();
+            }
+          }
+          if (context.mounted) {
+            AppSnackbar.show(
+              context,
+              message: '📸 Image selected & uploaded successfully!',
+              type: SnackbarType.success,
+            );
+          }
+        } catch (e) {
+          // If server upload is unreachable/offline, still retain local image for preview
+          if (context.mounted) {
+            AppSnackbar.show(
+              context,
+              message: 'Image loaded from device storage.',
+              type: SnackbarType.info,
+            );
+          }
+        } finally {
+          isUploadingCover.value = false;
+        }
+      } catch (e) {
+        if (context.mounted) {
+          AppSnackbar.show(
+            context,
+            message: 'Failed to pick image: $e',
+            type: SnackbarType.error,
+          );
+        }
+      }
+    }
+
+    void showImagePickerOptions() {
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: AppColors.getSurface(context),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (ctx) => SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.cloud_upload_outlined, color: AppColors.primary, size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Upload Cover Artwork',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.getTextPrimary(context),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.photo_library_rounded, color: AppColors.primary, size: 22),
+                  ),
+                  title: Text(
+                    'Choose from Gallery',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.getTextPrimary(context),
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Select photo from your device storage',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      color: AppColors.getTextSecondary(context),
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    handlePickImage(ImageSource.gallery);
+                  },
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2563EB).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.camera_alt_rounded, color: Color(0xFF2563EB), size: 22),
+                  ),
+                  title: Text(
+                    'Take a Photo',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.getTextPrimary(context),
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Capture a new photo with camera',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      color: AppColors.getTextSecondary(context),
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    handlePickImage(ImageSource.camera);
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     Future<void> handleAutoGenerateMeet() async {
       final title = titleController.text.trim().isNotEmpty
           ? titleController.text.trim()
@@ -139,124 +317,10 @@ class CreateEventScreen extends HookConsumerWidget {
         }
       } catch (e) {
         if (context.mounted) {
-          showDialog(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              backgroundColor: AppColors.getSurface(context),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-                side: BorderSide(color: AppColors.getBorder(context)),
-              ),
-              title: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEA4335).withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.g_mobiledata_rounded,
-                      color: Color(0xFFEA4335),
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Google Sign-In Required',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.getTextPrimary(context),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'For auto-generating live Google Meet links with 1-tap, please first sign in with Google Authentication (Google OAuth).',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13,
-                      height: 1.4,
-                      color: AppColors.getTextPrimary(context),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppColors.getCard(context),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppColors.getBorder(context)),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(
-                          Icons.lightbulb_outline_rounded,
-                          color: Color(0xFFF59E0B),
-                          size: 18,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Or create a room at meet.google.com/new and paste your link into the "Meeting Join URL" box below.',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 12,
-                              color: AppColors.getTextSecondary(context),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  child: Text(
-                    'I\'ll Paste Manually',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.getTextSecondary(context),
-                    ),
-                  ),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2563EB),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  onPressed: () {
-                    Navigator.of(ctx).pop();
-                    context.push('/auth/login');
-                  },
-                  child: Text(
-                    'Sign in with Google',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-
           AppSnackbar.show(
             context,
-            message:
-                'For 1-tap auto-generation, first sign in with Google Auth, or paste your link manually.',
-            type: SnackbarType.warning,
+            message: 'Failed to generate Meet room: ${e.toString()}',
+            type: SnackbarType.error,
           );
         }
       } finally {
@@ -417,6 +481,9 @@ class CreateEventScreen extends HookConsumerWidget {
                         categoriesAsync: categoriesAsync,
                         selectedCoverUrl: selectedCoverUrl,
                         customCoverController: customCoverController,
+                        selectedLocalFile: selectedLocalFile,
+                        isUploadingCover: isUploadingCover,
+                        onPickImage: showImagePickerOptions,
                         coverPresets: _coverPresets,
                         timezone: timezone,
                         startDate: startDate,
@@ -683,6 +750,9 @@ class _Step1Basics extends StatelessWidget {
   final AsyncValue<List<EventCategory>> categoriesAsync;
   final ValueNotifier<String> selectedCoverUrl;
   final TextEditingController customCoverController;
+  final ValueNotifier<File?> selectedLocalFile;
+  final ValueNotifier<bool> isUploadingCover;
+  final VoidCallback onPickImage;
   final List<String> coverPresets;
   final ValueNotifier<String> timezone;
   final ValueNotifier<DateTime> startDate;
@@ -695,6 +765,9 @@ class _Step1Basics extends StatelessWidget {
     required this.categoriesAsync,
     required this.selectedCoverUrl,
     required this.customCoverController,
+    required this.selectedLocalFile,
+    required this.isUploadingCover,
+    required this.onPickImage,
     required this.coverPresets,
     required this.timezone,
     required this.startDate,
@@ -770,29 +843,210 @@ class _Step1Basics extends StatelessWidget {
 
         const SizedBox(height: 20),
 
-        // Cover Presets Carousel
-        Text(
-          'Cover Banner Artwork',
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: AppColors.getTextPrimary(context),
-          ),
+        // Cover Presets & Local Upload
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Cover Banner Artwork',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: AppColors.getTextPrimary(context),
+              ),
+            ),
+            GestureDetector(
+              onTap: onPickImage,
+              child: Row(
+                children: [
+                  const Icon(Icons.add_photo_alternate_outlined, color: AppColors.primary, size: 16),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Upload Image',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 8),
+
+        // Prominent preview when a local image is selected
+        if (selectedLocalFile.value != null) ...[
+          Container(
+            height: 120,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.primary, width: 2),
+            ),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.file(
+                      selectedLocalFile.value!,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      gradient: LinearGradient(
+                        colors: [Colors.black.withValues(alpha: 0.6), Colors.transparent],
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 8,
+                  left: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isUploadingCover.value)
+                          const SizedBox(
+                            width: 10,
+                            height: 10,
+                            child: CircularProgressIndicator(strokeWidth: 1.5, color: Colors.white),
+                          )
+                        else
+                          const Icon(Icons.check_circle_rounded, size: 12, color: Colors.white),
+                        const SizedBox(width: 4),
+                        Text(
+                          isUploadingCover.value ? 'Uploading…' : 'Local File Active',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: onPickImage,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.7),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: Colors.white24),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.edit_rounded, size: 12, color: Colors.white),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Change',
+                                style: GoogleFonts.plusJakartaSans(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      GestureDetector(
+                        onTap: () {
+                          selectedLocalFile.value = null;
+                          customCoverController.clear();
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.7),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: Colors.white24),
+                          ),
+                          child: const Icon(Icons.close_rounded, size: 14, color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+
+        // Cover Presets & Upload Tile Carousel
         SizedBox(
           height: 90,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            itemCount: coverPresets.length,
+            itemCount: coverPresets.length + 1,
             separatorBuilder: (_, __) => const SizedBox(width: 10),
             itemBuilder: (context, idx) {
-              final url = coverPresets[idx];
-              final isSelected = selectedCoverUrl.value == url && customCoverController.text.isEmpty;
+              if (idx == 0) {
+                // Upload button tile
+                return GestureDetector(
+                  onTap: onPickImage,
+                  child: Container(
+                    width: 100,
+                    decoration: BoxDecoration(
+                      color: AppColors.getCardAlt(context),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: selectedLocalFile.value != null ? AppColors.primary : AppColors.getBorder(context),
+                        width: selectedLocalFile.value != null ? 2 : 1,
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.cloud_upload_outlined, color: AppColors.primary, size: 20),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Upload File',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.getTextPrimary(context),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              final url = coverPresets[idx - 1];
+              final isSelected = selectedCoverUrl.value == url && customCoverController.text.isEmpty && selectedLocalFile.value == null;
 
               return GestureDetector(
                 onTap: () {
                   selectedCoverUrl.value = url;
+                  selectedLocalFile.value = null;
                   customCoverController.clear();
                 },
                 child: Container(
@@ -1032,7 +1286,7 @@ class _Step2FormatVenue extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            'Generate a secure room with 1 tap (Requires Google Auth)',
+                            'Generate a secure room with 1 tap',
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 11.5,
                               color: AppColors.getTextSecondary(context),
@@ -1062,15 +1316,6 @@ class _Step2FormatVenue extends StatelessWidget {
                       onPressed: isGeneratingMeet ? null : onGenerateMeet,
                     ),
                   ],
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  '💡 Note: Auto-Gen requires signing in with Google OAuth. If signed in with email/password, please paste your Google Meet or Zoom link below.',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 11,
-                    color: AppColors.getTextSecondary(context),
-                    height: 1.3,
-                  ),
                 ),
               ],
             ),

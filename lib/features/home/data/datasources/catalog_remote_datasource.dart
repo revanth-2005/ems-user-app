@@ -430,4 +430,314 @@ class CatalogRemoteDataSource {
       throw NetworkException.fromDioError(e);
     }
   }
+
+  // ── 🔍 Instant Typeahead / Autocomplete (GET /search/autocomplete) ─────────
+
+  Future<AutocompleteResult> getAutocompleteSuggestions(
+    String query, {
+    double? lat,
+    double? lng,
+    int limit = 5,
+  }) async {
+    if (query.trim().length < 2) return const AutocompleteResult();
+    try {
+      final res = await _dio.get(
+        ApiConstants.searchAutocomplete,
+        queryParameters: {
+          'q': query.trim(),
+          'limit': limit,
+          if (lat != null && lng != null) 'lat': lat,
+          if (lat != null && lng != null) 'lng': lng,
+        },
+      );
+      if (res.statusCode == 200 && res.data is Map<String, dynamic>) {
+        return AutocompleteResult.fromJson(res.data as Map<String, dynamic>);
+      }
+      return const AutocompleteResult();
+    } catch (_) {
+      // Don't throw for autocomplete failures, gracefully return empty
+      return const AutocompleteResult();
+    }
+  }
+
+  // ── 🌐 Unified Overview Search (GET /search/unified) ───────────────────────
+
+  Future<UnifiedSearchResult> searchUnified(SearchQuery query) async {
+    try {
+      final res = await _dio.get(
+        ApiConstants.searchUnified,
+        queryParameters: query.toQueryParams(),
+      );
+      if (res.statusCode == 200 && res.data is Map<String, dynamic>) {
+        return UnifiedSearchResult.fromJson(res.data as Map<String, dynamic>);
+      }
+      return const UnifiedSearchResult();
+    } on DioException catch (e) {
+      // If unified search is 404/error, fallback to fetching in parallel
+      try {
+        final pkgs = await getPackages(
+          search: query.search,
+          city: query.city,
+          categoryId: query.categoryId,
+          minPrice: query.minPrice,
+          maxPrice: query.maxPrice,
+          limit: 5,
+        );
+        final svcs = await getServices(
+          search: query.search,
+          city: query.city,
+          categoryId: query.categoryId,
+          pricingUnit: query.pricingUnit,
+          minPrice: query.minPrice,
+          maxPrice: query.maxPrice,
+          limit: 5,
+        );
+        final orgs = await getOrganizers(
+          search: query.search,
+          city: query.city,
+          limit: 5,
+        );
+        final evts = await getEvents(
+          search: query.search,
+          city: query.city,
+          categoryId: query.categoryId,
+          mode: query.eventMode,
+          limit: 5,
+        );
+        return UnifiedSearchResult(
+          totalPackages: pkgs.length,
+          totalServices: svcs.length,
+          totalOrganizers: orgs.length,
+          totalEvents: evts.length,
+          packages: pkgs,
+          services: svcs,
+          organizers: orgs,
+          events: evts,
+        );
+      } catch (_) {}
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  // ── 📦 Search Bundled Packages (GET /search/packages) ──────────────────────
+
+  Future<List<EventPackage>> searchPackages(SearchQuery query) async {
+    try {
+      Response res;
+      try {
+        res = await _dio.get(
+          ApiConstants.searchPackages,
+          queryParameters: query.toQueryParams(),
+        );
+      } catch (_) {
+        res = await _dio.get(
+          ApiConstants.catalogPackages,
+          queryParameters: query.toQueryParams(),
+        );
+      }
+      if (res.statusCode == 200) {
+        final list = _extractList(res.data, ['packages', 'data', 'items', 'results']);
+        return list
+            .whereType<Map<String, dynamic>>()
+            .map(EventPackage.fromJson)
+            .toList();
+      }
+      return const [];
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  // ── 🛠️ Search Standalone Services (GET /search/services) ───────────────────
+
+  Future<List<StandaloneService>> searchServices(SearchQuery query) async {
+    try {
+      Response res;
+      try {
+        res = await _dio.get(
+          ApiConstants.searchServices,
+          queryParameters: query.toQueryParams(),
+        );
+      } catch (_) {
+        res = await _dio.get(
+          ApiConstants.catalogServices,
+          queryParameters: query.toQueryParams(),
+        );
+      }
+      if (res.statusCode == 200) {
+        final list = _extractList(res.data, ['services', 'data', 'items', 'results']);
+        return list
+            .whereType<Map<String, dynamic>>()
+            .map(StandaloneService.fromJson)
+            .toList();
+      }
+      return const [];
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  // ── 🏢 Search Organizers Directory (GET /search/organizers) ────────────────
+
+  Future<List<OrganizerSummary>> searchOrganizers(SearchQuery query) async {
+    try {
+      Response res;
+      try {
+        res = await _dio.get(
+          ApiConstants.searchOrganizers,
+          queryParameters: query.toQueryParams(),
+        );
+      } catch (_) {
+        res = await _dio.get(
+          ApiConstants.catalogOrganizers,
+          queryParameters: query.toQueryParams(),
+        );
+      }
+      if (res.statusCode == 200) {
+        final list = _extractList(res.data, ['organizers', 'data', 'items', 'results']);
+        return list
+            .whereType<Map<String, dynamic>>()
+            .map(OrganizerSummary.fromJson)
+            .toList();
+      }
+      return const [];
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  // ── 🎟️ Search Public Events (GET /search/events) ───────────────────────────
+
+  Future<List<PublicEvent>> searchEvents(SearchQuery query) async {
+    try {
+      Response res;
+      try {
+        res = await _dio.get(
+          ApiConstants.searchEvents,
+          queryParameters: query.toQueryParams(),
+        );
+      } catch (_) {
+        res = await _dio.get(
+          ApiConstants.catalogEvents,
+          queryParameters: query.toQueryParams(),
+        );
+      }
+      if (res.statusCode == 200) {
+        final list = _extractList(res.data, ['events', 'data', 'items', 'results']);
+        return list
+            .whereType<Map<String, dynamic>>()
+            .map(PublicEvent.fromJson)
+            .toList();
+      }
+      return const [];
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  // ── ⭐ Follow / Unfollow Organizer (POST /organizers/:id/follow & unfollow) ─
+
+  Future<FollowToggleResponse> toggleFollowOrganizer(
+    String organizerId,
+    bool currentFollowState,
+  ) async {
+    try {
+      final endpoint = currentFollowState
+          ? ApiConstants.unfollowOrganizer.replaceAll('{id}', organizerId)
+          : ApiConstants.followOrganizer.replaceAll('{id}', organizerId);
+
+      Response res;
+      try {
+        res = await _dio.post(endpoint);
+      } on DioException catch (dioErr) {
+        if (dioErr.response?.statusCode == 404) {
+          // Fallback to /catalog/organizers/{id}/follow if mounted under catalog
+          final fallback = '/catalog$endpoint';
+          res = await _dio.post(fallback);
+        } else {
+          rethrow;
+        }
+      }
+
+      if ((res.statusCode == 200 || res.statusCode == 201) &&
+          res.data is Map<String, dynamic>) {
+        return FollowToggleResponse.fromJson(res.data as Map<String, dynamic>);
+      }
+      return FollowToggleResponse(
+        isFollowed: !currentFollowState,
+        followerCount: 0,
+      );
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  // ── ⭐ Check Follow Status (GET /organizers/:id/follow-status) ──────────────
+
+  Future<bool> getFollowStatus(String organizerId) async {
+    try {
+      final endpoint = ApiConstants.followStatus.replaceAll('{id}', organizerId);
+      final res = await _dio.get(endpoint);
+      if (res.statusCode == 200 && res.data is Map<String, dynamic>) {
+        return res.data['isFollowed'] == true || res.data['is_followed'] == true;
+      }
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // ── ⭐ Get Followed Organizers (GET /users/me/followed-organizers) ──────────
+
+  Future<List<OrganizerSummary>> getFollowedOrganizers({
+    int page = 1,
+    int limit = 20,
+    String? search,
+  }) async {
+    try {
+      final params = <String, dynamic>{'page': page, 'limit': limit};
+      if (search?.trim().isNotEmpty == true) params['search'] = search!.trim();
+
+      final res = await _dio.get(
+        ApiConstants.followedOrganizers,
+        queryParameters: params,
+      );
+      if (res.statusCode == 200) {
+        final list = _extractList(res.data, ['organizers', 'data', 'items']);
+        return list.whereType<Map<String, dynamic>>().map((item) {
+          if (item['organizer'] is Map<String, dynamic>) {
+            return FollowedOrganizerItem.fromJson(item).organizer.toSummary();
+          }
+          return OrganizerSummary.fromJson(item);
+        }).toList();
+      }
+      return const [];
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  // ── ⭐ Get Organizer Followers (GET /organizers/:id/followers) ─────────────
+
+  Future<List<Map<String, dynamic>>> getOrganizerFollowers(
+    String organizerId, {
+    int page = 1,
+    int limit = 20,
+  }) async {
+    try {
+      final endpoint = ApiConstants.organizerFollowers.replaceAll('{id}', organizerId);
+      final res = await _dio.get(
+        endpoint,
+        queryParameters: {'page': page, 'limit': limit},
+      );
+      if (res.statusCode == 200) {
+        final list = _extractList(res.data, ['followers', 'data', 'items']);
+        return list.whereType<Map<String, dynamic>>().toList();
+      }
+      return const [];
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
 }
+
