@@ -245,33 +245,6 @@ class EventDetailScreen extends HookConsumerWidget {
                         ),
                         child: Row(
                           children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(20),
-                              child: SizedBox(
-                                width: 40,
-                                height: 40,
-                                child: (event.hostProfilePhoto != null && event.hostProfilePhoto!.isNotEmpty)
-                                    ? AppNetworkImage(
-                                        url: event.hostProfilePhoto,
-                                        titleHint: event.hostName,
-                                        fit: BoxFit.cover,
-                                      )
-                                    : Container(
-                                        color: AppColors.primary.withValues(alpha: 0.15),
-                                        child: Center(
-                                          child: Text(
-                                            event.hostName.isNotEmpty ? event.hostName[0].toUpperCase() : 'H',
-                                            style: GoogleFonts.plusJakartaSans(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w800,
-                                              color: AppColors.primary,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -335,13 +308,10 @@ class EventDetailScreen extends HookConsumerWidget {
                           children: [
                             Row(
                               children: [
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primary.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: const Icon(Icons.calendar_month_rounded, color: AppColors.primary, size: 20),
+                                const Icon(
+                                  Icons.calendar_month_rounded,
+                                  color: AppColors.primary,
+                                  size: 22,
                                 ),
                                 const SizedBox(width: 14),
                                 Expanded(
@@ -390,17 +360,10 @@ class EventDetailScreen extends HookConsumerWidget {
                             // Venue / Location Row
                             Row(
                               children: [
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: (event.isOnline ? const Color(0xFF3B82F6) : AppColors.primary).withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Icon(
-                                    event.isOnline ? Icons.laptop_mac_rounded : Icons.location_on_rounded,
-                                    color: event.isOnline ? const Color(0xFF2563EB) : AppColors.primary,
-                                    size: 20,
-                                  ),
+                                Icon(
+                                  event.isOnline ? Icons.laptop_mac_rounded : Icons.location_on_rounded,
+                                  color: event.isOnline ? const Color(0xFF2563EB) : AppColors.primary,
+                                  size: 22,
                                 ),
                                 const SizedBox(width: 14),
                                 Expanded(

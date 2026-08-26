@@ -117,59 +117,49 @@ class PackageDetailScreen extends HookConsumerWidget {
                   ),
                 ),
                 flexibleSpace: FlexibleSpaceBar(
-                  background: GestureDetector(
-                    onTap: () {
-                      if (currentMedia != null) {
-                        _showMediaLightbox(context, currentMedia);
-                      }
-                    },
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        AppNetworkImage(
-                          url: currentMedia?.mediaUrl ?? pkg.coverImageUrl,
-                          categoryHint: pkg.categoryName,
-                          titleHint: pkg.name,
-                          fit: BoxFit.cover,
-                        ),
-                        if (currentMedia?.isVideo == true) ...[
-                          DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.3),
-                            ),
-                          ),
-                          Center(
-                            child: Container(
-                              width: 54,
-                              height: 54,
-                              decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: 0.7),
-                                shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white, width: 2),
+                  background: currentMedia?.isVideo == true
+                      ? AppInlineVideoPlayer(
+                          key: ValueKey(currentMedia!.mediaUrl),
+                          videoUrl: currentMedia.mediaUrl,
+                          title: currentMedia.caption?.isNotEmpty == true
+                              ? currentMedia.caption!
+                              : pkg.name,
+                          caption: currentMedia.caption,
+                          autoPlay: true,
+                          looping: true,
+                          onExpandFullscreen: () =>
+                              _showMediaLightbox(context, currentMedia),
+                        )
+                      : GestureDetector(
+                          onTap: () {
+                            if (currentMedia != null) {
+                              _showMediaLightbox(context, currentMedia);
+                            }
+                          },
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              AppNetworkImage(
+                                url: currentMedia?.mediaUrl ?? pkg.coverImageUrl,
+                                categoryHint: pkg.categoryName,
+                                titleHint: pkg.name,
+                                fit: BoxFit.cover,
                               ),
-                              child: const Icon(
-                                Icons.play_arrow_rounded,
-                                color: Colors.white,
-                                size: 36,
+                              DecoratedBox(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      Colors.transparent,
+                                      Colors.black.withValues(alpha: 0.7),
+                                    ],
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                        ],
-                        DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.transparent,
-                                Colors.black.withValues(alpha: 0.7),
-                              ],
-                            ),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
-                  ),
                 ),
               ),
 
@@ -209,29 +199,9 @@ class PackageDetailScreen extends HookConsumerWidget {
                                   ),
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(10),
-                                    child: Stack(
-                                      fit: StackFit.expand,
-                                      children: [
-                                        AppNetworkImage(
-                                          url: item.mediaUrl,
-                                          fit: BoxFit.cover,
-                                        ),
-                                        if (item.isVideo)
-                                          Center(
-                                            child: Container(
-                                              padding: const EdgeInsets.all(3),
-                                              decoration: const BoxDecoration(
-                                                color: Colors.black54,
-                                                shape: BoxShape.circle,
-                                              ),
-                                              child: const Icon(
-                                                Icons.play_arrow_rounded,
-                                                size: 16,
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                          ),
-                                      ],
+                                    child: AppNetworkImage(
+                                      url: item.mediaUrl,
+                                      fit: BoxFit.cover,
                                     ),
                                   ),
                                 ),
@@ -275,12 +245,12 @@ class PackageDetailScreen extends HookConsumerWidget {
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
-                                color: AppColors.primary,
+                                color: AppColors.getTextPrimary(context),
                               ),
                             ),
                             const SizedBox(width: 4),
-                            const Icon(Icons.arrow_forward_ios_rounded,
-                                size: 12, color: AppColors.primary),
+                            Icon(Icons.arrow_forward_ios_rounded,
+                                size: 12, color: AppColors.getTextPrimary(context)),
                           ],
                         ),
                       ),
@@ -299,19 +269,10 @@ class PackageDetailScreen extends HookConsumerWidget {
                           ),
                           child: Row(
                             children: [
-                              Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary
-                                      .withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Icon(
-                                  Icons.calendar_month_rounded,
-                                  color: AppColors.primary,
-                                  size: 22,
-                                ),
+                              const Icon(
+                                Icons.calendar_month_rounded,
+                                color: AppColors.primary,
+                                size: 24,
                               ),
                               const SizedBox(width: 14),
                               Expanded(
@@ -344,7 +305,7 @@ class PackageDetailScreen extends HookConsumerWidget {
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
-                                  color: AppColors.primary,
+                                  color: AppColors.getTextPrimary(context),
                                 ),
                               ),
                             ],
@@ -360,10 +321,10 @@ class PackageDetailScreen extends HookConsumerWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 14),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.08),
+                            color: AppColors.getCardAlt(context),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                                color: AppColors.primary.withValues(alpha: 0.2)),
+                                color: AppColors.getBorder(context)),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -378,13 +339,13 @@ class PackageDetailScreen extends HookConsumerWidget {
                                     style: GoogleFonts.plusJakartaSans(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w800,
-                                      color: AppColors.primary,
+                                      color: AppColors.getTextPrimary(context),
                                     ),
                                   ),
                                 ],
                               ),
-                              const Icon(Icons.chevron_right_rounded,
-                                  color: AppColors.primary, size: 20),
+                              Icon(Icons.chevron_right_rounded,
+                                  color: AppColors.getTextPrimary(context), size: 20),
                             ],
                           ),
                         ),

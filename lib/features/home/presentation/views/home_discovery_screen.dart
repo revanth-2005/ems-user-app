@@ -12,6 +12,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../bookings/presentation/providers/booking_providers.dart';
+import '../../../notifications/presentation/providers/notification_providers.dart';
 import '../providers/catalog_providers.dart';
 import '../widgets/catalog_cards.dart';
 import '../widgets/ticket_selection_bottom_sheet.dart';
@@ -24,6 +25,7 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
     final homeFeedAsync = ref.watch(homeFeedProvider);
     final cartState = ref.watch(cartProvider);
     final cartCount = cartState.items.length;
+    final unreadNotifs = ref.watch(unreadNotificationsCountProvider);
 
     final isDark = AppColors.isDark(context);
 
@@ -96,6 +98,55 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
                           ref.read(authStateProvider.notifier).switchPortal(ActivePortal.HOST);
                           context.push(AppRoutes.hostDashboard);
                         },
+                      ),
+                      const SizedBox(width: 4),
+                      GestureDetector(
+                        onTap: () => context.push(AppRoutes.notifications),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Icon(
+                                Icons.notifications_none_rounded,
+                                color: AppColors.getTextPrimary(context),
+                                size: 26,
+                              ),
+                              if (unreadNotifs > 0)
+                                Positioned(
+                                  top: -4,
+                                  right: -4,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(3),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: isDark ? Colors.black : Colors.white,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    constraints: const BoxConstraints(
+                                      minWidth: 18,
+                                      minHeight: 18,
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        unreadNotifs > 9 ? '9+' : '$unreadNotifs',
+                                        textAlign: TextAlign.center,
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w800,
+                                          color: Colors.white,
+                                          height: 1.0,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
                       ),
                       const SizedBox(width: 4),
                       GestureDetector(
@@ -658,11 +709,14 @@ class _NetflixEventHeroState extends ConsumerState<_NetflixEventHero> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppColors.isDark(context);
+    final bgColor = AppColors.getBg(context);
     final events = widget.events;
     final screenWidth = MediaQuery.of(context).size.width;
     final heroHeight = screenWidth * 1.25;
     final cartState = ref.watch(cartProvider);
     final cartCount = cartState.items.length;
+    final unreadNotifs = ref.watch(unreadNotificationsCountProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -703,12 +757,20 @@ class _NetflixEventHeroState extends ConsumerState<_NetflixEventHero> {
                               gradient: LinearGradient(
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
-                                stops: const [0.25, 0.65, 1.0],
-                                colors: [
-                                  Colors.transparent,
-                                  Colors.black.withValues(alpha: 0.55),
-                                  Colors.black.withValues(alpha: 0.98),
-                                ],
+                                stops: isDark
+                                    ? const [0.25, 0.65, 1.0]
+                                    : const [0.50, 0.78, 1.0],
+                                colors: isDark
+                                    ? [
+                                        Colors.transparent,
+                                        Colors.black.withValues(alpha: 0.55),
+                                        Colors.black.withValues(alpha: 0.98),
+                                      ]
+                                    : [
+                                        Colors.transparent,
+                                        bgColor.withValues(alpha: 0.45),
+                                        bgColor,
+                                      ],
                               ),
                             ),
                           ),
@@ -732,7 +794,9 @@ class _NetflixEventHeroState extends ConsumerState<_NetflixEventHero> {
                                     style: GoogleFonts.plusJakartaSans(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w700,
-                                      color: Colors.white.withValues(alpha: 0.8),
+                                      color: isDark
+                                          ? Colors.white.withValues(alpha: 0.8)
+                                          : const Color(0xFFE50914),
                                       letterSpacing: 1.2,
                                     ),
                                   ),
@@ -746,17 +810,22 @@ class _NetflixEventHeroState extends ConsumerState<_NetflixEventHero> {
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 26,
+                                    fontSize: 25,
                                     fontWeight: FontWeight.w900,
-                                    color: Colors.white,
+                                    color: isDark
+                                        ? Colors.white
+                                        : const Color(0xFF111827),
                                     height: 1.15,
                                     letterSpacing: -0.3,
-                                    shadows: [
-                                      Shadow(
-                                        color: Colors.black.withValues(alpha: 0.8),
-                                        blurRadius: 12,
-                                      ),
-                                    ],
+                                    shadows: isDark
+                                        ? [
+                                            Shadow(
+                                              color: Colors.black
+                                                  .withValues(alpha: 0.8),
+                                              blurRadius: 12,
+                                            ),
+                                          ]
+                                        : null,
                                   ),
                                 ),
 
@@ -769,14 +838,32 @@ class _NetflixEventHeroState extends ConsumerState<_NetflixEventHero> {
                                     // Mode badge (IN-PERSON / ONLINE)
                                     Container(
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 3),
+                                          horizontal: 8.5, vertical: 3.5),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.18),
+                                        color: isDark
+                                            ? Colors.white
+                                                .withValues(alpha: 0.18)
+                                            : Colors.white
+                                                .withValues(alpha: 0.92),
                                         borderRadius: BorderRadius.circular(6),
                                         border: Border.all(
-                                          color: Colors.white.withValues(alpha: 0.18),
+                                          color: isDark
+                                              ? Colors.white
+                                                  .withValues(alpha: 0.18)
+                                              : Colors.black
+                                                  .withValues(alpha: 0.08),
                                           width: 0.6,
                                         ),
+                                        boxShadow: isDark
+                                            ? null
+                                            : [
+                                                BoxShadow(
+                                                  color: Colors.black
+                                                      .withValues(alpha: 0.04),
+                                                  blurRadius: 4,
+                                                  offset: const Offset(0, 1),
+                                                ),
+                                              ],
                                       ),
                                       child: Text(
                                         isOnline ? 'ONLINE EVENT' : 'IN-PERSON',
@@ -784,7 +871,9 @@ class _NetflixEventHeroState extends ConsumerState<_NetflixEventHero> {
                                           fontSize: 9.5,
                                           fontWeight: FontWeight.w800,
                                           letterSpacing: 0.6,
-                                          color: Colors.white,
+                                          color: isDark
+                                              ? Colors.white
+                                              : const Color(0xFF111827),
                                         ),
                                       ),
                                     ),
@@ -795,17 +884,22 @@ class _NetflixEventHeroState extends ConsumerState<_NetflixEventHero> {
                                       width: 3.5,
                                       height: 3.5,
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.4),
+                                        color: isDark
+                                            ? Colors.white
+                                                .withValues(alpha: 0.4)
+                                            : const Color(0xFF9CA3AF),
                                         shape: BoxShape.circle,
                                       ),
                                     ),
                                     const SizedBox(width: 8),
 
                                     // Date
-                                    const Icon(
+                                    Icon(
                                       Icons.calendar_today_rounded,
                                       size: 12.5,
-                                      color: Colors.white70,
+                                      color: isDark
+                                          ? Colors.white70
+                                          : const Color(0xFF4B5563),
                                     ),
                                     const SizedBox(width: 5),
                                     Text(
@@ -813,7 +907,10 @@ class _NetflixEventHeroState extends ConsumerState<_NetflixEventHero> {
                                       style: GoogleFonts.plusJakartaSans(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w600,
-                                        color: Colors.white.withValues(alpha: 0.85),
+                                        color: isDark
+                                            ? Colors.white
+                                                .withValues(alpha: 0.85)
+                                            : const Color(0xFF374151),
                                       ),
                                     ),
                                   ],
@@ -828,6 +925,7 @@ class _NetflixEventHeroState extends ConsumerState<_NetflixEventHero> {
                                   children: [
                                     // 1. 🛒 Cart Button (Round)
                                     _heroActionButton(
+                                      context: context,
                                       icon: Icons.shopping_cart_outlined,
                                       label: 'Cart',
                                       onTap: () async {
@@ -847,7 +945,7 @@ class _NetflixEventHeroState extends ConsumerState<_NetflixEventHero> {
 
                                     const SizedBox(width: 16),
 
-                                    // 2. ▶ Book / Free Tickets (Primary White CTA - height 44 to match 44x44 circles)
+                                    // 2. ▶ Book / Free Tickets (Primary CTA - height 44 to match 44x44 circles)
                                     GestureDetector(
                                       onTap: () =>
                                           TicketSelectionBottomSheet.show(
@@ -858,16 +956,28 @@ class _NetflixEventHeroState extends ConsumerState<_NetflixEventHero> {
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 22),
                                         decoration: BoxDecoration(
-                                          color: Colors.white,
+                                          color: isDark
+                                              ? Colors.white
+                                              : const Color(0xFF111827),
                                           borderRadius:
-                                              BorderRadius.circular(6),
+                                              BorderRadius.circular(8),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(
+                                                  alpha: isDark ? 0.25 : 0.18),
+                                              blurRadius: 10,
+                                              offset: const Offset(0, 3),
+                                            ),
+                                          ],
                                         ),
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            const Icon(
+                                            Icon(
                                               Icons.play_arrow_rounded,
-                                              color: Colors.black,
+                                              color: isDark
+                                                  ? Colors.black
+                                                  : Colors.white,
                                               size: 22,
                                             ),
                                             const SizedBox(width: 6),
@@ -879,7 +989,9 @@ class _NetflixEventHeroState extends ConsumerState<_NetflixEventHero> {
                                                   GoogleFonts.plusJakartaSans(
                                                 fontSize: 14,
                                                 fontWeight: FontWeight.w800,
-                                                color: Colors.black,
+                                                color: isDark
+                                                    ? Colors.black
+                                                    : Colors.white,
                                               ),
                                             ),
                                           ],
@@ -891,6 +1003,7 @@ class _NetflixEventHeroState extends ConsumerState<_NetflixEventHero> {
 
                                     // 3. ℹ Info Button (Round)
                                     _heroActionButton(
+                                      context: context,
                                       icon: Icons.info_outline_rounded,
                                       label: 'Info',
                                       onTap: () => context
@@ -913,18 +1026,24 @@ class _NetflixEventHeroState extends ConsumerState<_NetflixEventHero> {
                 top: 0,
                 left: 0,
                 right: 0,
-                height: 120,
+                height: 100,
                 child: IgnorePointer(
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.black.withValues(alpha: 0.85),
-                          Colors.black.withValues(alpha: 0.4),
-                          Colors.transparent,
-                        ],
+                        colors: isDark
+                            ? [
+                                Colors.black.withValues(alpha: 0.85),
+                                Colors.black.withValues(alpha: 0.4),
+                                Colors.transparent,
+                              ]
+                            : [
+                                Colors.white.withValues(alpha: 0.35),
+                                Colors.white.withValues(alpha: 0.10),
+                                Colors.transparent,
+                              ],
                       ),
                     ),
                   ),
@@ -959,16 +1078,21 @@ class _NetflixEventHeroState extends ConsumerState<_NetflixEventHero> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 10, vertical: 5),
                               decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: 0.55),
+                                color: isDark
+                                    ? Colors.black.withValues(alpha: 0.55)
+                                    : Colors.white.withValues(alpha: 0.92),
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.2),
+                                  color: isDark
+                                      ? Colors.white.withValues(alpha: 0.2)
+                                      : Colors.black.withValues(alpha: 0.08),
                                   width: 0.8,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.35),
-                                    blurRadius: 6,
+                                    color: Colors.black.withValues(
+                                        alpha: isDark ? 0.35 : 0.06),
+                                    blurRadius: 8,
                                     offset: const Offset(0, 2),
                                   ),
                                 ],
@@ -988,7 +1112,9 @@ class _NetflixEventHeroState extends ConsumerState<_NetflixEventHero> {
                                       fontSize: 10.5,
                                       fontWeight: FontWeight.w800,
                                       letterSpacing: 0.5,
-                                      color: Colors.white,
+                                      color: isDark
+                                          ? Colors.white
+                                          : const Color(0xFF111827),
                                     ),
                                   ),
                                 ],
@@ -998,7 +1124,7 @@ class _NetflixEventHeroState extends ConsumerState<_NetflixEventHero> {
                         ),
                         const Spacer(),
 
-                        // Host Studio Quick Switch Button
+                        // 1. Host Studio Quick Switch Button
                         IconButton(
                           icon: const Icon(Icons.storefront_outlined, size: 24),
                           tooltip: 'Host & Ticketing Studio',
@@ -1012,12 +1138,62 @@ class _NetflixEventHeroState extends ConsumerState<_NetflixEventHero> {
                         ),
                         const SizedBox(width: 4),
 
-                        // Cart Badge Button
+                        // 2. Notifications Bell Button
+                        GestureDetector(
+                          onTap: () => context.push(AppRoutes.notifications),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                const Icon(
+                                  Icons.notifications_none_rounded,
+                                  color: Colors.white,
+                                  size: 26,
+                                ),
+                                if (unreadNotifs > 0)
+                                  Positioned(
+                                    top: -4,
+                                    right: -4,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(3),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primary,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: Colors.black,
+                                          width: 1.5,
+                                        ),
+                                      ),
+                                      constraints: const BoxConstraints(
+                                        minWidth: 16,
+                                        minHeight: 16,
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          unreadNotifs > 9 ? '9+' : '$unreadNotifs',
+                                          textAlign: TextAlign.center,
+                                          style: GoogleFonts.plusJakartaSans(
+                                            fontSize: 9.5,
+                                            fontWeight: FontWeight.w800,
+                                            color: Colors.white,
+                                            height: 1.0,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+
+                        // 3. Cart Badge Button
                         GestureDetector(
                           onTap: () => context.push(AppRoutes.cart),
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
                             child: Stack(
                               clipBehavior: Clip.none,
                               children: [
@@ -1041,15 +1217,15 @@ class _NetflixEventHeroState extends ConsumerState<_NetflixEventHero> {
                                         ),
                                       ),
                                       constraints: const BoxConstraints(
-                                        minWidth: 18,
-                                        minHeight: 18,
+                                        minWidth: 16,
+                                        minHeight: 16,
                                       ),
                                       child: Center(
                                         child: Text(
                                           '$cartCount',
                                           textAlign: TextAlign.center,
                                           style: GoogleFonts.plusJakartaSans(
-                                            fontSize: 10,
+                                            fontSize: 9.5,
                                             fontWeight: FontWeight.w800,
                                             color: Colors.white,
                                             height: 1.0,
@@ -1161,10 +1337,12 @@ class _NetflixEventHeroState extends ConsumerState<_NetflixEventHero> {
   }
 
   Widget _heroActionButton({
+    required BuildContext context,
     required IconData icon,
     required String label,
     VoidCallback? onTap,
   }) {
+    final isDark = AppColors.isDark(context);
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
@@ -1176,17 +1354,36 @@ class _NetflixEventHeroState extends ConsumerState<_NetflixEventHero> {
             height: 44,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white.withValues(alpha: 0.12),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.12)
+                  : Colors.white.withValues(alpha: 0.92),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.25)
+                    : Colors.black.withValues(alpha: 0.08),
+              ),
+              boxShadow: isDark
+                  ? null
+                  : [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.06),
+                        blurRadius: 6,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
             ),
-            child: Icon(icon, color: Colors.white, size: 22),
+            child: Icon(
+              icon,
+              color: isDark ? Colors.white : const Color(0xFF111827),
+              size: 20,
+            ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 5),
           Text(
             label,
             style: GoogleFonts.plusJakartaSans(
               fontSize: 10.5,
-              color: Colors.white70,
+              color: isDark ? Colors.white70 : const Color(0xFF4B5563),
               fontWeight: FontWeight.w600,
             ),
           ),

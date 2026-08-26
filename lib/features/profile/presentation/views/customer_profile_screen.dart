@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../app/app_router.dart';
 import '../../../../core/common_widgets/app_button.dart';
-import '../../../../core/common_widgets/app_snackbar.dart';
 import '../../../../core/common_widgets/app_status_badge.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/services/notification_service.dart';
 import '../../../../core/theme/theme_provider.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
@@ -44,14 +41,13 @@ class CustomerProfileScreen extends HookConsumerWidget {
                 child: Row(
                   children: [
                     Container(
-                      decoration: BoxDecoration(
+                      width: 68,
+                      height: 68,
+                      decoration: const BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(
-                            color: AppColors.getBorder(context), width: 2),
+                        gradient: AppColors.avatarGradient,
                       ),
-                      child: CircleAvatar(
-                        radius: 34,
-                        backgroundColor: AppColors.getCardAlt(context),
+                      child: Center(
                         child: Text(
                           user?.name.isNotEmpty == true
                               ? user!.name[0].toUpperCase()
@@ -59,7 +55,7 @@ class CustomerProfileScreen extends HookConsumerWidget {
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 26,
                             fontWeight: FontWeight.w800,
-                            color: AppColors.getTextPrimary(context),
+                            color: Colors.white,
                           ),
                         ),
                       ),
@@ -224,172 +220,7 @@ class CustomerProfileScreen extends HookConsumerWidget {
                   _ActionTile(
                     title: 'Notifications & Alerts',
                     icon: Icons.notifications_rounded,
-                    onTap: () {
-                      showModalBottomSheet(
-                        context: context,
-                        backgroundColor: AppColors.getSurface(context),
-                        shape: const RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.vertical(top: Radius.circular(24)),
-                        ),
-                        builder: (ctx) {
-                          return FutureBuilder<String?>(
-                            future: NotificationService().getOrFetchToken(),
-                            builder: (context, snapshot) {
-                              final token = snapshot.data;
-                              final isLoading = snapshot.connectionState ==
-                                  ConnectionState.waiting;
-
-                              return Padding(
-                                padding: const EdgeInsets.all(24),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.all(10),
-                                          decoration: BoxDecoration(
-                                            color: AppColors.primary
-                                                .withValues(alpha: 0.12),
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: const Icon(
-                                            Icons.notifications_active_rounded,
-                                            color: AppColors.primary,
-                                            size: 24,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 14),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                'Push Notifications',
-                                                style: GoogleFonts
-                                                    .plusJakartaSans(
-                                                  fontSize: 17,
-                                                  fontWeight: FontWeight.w800,
-                                                  color:
-                                                      AppColors.getTextPrimary(
-                                                          context),
-                                                ),
-                                              ),
-                                              Text(
-                                                token != null
-                                                    ? 'Firebase FCM Active'
-                                                    : (isLoading
-                                                        ? 'Fetching Token...'
-                                                        : 'FCM Ready'),
-                                                style: GoogleFonts
-                                                    .plusJakartaSans(
-                                                  fontSize: 12,
-                                                  color: token != null
-                                                      ? const Color(0xFF10B981)
-                                                      : AppColors
-                                                          .getTextSecondary(
-                                                              context),
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 18),
-                                    Text(
-                                      'FCM Device Registration Token:',
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w700,
-                                        color:
-                                            AppColors.getTextSecondary(context),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Container(
-                                      width: double.infinity,
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.getCardAlt(context),
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(
-                                            color:
-                                                AppColors.getBorder(context)),
-                                      ),
-                                      child: isLoading
-                                          ? const Center(
-                                              child: Padding(
-                                                padding: EdgeInsets.all(8.0),
-                                                child: SizedBox(
-                                                  height: 20,
-                                                  width: 20,
-                                                  child:
-                                                      CircularProgressIndicator(
-                                                    strokeWidth: 2,
-                                                    color: AppColors.primary,
-                                                  ),
-                                                ),
-                                              ),
-                                            )
-                                          : SelectableText(
-                                              token ??
-                                                  'Could not retrieve token. Check internet / Google Play Services.',
-                                              style: GoogleFonts.firaCode(
-                                                fontSize: 11,
-                                                color: AppColors.getTextPrimary(
-                                                    context),
-                                              ),
-                                              maxLines: 4,
-                                            ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Row(
-                                      children: [
-                                        if (token != null) ...[
-                                          Expanded(
-                                            child: AppPrimaryButton(
-                                              text: 'Copy Token',
-                                              onPressed: () {
-                                                Clipboard.setData(
-                                                    ClipboardData(text: token));
-                                                context.pop();
-                                                AppSnackbar.show(
-                                                  context,
-                                                  message:
-                                                      'FCM Device Token copied to clipboard!',
-                                                  type: SnackbarType.success,
-                                                );
-                                              },
-                                            ),
-                                          ),
-                                          const SizedBox(width: 10),
-                                        ],
-                                        Expanded(
-                                          child: AppSecondaryButton(
-                                            text: 'Send Test Alert',
-                                            onPressed: () {
-                                              NotificationService()
-                                                  .showTestNotification();
-                                              context.pop();
-                                            },
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 12),
-                                  ],
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      );
-                    },
+                    onTap: () => context.push(AppRoutes.notifications),
                   ),
                   // const SizedBox(height: 10),
 

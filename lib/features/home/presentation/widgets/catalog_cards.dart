@@ -41,14 +41,9 @@ class PackageCard extends StatelessWidget {
       onTap: onTap ?? () => context.push('/detail/package/${package.id}'),
       child: Container(
         height: 195,
-        decoration: BoxDecoration(
-          color: AppColors.getSurface(context),
+        decoration: AppColors.getCardDecoration(
+          context,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: AppColors.getBorder(context),
-            width: 1,
-          ),
-          boxShadow: AppColors.getCardShadow(context),
         ),
         clipBehavior: Clip.antiAlias,
         child: Stack(
@@ -68,35 +63,73 @@ class PackageCard extends StatelessWidget {
               bottom: 0,
               left: 0,
               right: 0,
-              height: 75,
+              height: 80,
               child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withValues(alpha: 0.65),
-                    ],
-                  ),
+                decoration: const BoxDecoration(
+                  gradient: AppColors.cardImageOverlay,
                 ),
               ),
             ),
 
-            // ── 3. Card Content ─────────────────────────────────────────────
+            // ── 3. Top-Right Location Badge ────────────────────────────────
+            Positioned(
+              top: 14,
+              right: 14,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 8.5, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.65),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.20),
+                    width: 0.8,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.35),
+                      blurRadius: 5,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.location_on_rounded,
+                      size: 11,
+                      color: Color(0xFFE50914),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      cityName.toUpperCase(),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // ── 4. Card Content ─────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Top section: Title + Description + Location
+                  // Top section: Title + Description
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Title
                       ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 240),
+                        constraints: const BoxConstraints(maxWidth: 210),
                         child: Text(
                           package.name,
                           style: GoogleFonts.plusJakartaSans(
@@ -121,7 +154,7 @@ class PackageCard extends StatelessWidget {
 
                       // Subtitle / Description
                       ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 220),
+                        constraints: const BoxConstraints(maxWidth: 210),
                         child: Text(
                           descriptionText,
                           style: GoogleFonts.plusJakartaSans(
@@ -139,41 +172,6 @@ class PackageCard extends StatelessWidget {
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-
-                      // Location Badge Capsule
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3.5),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.60),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.16),
-                            width: 0.8,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.location_on_rounded,
-                              size: 10.5,
-                              color: Color(0xFFE50914),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              cityName.toUpperCase(),
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 9,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.5,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
                         ),
                       ),
                     ],
@@ -290,11 +288,9 @@ class ServiceCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap ?? () => context.push('/detail/service/${service.id}'),
       child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.getSurface(context),
+        decoration: AppColors.getCardDecoration(
+          context,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.getBorder(context)),
-          boxShadow: AppColors.getCardShadow(context),
         ),
         clipBehavior: Clip.antiAlias,
         child: Column(
@@ -526,15 +522,9 @@ class OrganizerCard extends ConsumerWidget {
               AppRoutes.organizerProfile.replaceAll(':id', organizer.id)),
       child: Container(
         padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppColors.getSurface(context),
+        decoration: AppColors.getCardDecoration(
+          context,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: (followState.isFollowed || isActuallyFollowed)
-                ? AppColors.primary.withValues(alpha: 0.3)
-                : AppColors.getBorder(context),
-          ),
-          boxShadow: AppColors.getCardShadow(context),
         ),
         child: Row(
           children: [
@@ -551,7 +541,9 @@ class OrganizerCard extends ConsumerWidget {
                         titleHint: organizer.effectiveName,
                       )
                     : Container(
-                        color: AppColors.primary.withValues(alpha: 0.1),
+                        decoration: const BoxDecoration(
+                          gradient: AppColors.avatarGradient,
+                        ),
                         child: Center(
                           child: Text(
                             organizer.effectiveName.isNotEmpty
@@ -560,7 +552,7 @@ class OrganizerCard extends ConsumerWidget {
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 22,
                               fontWeight: FontWeight.w800,
-                              color: AppColors.primary,
+                              color: Colors.white,
                             ),
                           ),
                         ),
@@ -679,11 +671,9 @@ class PublicEventCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap ?? () => context.push('/detail/event/${event.id}'),
       child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.getSurface(context),
+        decoration: AppColors.getCardDecoration(
+          context,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.getBorder(context)),
-          boxShadow: AppColors.getCardShadow(context),
         ),
         clipBehavior: Clip.antiAlias,
         child: Column(
@@ -824,13 +814,11 @@ class PublicEventCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            event.minPricePaise == 0
-                                ? 'Free Admission'
-                                : CurrencyFormatter.formatPaise(event.minPricePaise),
+                            event.effectivePriceLabel,
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
-                              color: event.minPricePaise == 0
+                              color: event.effectivePriceLabel.toLowerCase().contains('free') && event.minPricePaise == 0
                                   ? AppColors.accentEmerald
                                   : AppColors.getTextPrimary(context),
                             ),

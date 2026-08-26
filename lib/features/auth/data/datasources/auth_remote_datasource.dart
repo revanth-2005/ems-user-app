@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/errors/network_exception.dart';
@@ -75,17 +76,45 @@ class AuthRemoteDataSource {
     required String otp,
   }) => verifyOtp(target: phone, otp: otp);
 
-  /// Google Sign-In / Sign-Up via OAuth 2.0.
+  /// Google Sign-In / Sign-Up (Native SDK + Backend verification).
   ///
-  /// Opens a Chrome Custom Tab pointing at `GET /auth/google` (Passport redirect).
-  /// Google redirects the browser back to `emsapp://auth/callback?accessToken=...`
-  /// This method catches that deep link and parses the JWT token pair.
+  /// 1. Tries Native Google Sign-In on Android/iOS and sends `idToken` to `POST /auth/google/mobile`.
+  /// 2. If Native Sign-In is unavailable or cancelled/fails, falls back to OAuth 2.0 via Chrome Custom Tab (`GET /auth/google`).
   Future<({UserDto user, String accessToken, String? refreshToken})>
       signInWithGoogle() async {
+    // 1. Try Native Google Sign-In Flow
+    try {
+      final googleSignIn = GoogleSignIn(
+        serverClientId: ApiConstants.googleWebClientId,
+        scopes: ['email', 'profile'],
+      );
+
+      final googleUser = await googleSignIn.signIn();
+      if (googleUser == null) {
+        throw const NetworkException('Google sign-in was cancelled');
+      }
+
+      final googleAuth = await googleUser.authentication;
+      final idToken = googleAuth.idToken;
+
+      if (idToken != null && idToken.isNotEmpty) {
+        final response = await _dio.post(
+          ApiConstants.googleAuthMobile,
+          data: {'idToken': idToken},
+        );
+        return _parseAuthResponse(response.data);
+      }
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    } catch (e) {
+      if (e is NetworkException) rethrow;
+      // Fall through to OAuth deep link fallback
+    }
+
+    // 2. Fallback: Web/OAuth redirect via Chrome Custom Tab
     try {
       final googleAuthUrl = '${ApiConstants.baseUrl}${ApiConstants.googleAuth}';
 
-      // Opens Chrome Custom Tab. Resolves when `emsapp://auth` deep link is caught.
       final resultUrl = await FlutterWebAuth2.authenticate(
         url: googleAuthUrl,
         callbackUrlScheme: 'emsapp',

@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../constants/api_constants.dart';
 import '../constants/app_colors.dart';
 import 'app_loader.dart';
+import 'app_video_player.dart';
 
 /// Project-level wrapper for images with:
 /// 1. Automatic URL normalization — MinIO URLs are passed through unchanged (host preserved from API)
@@ -87,66 +88,25 @@ class AppNetworkImage extends StatelessWidget {
   Widget build(BuildContext context) {
     final normalized = normalizeUrl(url);
     final hasUrl = normalized != null && normalized.isNotEmpty;
+    final cleanUrl = hasUrl ? normalized.toLowerCase().split('?').first : '';
     final isVideo = hasUrl &&
-        (normalized.toLowerCase().endsWith('.mp4') ||
-            normalized.toLowerCase().endsWith('.mov'));
+        (cleanUrl.endsWith('.mp4') ||
+            cleanUrl.endsWith('.mov') ||
+            cleanUrl.endsWith('.webm') ||
+            cleanUrl.endsWith('.mkv') ||
+            cleanUrl.endsWith('.m3u8') ||
+            cleanUrl.contains('/video/'));
 
     Widget imageWidget;
     if (isVideo) {
-      imageWidget = Container(
+      imageWidget = AppVideoThumbnail(
+        videoUrl: normalized,
+        fit: fit,
         width: width,
         height: height,
-        decoration: BoxDecoration(
-          color: const Color(0xFF1E1B2E),
-          borderRadius: BorderRadius.circular(borderRadius),
-        ),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Center(
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: AppColors.accentRose.withValues(alpha: 0.9),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.accentRose.withValues(alpha: 0.4),
-                      blurRadius: 10,
-                      spreadRadius: 2,
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.play_arrow_rounded,
-                  color: Colors.white,
-                  size: 28,
-                ),
-              ),
-            ),
-            Positioned(
-              top: 8,
-              right: 8,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  'VIDEO',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+        borderRadius: borderRadius,
+        categoryHint: categoryHint,
+        titleHint: titleHint,
       );
     } else if (hasUrl) {
       imageWidget = CachedNetworkImage(

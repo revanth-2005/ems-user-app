@@ -43,4 +43,25 @@ class DateFormatter {
       return '${difference.inMinutes}m remaining';
     }
   }
+
+  /// Formats time in relative format e.g. "Just now", "5m ago", "2h ago", "Yesterday"
+  static String formatRelativeTime(DateTime? date) {
+    if (date == null) return '';
+    final now = DateTime.now();
+    final diff = now.difference(date);
+
+    if (diff.inSeconds < 60) {
+      return 'Just now';
+    } else if (diff.inMinutes < 60) {
+      return '${diff.inMinutes}m ago';
+    } else if (diff.inHours < 24) {
+      return '${diff.inHours}h ago';
+    } else if (diff.inDays == 1) {
+      return 'Yesterday';
+    } else if (diff.inDays < 7) {
+      return '${diff.inDays}d ago';
+    } else {
+      return DateFormat('d MMM').format(date);
+    }
+  }
 }

@@ -17,10 +17,14 @@ class ApiConstants {
   static const String refreshToken  = '/auth/refresh';
   static const String logout        = '/auth/logout';
   static const String googleAuth    = '/auth/google';
+  static const String googleAuthMobile = '/auth/google/mobile';
+  static const String googleWebClientId =
+      '1046270070303-14805ic3j0fdlv6s97r96vi2p30lqols.apps.googleusercontent.com';
 
   // ── 👤 User Endpoints ──────────────────────────────────────────────────────
   static const String userProfile   = '/users/me';
   static const String userAddresses = '/users/me/addresses';
+  static const String updateFcmToken = '/users/me/fcm-token';
 
   // ── 📦 Master & Catalog Endpoints ──────────────────────────────────────────
   static const String masterCategories             = '/master/categories';
@@ -93,4 +97,9 @@ class ApiConstants {
   static const String cancelRegistration      = '/registrations/{id}/cancel';
   static const String bookingRefundQuote       = '/bookings/{id}/refund-quote';
   static const String cancelBookingEndpoint   = '/bookings/{id}/cancel';
+
+  // ── 🔔 In-App Notifications Endpoints ─────────────────────────────────────
+  static const String notificationsMe           = '/notifications/me';
+  static const String markNotificationRead      = '/notifications/{id}/read';
+  static const String markAllNotificationsRead  = '/notifications/mark-all-read';
 }

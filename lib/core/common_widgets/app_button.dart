@@ -15,6 +15,8 @@ class AppPrimaryButton extends StatelessWidget {
   final IconData? icon;
   final bool isLoading;
   final double? width;
+  final double? height;
+  final double? fontSize;
   final Color? backgroundColor;
   final Gradient? gradient;
 
@@ -25,6 +27,8 @@ class AppPrimaryButton extends StatelessWidget {
     this.icon,
     this.isLoading = false,
     this.width,
+    this.height,
+    this.fontSize,
     this.backgroundColor,
     this.gradient,
   });
@@ -33,7 +37,7 @@ class AppPrimaryButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: width ?? double.infinity,
-      height: 52,
+      height: height ?? 52,
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: (gradient == null && backgroundColor != null && onPressed != null)
@@ -71,7 +75,7 @@ class AppPrimaryButton extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (icon != null) ...[
-                      Icon(icon, color: Colors.white, size: 18),
+                      Icon(icon, color: Colors.white, size: (fontSize != null ? fontSize! + 2 : 18)),
                       const SizedBox(width: 8),
                     ],
                     Flexible(
@@ -80,7 +84,7 @@ class AppPrimaryButton extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.plusJakartaSans(
-                          fontSize: 15,
+                          fontSize: fontSize ?? 15,
                           fontWeight: FontWeight.w700,
                           color: Colors.white,
                         ),

@@ -242,11 +242,9 @@ class _FollowedOrganizerCard extends ConsumerWidget {
           AppRoutes.organizerProfile.replaceAll(':id', organizer.id)),
       child: Container(
         padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppColors.getSurface(context),
+        decoration: AppColors.getCardDecoration(
+          context,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppColors.getBorder(context)),
-          boxShadow: AppColors.getCardShadow(context),
         ),
         child: Row(
           children: [
@@ -262,7 +260,9 @@ class _FollowedOrganizerCard extends ConsumerWidget {
                         fit: BoxFit.cover,
                       )
                     : Container(
-                        color: AppColors.primary.withValues(alpha: 0.1),
+                        decoration: const BoxDecoration(
+                          gradient: AppColors.avatarGradient,
+                        ),
                         child: Center(
                           child: Text(
                             organizer.effectiveName.isNotEmpty
@@ -271,7 +271,7 @@ class _FollowedOrganizerCard extends ConsumerWidget {
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 22,
                               fontWeight: FontWeight.w800,
-                              color: AppColors.primary,
+                              color: Colors.white,
                             ),
                           ),
                         ),

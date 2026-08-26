@@ -35,27 +35,57 @@ class AppColors {
   static const Color textSecondary    = darkTextSecondary;
   static const Color textMuted        = darkTextMuted;
 
-  // ── Primary Brand (Signature Red) ─────────────────────────────────────────
-  static const Color primary          = Color(0xFFE50914);
-  static const Color primaryDark      = Color(0xFFB20710);
-  static const Color primaryLight     = Color(0xFFFF2B35);
-  static const Color secondary        = Color(0xFFB20710);
+  // ── Primary Brand (Official Dual-Gradient Visual System) ─────────────────
+  static const Color primary          = Color(0xFFED2926); // Bright Red (#ED2926)
+  static const Color primaryDark      = Color(0xFFB62025); // Crimson (#B62025)
+  static const Color crimson          = Color(0xFFB62025);
+  static const Color brightRed        = Color(0xFFED2926);
+  static const Color primaryLight     = Color(0xFFFF4B48);
+  static const Color secondary        = Color(0xFFB62025);
+
+  // Subtle Icon Containers: rgba(237, 41, 38, 0.15)
+  static Color get subtleIconBg       => const Color(0xFFED2926).withValues(alpha: 0.15);
 
   // ── Gradients ─────────────────────────────────────────────────────────────
+
+  /// 1. Primary Buttons & CTAs: Linear 90deg (Left → Right) #B62025 -> #ED2926
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [Color(0xFFB20710), Color(0xFFE50914)],
+    colors: [Color(0xFFB62025), Color(0xFFED2926)],
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
   );
 
-  static const LinearGradient bgGradient = LinearGradient(
-    colors: [Color(0xFF1A0000), Color(0xFF0A0A0A)],
+  /// 2. Monograms & User Avatars: Linear 135deg (Top-Left → Bottom-Right) #B62025 -> #ED2926
+  static const LinearGradient avatarGradient = LinearGradient(
+    colors: [Color(0xFFB62025), Color(0xFFED2926)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  /// 3. Cards & Panels Background: Linear 0deg (Bottom → Top)
+  /// Deep Dark Obsidian Navy rgba(11, 18, 38, 0.95) -> Dark Velvet Obsidian rgba(18, 8, 18, 0.95)
+  static const LinearGradient cardGradient = LinearGradient(
+    colors: [
+      Color(0xF20B1226), // Deep Dark Obsidian Navy (#0B1226 at 95% opacity)
+      Color(0xF2120812), // Dark Velvet Obsidian (#120812 at 95% opacity)
+    ],
+    begin: Alignment.bottomCenter,
+    end: Alignment.topCenter,
+  );
+
+  /// 4. Image Edge Feathering Mask / Card Banner Bottom Fade Overlay
+  /// transparent -> rgba(33, 14, 23, 0.95)
+  static const LinearGradient cardImageOverlay = LinearGradient(
+    colors: [
+      Colors.transparent,
+      Color(0xF2210E17), // 95% opacity #210E17
+    ],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );
 
-  static const LinearGradient cardImageOverlay = LinearGradient(
-    colors: [Colors.transparent, Color(0xCC000000)],
+  static const LinearGradient bgGradient = LinearGradient(
+    colors: [Color(0xFF210E17), Color(0xFF0A0A0A)],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );
@@ -67,21 +97,21 @@ class AppColors {
   );
 
   // ── Accents & Status ───────────────────────────────────────────────────────
-  static const Color accent           = Color(0xFFE50914);
+  static const Color accent           = Color(0xFFED2926);
   static const Color success          = Color(0xFF10B981);
   static const Color warning          = Color(0xFFF59E0B);
-  static const Color error            = Color(0xFFE50914);
+  static const Color error            = Color(0xFFED2926);
   static const Color accentEmerald    = Color(0xFF10B981);
   static const Color accentAmber      = Color(0xFFF59E0B);
-  static const Color accentRose       = Color(0xFFE50914);
+  static const Color accentRose       = Color(0xFFED2926);
   static const Color accentCyan       = Color(0xFF06B6D4);
   static const Color accentTeal       = Color(0xFF14B8A6);
   static const Color accentIndigo     = Color(0xFF6366F1);
 
   static const Color statusCompleted  = Color(0xFF10B981);
   static const Color statusRescheduled= Color(0xFFF59E0B);
-  static const Color statusCancelled  = Color(0xFFE50914);
-  static const Color statusPending    = Color(0xFFE50914);
+  static const Color statusCancelled  = Color(0xFFED2926);
+  static const Color statusPending    = Color(0xFFED2926);
   static const Color statusRequested  = Color(0xFFF59E0B);
   static const Color statusAccepted   = Color(0xFF10B981);
 
@@ -116,10 +146,33 @@ class AppColors {
   static Color getTextMuted(BuildContext context) =>
       isDark(context) ? darkTextMuted : whiteTextMuted;
 
+  // ── Theme-aware Card Decoration Helper ────────────────────────────────────
+  static BoxDecoration getCardDecoration(
+    BuildContext context, {
+    BorderRadius? borderRadius,
+    Border? border,
+    List<BoxShadow>? boxShadow,
+  }) {
+    final isDarkMode = isDark(context);
+    return BoxDecoration(
+      color: isDarkMode ? null : whiteCard,
+      gradient: isDarkMode ? cardGradient : null,
+      borderRadius: borderRadius ?? BorderRadius.circular(16),
+      border: border ??
+          Border.all(
+            color: isDarkMode
+                ? const Color(0xFF2E2E2E)
+                : const Color(0xFFE5E7EB),
+            width: 1,
+          ),
+      boxShadow: boxShadow ?? getCardShadow(context),
+    );
+  }
+
   // ── Theme-aware Shadows ───────────────────────────────────────────────────
   static List<BoxShadow> get cardShadow => [
     BoxShadow(
-      color: const Color(0xFFE50914).withValues(alpha: 0.10),
+      color: const Color(0xFFED2926).withValues(alpha: 0.10),
       blurRadius: 18,
       offset: const Offset(0, 4),
     ),

@@ -30,6 +30,7 @@ import '../features/host/presentation/views/qr_scanner_screen.dart';
 import '../features/host/presentation/views/event_hosting_subscription_screen.dart';
 import '../features/profile/presentation/views/customer_profile_screen.dart';
 import '../features/profile/presentation/views/followed_organizers_screen.dart';
+import '../features/notifications/presentation/views/notifications_screen.dart';
 import 'app_shell.dart';
 
 // ── Named Route Paths ──────────────────────────────────────────────────────
@@ -47,6 +48,9 @@ abstract class AppRoutes {
   static const profile = '/profile';
   static const eventsDiscovery = '/events';
   static const following = '/following';
+
+  // Notifications
+  static const notifications = '/notifications';
 
   // Detail screens
   static const eventDetail = '/detail/event/:id';
@@ -181,6 +185,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.following,
         builder: (_, __) => const FollowedOrganizersScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.notifications,
+        builder: (_, __) => const NotificationsScreen(),
       ),
 
       // ── Cart ──────────────────────────────────────────────────────────────

@@ -145,10 +145,15 @@ class PortfolioItem {
     this.sortOrder = 0,
   });
 
-  bool get isVideo =>
-      mediaType.toLowerCase() == 'video' ||
-      mediaUrl.toLowerCase().endsWith('.mp4') ||
-      mediaUrl.toLowerCase().endsWith('.mov');
+  bool get isVideo {
+    if (mediaType.toLowerCase() == 'video') return true;
+    final clean = mediaUrl.toLowerCase().split('?').first;
+    return clean.endsWith('.mp4') ||
+        clean.endsWith('.mov') ||
+        clean.endsWith('.webm') ||
+        clean.endsWith('.mkv') ||
+        clean.endsWith('.m3u8');
+  }
 
   bool get isImage => !isVideo;
 
@@ -1006,8 +1011,16 @@ class TicketType {
   }
 
   factory TicketType.fromJson(Map<String, dynamic> json) {
-    final rawPrice = json['priceInPaise'] ?? json['price_in_paise'] ?? 0;
-    final parsedPrice = rawPrice is num ? rawPrice.toInt() : (int.tryParse(rawPrice.toString()) ?? 0);
+    int parsedPrice = 0;
+    if (json['priceInPaise'] != null || json['price_in_paise'] != null) {
+      final v = json['priceInPaise'] ?? json['price_in_paise'];
+      parsedPrice = v is num ? v.toInt() : (int.tryParse(v.toString()) ?? 0);
+    } else if (json['price'] != null || json['priceInRupees'] != null || json['price_in_rupees'] != null) {
+      final v = json['price'] ?? json['priceInRupees'] ?? json['price_in_rupees'];
+      final numVal = v is num ? v.toDouble() : (double.tryParse(v.toString()) ?? 0.0);
+      parsedPrice = (numVal * 100).round();
+    }
+
     final qty = json['quantity'] as int?;
     final sold = (json['soldCount'] ?? json['sold_count'] ?? 0) as int;
     final rem = json['remainingCount'] as int? ?? (qty != null ? (qty - sold) : null);
@@ -1117,11 +1130,11 @@ class PublicEvent {
 
   String get effectivePriceLabel {
     if (ticketTypes.isEmpty) {
-      return minPricePaise == 0 ? 'Free Pass' : 'From ₹${(minPricePaise / 100).toStringAsFixed(0)}';
+      return minPricePaise == 0 ? 'Free Admission' : 'From ₹${(minPricePaise / 100).toStringAsFixed(0)}';
     }
     final freeTiers = ticketTypes.where((t) => t.isFree);
     final paidTiers = ticketTypes.where((t) => !t.isFree).toList();
-    if (paidTiers.isEmpty) return 'Free Pass';
+    if (paidTiers.isEmpty) return 'Free Admission';
     if (freeTiers.isNotEmpty) return 'Free — ₹${paidTiers.map((t) => t.priceInRupees).reduce((a, b) => a > b ? a : b).toStringAsFixed(0)}';
     final minPaid = paidTiers.map((t) => t.priceInRupees).reduce((a, b) => a < b ? a : b);
     return 'From ₹${minPaid.toStringAsFixed(0)}';
@@ -1134,20 +1147,54 @@ class PublicEvent {
         ? Category.fromJson(json['category'] as Map<String, dynamic>)
         : null;
 
-    final rawMin = json['minPricePaise'] ?? json['min_price_paise'] ?? 0;
-    final rawMax = json['maxPricePaise'] ?? json['max_price_paise'] ?? 0;
+    final ticketsList = ((json['ticketTypes'] ?? json['ticket_types'] ?? json['tickets']) as List<dynamic>?)
+            ?.whereType<Map<String, dynamic>>()
+            .map(TicketType.fromJson)
+            .toList() ??
+        const [];
+
+    int parsedMinPaise = 0;
+    if (json['minPricePaise'] != null || json['min_price_paise'] != null) {
+      final v = json['minPricePaise'] ?? json['min_price_paise'];
+      parsedMinPaise = v is num ? v.toInt() : (int.tryParse(v.toString()) ?? 0);
+    } else if (json['minPrice'] != null || json['min_price'] != null || json['startingPrice'] != null || json['starting_price'] != null) {
+      final v = json['minPrice'] ?? json['min_price'] ?? json['startingPrice'] ?? json['starting_price'];
+      final numVal = v is num ? v.toDouble() : (double.tryParse(v.toString()) ?? 0.0);
+      parsedMinPaise = (numVal * 100).round();
+    } else if (json['priceInPaise'] != null || json['price_in_paise'] != null) {
+      final v = json['priceInPaise'] ?? json['price_in_paise'];
+      parsedMinPaise = v is num ? v.toInt() : (int.tryParse(v.toString()) ?? 0);
+    } else if (json['price'] != null) {
+      final v = json['price'];
+      final numVal = v is num ? v.toDouble() : (double.tryParse(v.toString()) ?? 0.0);
+      parsedMinPaise = (numVal * 100).round();
+    }
+
+    if (parsedMinPaise == 0 && ticketsList.isNotEmpty) {
+      final activeTiers = ticketsList.where((t) => !t.isSoldOut).toList();
+      final pool = activeTiers.isNotEmpty ? activeTiers : ticketsList;
+      parsedMinPaise = pool.map((t) => t.priceInPaise).reduce((a, b) => a < b ? a : b);
+    }
+
+    int parsedMaxPaise = 0;
+    if (json['maxPricePaise'] != null || json['max_price_paise'] != null) {
+      final v = json['maxPricePaise'] ?? json['max_price_paise'];
+      parsedMaxPaise = v is num ? v.toInt() : (int.tryParse(v.toString()) ?? 0);
+    } else if (json['maxPrice'] != null || json['max_price'] != null) {
+      final v = json['maxPrice'] ?? json['max_price'];
+      final numVal = v is num ? v.toDouble() : (double.tryParse(v.toString()) ?? 0.0);
+      parsedMaxPaise = (numVal * 100).round();
+    }
+
+    if (parsedMaxPaise == 0 && ticketsList.isNotEmpty) {
+      parsedMaxPaise = ticketsList.map((t) => t.priceInPaise).reduce((a, b) => a > b ? a : b);
+    }
 
     final regObj = json['userRegistration'] is Map<String, dynamic>
         ? UserRegistrationModel.fromJson(json['userRegistration'] as Map<String, dynamic>)
         : (json['registration'] is Map<String, dynamic>
             ? UserRegistrationModel.fromJson(json['registration'] as Map<String, dynamic>)
             : null);
-
-    final ticketsList = (json['ticketTypes'] as List<dynamic>?)
-            ?.whereType<Map<String, dynamic>>()
-            .map(TicketType.fromJson)
-            .toList() ??
-        const [];
 
     return PublicEvent(
       id: json['id']?.toString() ?? '',
@@ -1183,8 +1230,8 @@ class PublicEvent {
           : null,
       timezone: json['timezone']?.toString() ?? 'Asia/Kolkata',
       maxCapacity: json['maxCapacity'] ?? json['max_capacity'] ?? 300,
-      minPricePaise: rawMin is num ? rawMin.toInt() : (int.tryParse(rawMin.toString()) ?? 0),
-      maxPricePaise: rawMax is num ? rawMax.toInt() : (int.tryParse(rawMax.toString()) ?? 0),
+      minPricePaise: parsedMinPaise,
+      maxPricePaise: parsedMaxPaise,
       hostName: hostObj?['name']?.toString() ??
           json['hostName']?.toString() ??
           json['host_name']?.toString() ??

@@ -1,8 +1,8 @@
 import 'dart:developer';
-import 'dart:io';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import '../constants/api_constants.dart';
 import '../network/api_client.dart';
 
 /// Top-level background message handler for FCM
@@ -43,8 +43,8 @@ class NotificationService {
     }
   }
 
-  static const String channelId = 'eventsphere_high_importance';
-  static const String channelName = 'High Importance Notifications';
+  static const String channelId = 'ems_default_channel';
+  static const String channelName = 'Event Notifications';
 
   /// Initialize Firebase, FCM, and Local Notifications
   Future<void> initialize({
@@ -189,21 +189,18 @@ class NotificationService {
     }
   }
 
-  /// Syncs FCM Token with Backend
+  /// Syncs FCM Token with Backend (PATCH /users/me/fcm-token)
   Future<void> syncDeviceToken(String token) async {
     try {
-      final deviceType = Platform.isAndroid ? 'ANDROID' : (Platform.isIOS ? 'IOS' : 'OTHER');
-      await ApiClient().dio.post(
-        '/notifications/device-token',
+      await ApiClient().dio.patch(
+        ApiConstants.updateFcmToken,
         data: {
           'fcmToken': token,
-          'deviceType': deviceType,
         },
       );
-      log('[FCM] Device token registered with backend successfully.');
+      log('[FCM] Device token registered with backend (PATCH ${ApiConstants.updateFcmToken}) successfully.');
     } catch (e) {
-      // Gracefully ignore if endpoint is not implemented yet on backend
-      log('[FCM] Note: Backend endpoint /notifications/device-token not active yet ($e)');
+      log('[FCM] Note: Backend endpoint ${ApiConstants.updateFcmToken} error: $e');
     }
   }
 

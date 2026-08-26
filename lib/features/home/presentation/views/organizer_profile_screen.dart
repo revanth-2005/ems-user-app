@@ -130,7 +130,7 @@ class OrganizerProfileScreen extends HookConsumerWidget {
                                           style: GoogleFonts.plusJakartaSans(
                                             fontSize: 12,
                                             fontWeight: FontWeight.w600,
-                                            color: AppColors.primary,
+                                            color: AppColors.getTextPrimary(context),
                                           ),
                                         ),
                                       ],
@@ -450,49 +450,6 @@ class _OrganizerPortfolioTab extends StatelessWidget {
                   url: item.mediaUrl,
                   fit: BoxFit.cover,
                 ),
-                if (item.isVideo) ...[
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.25),
-                    ),
-                  ),
-                  Center(
-                    child: Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.65),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 1.5),
-                      ),
-                      child: const Icon(
-                        Icons.play_arrow_rounded,
-                        color: Colors.white,
-                        size: 26,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: AppColors.accentRose,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        'VIDEO',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
                 if (item.caption != null)
                   Positioned(
                     bottom: 0,

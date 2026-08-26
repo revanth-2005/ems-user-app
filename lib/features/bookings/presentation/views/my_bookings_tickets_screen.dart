@@ -194,11 +194,9 @@ class _VendorBookingCard extends HookConsumerWidget {
 
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppColors.getSurface(context),
+      decoration: AppColors.getCardDecoration(
+        context,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.getBorder(context)),
-        boxShadow: AppColors.getCardShadow(context),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -222,6 +220,7 @@ class _VendorBookingCard extends HookConsumerWidget {
               AppStatusBadge(
                 label: _statusLabel(booking.status),
                 status: _badgeStatus(booking.status),
+                showBackground: false,
               ),
             ],
           ),
@@ -246,32 +245,23 @@ class _VendorBookingCard extends HookConsumerWidget {
 
           // ── 24h SLA Countdown for REQUESTED bookings ─────────────────────
           if (booking.status == BookingStatus.REQUESTED) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppColors.warning.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                    color: AppColors.warning.withValues(alpha: 0.3)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.timer_rounded,
-                      size: 16, color: AppColors.warning),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      '24h SLA Guarantee: 18h 35m remaining',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.getTextPrimary(context),
-                      ),
-                      overflow: TextOverflow.ellipsis,
+            Row(
+              children: [
+                const Icon(Icons.timer_rounded,
+                    size: 15, color: AppColors.warning),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    '24h SLA Guarantee: 18h 35m remaining',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.getTextPrimary(context),
                     ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
           ],
@@ -279,7 +269,9 @@ class _VendorBookingCard extends HookConsumerWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.getCardAlt(context),
+              color: AppColors.isDark(context)
+                  ? Colors.black.withValues(alpha: 0.3)
+                  : AppColors.getCardAlt(context),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Row(
@@ -511,11 +503,9 @@ class _TicketPassCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppColors.getSurface(context),
+      decoration: AppColors.getCardDecoration(
+        context,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.getBorder(context)),
-        boxShadow: AppColors.getCardShadow(context),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -800,6 +790,8 @@ class _TicketPassCard extends StatelessWidget {
                     child: AppPrimaryButton(
                       text: 'Show Entry QR Code',
                       icon: Icons.qr_code_2_rounded,
+                      height: 42,
+                      fontSize: 13.5,
                       onPressed: () => EntryQrDialog.show(context, ticket),
                     ),
                   ),
