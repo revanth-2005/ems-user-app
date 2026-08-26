@@ -614,7 +614,8 @@ class EventDetailScreen extends HookConsumerWidget {
                                   'quantity': event.userRegistration?.quantity ?? 1,
                                   'status': event.userRegistration?.status ?? 'CONFIRMED',
                                   'event': event.toJson(),
-                                  'qrCodeData': event.userRegistration?.qrCodeToken ?? 'EMS-PASS-${event.id}',
+                                  'qrCodeData': event.userRegistration?.qrCodeToken ?? event.userRegistration?.id ?? event.id,
+                                  'qrCodeToken': event.userRegistration?.qrCodeToken,
                                   'accessLink': event.userRegistration?.accessLink ?? event.meetingUrl,
                                 });
 

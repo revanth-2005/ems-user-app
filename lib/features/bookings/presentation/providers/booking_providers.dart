@@ -37,6 +37,16 @@ class MyBookingsNotifier extends AsyncNotifier<List<VendorBooking>> {
     state = AsyncData(await repo.getMyBookings());
   }
 
+  Future<CancellationResult> cancelBookingWithRefund(
+    String bookingId, {
+    String reason = 'Customer request',
+  }) async {
+    final repo = ref.read(bookingRepositoryProvider);
+    final result = await repo.cancelBookingWithRefund(bookingId, reason: reason);
+    state = AsyncData(await repo.getMyBookings());
+    return result;
+  }
+
   Future<void> cancelBooking(String bookingId) async {
     final repo = ref.read(bookingRepositoryProvider);
     await repo.cancelBooking(bookingId);
@@ -46,9 +56,40 @@ class MyBookingsNotifier extends AsyncNotifier<List<VendorBooking>> {
 
 // ── Tickets Provider ──────────────────────────────────────────────────────
 
-final myTicketsProvider = FutureProvider<List<EventTicketPass>>((ref) async {
+final myTicketsProvider =
+    AsyncNotifierProvider<MyTicketsNotifier, List<EventTicketPass>>(
+        MyTicketsNotifier.new);
+
+class MyTicketsNotifier extends AsyncNotifier<List<EventTicketPass>> {
+  @override
+  Future<List<EventTicketPass>> build() async {
+    final repo = ref.watch(bookingRepositoryProvider);
+    return repo.getMyTickets();
+  }
+
+  Future<CancellationResult> cancelRegistration(
+    String registrationId, {
+    String reason = 'Personal scheduling conflict',
+  }) async {
+    final repo = ref.read(bookingRepositoryProvider);
+    final result = await repo.cancelRegistration(registrationId, reason: reason);
+    state = AsyncData(await repo.getMyTickets());
+    return result;
+  }
+}
+
+// ── Refund Quote Providers ────────────────────────────────────────────────
+
+final registrationRefundQuoteProvider =
+    FutureProvider.autoDispose.family<RefundQuote, String>((ref, regId) async {
   final repo = ref.watch(bookingRepositoryProvider);
-  return repo.getMyTickets();
+  return repo.getRegistrationRefundQuote(regId);
+});
+
+final bookingRefundQuoteProvider =
+    FutureProvider.autoDispose.family<RefundQuote, String>((ref, bookingId) async {
+  final repo = ref.watch(bookingRepositoryProvider);
+  return repo.getBookingRefundQuote(bookingId);
 });
 
 // ── Cart Notifier ─────────────────────────────────────────────────────────

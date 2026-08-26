@@ -373,6 +373,98 @@ class HostRemoteDataSource {
       return false;
     }
   }
+
+  // ── 💎 Event Hosting Subscriptions & Razorpay Order ─────────────────────────
+
+  /// Fetches public event hosting subscription plans.
+  /// GET /master/event-subscription-plans (Public)
+  Future<List<EventSubscriptionPlan>> getEventSubscriptionPlans() async {
+    try {
+      final res = await _dio.get(ApiConstants.masterEventSubscriptionPlans);
+      if (res.statusCode == 200) {
+        final list = _extractList(res.data, ['plans', 'data', 'items']);
+        if (list.isNotEmpty) {
+          return list
+              .whereType<Map<String, dynamic>>()
+              .map(EventSubscriptionPlan.fromJson)
+              .toList();
+        }
+        if (res.data is List) {
+          return (res.data as List)
+              .whereType<Map<String, dynamic>>()
+              .map(EventSubscriptionPlan.fromJson)
+              .toList();
+        }
+      }
+      return const [];
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  /// Gets current user's active event hosting subscription & live usage meter.
+  /// GET /organizer/user-event-subscription/current (Auth required)
+  Future<UserEventSubscriptionResponse> getCurrentUserEventSubscription() async {
+    try {
+      final res = await _dio.get(ApiConstants.userEventSubscriptionCurrent);
+      if (res.statusCode == 200 && res.data is Map<String, dynamic>) {
+        return UserEventSubscriptionResponse.fromJson(res.data as Map<String, dynamic>);
+      }
+      throw const NetworkException('Invalid subscription response from server.');
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  /// Selects or upgrades a subscription plan.
+  /// POST /organizer/user-event-subscription/select-plan (Auth required)
+  Future<SelectPlanResponse> selectEventSubscriptionPlan({
+    required String tier,
+    required String billingCycle,
+  }) async {
+    try {
+      final res = await _dio.post(
+        ApiConstants.userEventSubscriptionSelectPlan,
+        data: {
+          'tier': tier.toUpperCase(),
+          'billingCycle': billingCycle.toLowerCase(),
+        },
+      );
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        if (res.data is Map<String, dynamic>) {
+          return SelectPlanResponse.fromJson(res.data as Map<String, dynamic>);
+        }
+      }
+      throw const NetworkException('Failed to process subscription selection.');
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  /// Verifies Razorpay payment signature and activates subscription.
+  /// POST /payments/verify (Auth required)
+  Future<Map<String, dynamic>> verifyPayment({
+    required String gatewayOrderId,
+    required String gatewayPaymentId,
+    required String gatewaySignature,
+  }) async {
+    try {
+      final res = await _dio.post(
+        ApiConstants.verifyPayment,
+        data: {
+          'gatewayOrderId': gatewayOrderId,
+          'gatewayPaymentId': gatewayPaymentId,
+          'gatewaySignature': gatewaySignature,
+        },
+      );
+      if (res.data is Map<String, dynamic>) {
+        return res.data as Map<String, dynamic>;
+      }
+      return {'success': res.statusCode == 200 || res.statusCode == 201};
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
 }
 
 

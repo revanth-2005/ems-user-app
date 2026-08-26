@@ -335,7 +335,7 @@ class _ThemeModeOption extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         decoration: BoxDecoration(
           color: isSelected ? selectedBg : unselectedBg,
           borderRadius: BorderRadius.circular(16),
@@ -346,26 +346,31 @@ class _ThemeModeOption extends StatelessWidget {
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               icon,
-              size: 20,
+              size: 17,
               color: isSelected ? AppColors.primary : AppColors.getTextSecondary(context),
             ),
-            const SizedBox(width: 8),
-            Text(
-              title,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 13,
-                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                color: isSelected ? AppColors.primary : AppColors.getTextPrimary(context),
+            const SizedBox(width: 5),
+            Flexible(
+              child: Text(
+                title,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12.5,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                  color: isSelected ? AppColors.primary : AppColors.getTextPrimary(context),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
             if (isSelected) ...[
-              const SizedBox(width: 6),
+              const SizedBox(width: 4),
               const Icon(
                 Icons.check_circle_rounded,
-                size: 16,
+                size: 14,
                 color: AppColors.primary,
               ),
             ],

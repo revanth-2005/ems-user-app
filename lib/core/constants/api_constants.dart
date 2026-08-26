@@ -2,11 +2,11 @@
 /// All API endpoints and backend host URLs are defined here in one single place.
 class ApiConstants {
   // ── 🌐 Centralized Base URL Configuration ──────────────────────────────────
-  static const String serverHost = '192.168.0.112';
+  static const String serverHost = '192.168.0.151';
   static const String serverPort = '3001';          // Backend / Proxy Port
   static const String apiPrefix  = '';              // Live backend routes mount directly at root
 
-  /// Active Base URL: http://192.168.0.112:5173
+  /// Active Base URL: http://192.168.0.151:3001
   static String get baseUrl => 'http://$serverHost:$serverPort$apiPrefix';
 
   // ── 🔐 Auth Endpoints ──────────────────────────────────────────────────────
@@ -23,13 +23,14 @@ class ApiConstants {
   static const String userAddresses = '/users/me/addresses';
 
   // ── 📦 Master & Catalog Endpoints ──────────────────────────────────────────
-  static const String masterCategories      = '/master/categories';
-  static const String masterEventCategories = '/master/event-categories';
-  static const String catalogPackages       = '/catalog/packages';
-  static const String catalogServices       = '/catalog/services';
-  static const String catalogEvents         = '/catalog/events';
-  static const String calculateEventFee     = '/catalog/events/calculate-fee';
-  static const String catalogOrganizers     = '/catalog/organizers';
+  static const String masterCategories             = '/master/categories';
+  static const String masterEventCategories        = '/master/event-categories';
+  static const String masterEventSubscriptionPlans = '/master/event-subscription-plans';
+  static const String catalogPackages              = '/catalog/packages';
+  static const String catalogServices              = '/catalog/services';
+  static const String catalogEvents                = '/catalog/events';
+  static const String calculateEventFee            = '/catalog/events/calculate-fee';
+  static const String catalogOrganizers            = '/catalog/organizers';
 
   // ── 🛒 Cart & Checkout Endpoints ───────────────────────────────────────────
   static const String cart        = '/cart';
@@ -54,10 +55,12 @@ class ApiConstants {
   static const String organizerPayouts          = '/organizer/payouts';
 
   // ── 🎟️ Host & Ticketing Endpoints ───────────────────────────────────────────
-  static const String hostEvents              = '/host/events';
-  static const String hostGenerateMeet        = '/host/meetings/generate-meet';
-  static const String hostAttendeeQueue       = '/host/events/{id}/attendee-queue';
-  static const String hostApproveRegistration = '/host/events/registrations/{id}/approve';
+  static const String hostEvents                    = '/host/events';
+  static const String userEventSubscriptionCurrent  = '/organizer/user-event-subscription/current';
+  static const String userEventSubscriptionSelectPlan = '/organizer/user-event-subscription/select-plan';
+  static const String hostGenerateMeet              = '/host/meetings/generate-meet';
+  static const String hostAttendeeQueue             = '/host/events/{id}/attendee-queue';
+  static const String hostApproveRegistration       = '/host/events/registrations/{id}/approve';
   static const String hostDeclineRegistration = '/host/events/registrations/{id}/decline';
   static const String hostCheckIn             = '/host/events/{id}/check-in';
   static const String hostCheckInBulk         = '/host/events/{id}/check-in/bulk';
@@ -84,4 +87,10 @@ class ApiConstants {
   static const String followStatus       = '/organizers/{id}/follow-status';
   static const String followedOrganizers = '/users/me/followed-organizers';
   static const String organizerFollowers = '/organizers/{id}/followers';
+
+  // ── 💸 Ticket & Booking Cancellation & Automated Refund Endpoints ──────────
+  static const String registrationRefundQuote = '/registrations/{id}/refund-quote';
+  static const String cancelRegistration      = '/registrations/{id}/cancel';
+  static const String bookingRefundQuote       = '/bookings/{id}/refund-quote';
+  static const String cancelBookingEndpoint   = '/bookings/{id}/cancel';
 }

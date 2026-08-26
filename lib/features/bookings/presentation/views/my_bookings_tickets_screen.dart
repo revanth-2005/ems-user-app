@@ -14,6 +14,7 @@ import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../domain/entities/booking_entities.dart';
 import '../providers/booking_providers.dart';
+import '../widgets/cancellation_refund_modal.dart';
 import '../widgets/entry_qr_dialog.dart';
 
 enum BookingViewTab { BOOKINGS, TICKETS }
@@ -441,68 +442,13 @@ class _VendorBookingCard extends HookConsumerWidget {
 
   void _showCancelBookingDialog(
       BuildContext context, WidgetRef ref, VendorBooking booking) {
-    showModalBottomSheet(
+    CancellationRefundModal.show(
       context: context,
-      backgroundColor: AppColors.getSurface(context),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) {
-        return Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Cancel Booking Request?',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.getTextPrimary(context),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'According to the cancellation policy, you are eligible for a 100% full refund of your deposit (${CurrencyFormatter.formatPaise(booking.depositPaidPaise)}) if cancelled now.',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13,
-                  color: AppColors.getTextSecondary(context),
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: AppSecondaryButton(
-                      text: 'Keep Booking',
-                      onPressed: () => Navigator.pop(ctx),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: AppPrimaryButton(
-                      text: 'Confirm Cancel',
-                      onPressed: () {
-                        Navigator.pop(ctx);
-                        ref
-                            .read(myBookingsProvider.notifier)
-                            .cancelBooking(booking.id);
-                        AppSnackbar.show(
-                          context,
-                          message: 'Booking #${booking.id} cancelled. Refund initiated.',
-                          type: SnackbarType.info,
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
+      targetId: booking.id,
+      targetType: RefundTargetType.BOOKING,
+      fallbackTitle: booking.title,
+      fallbackPaidPaise: booking.depositPaidPaise,
+      fallbackDate: booking.eventDate,
     );
   }
 
@@ -593,49 +539,63 @@ class _TicketPassCard extends StatelessWidget {
                   ),
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: ticket.isCheckedIn
-                      ? const Color(0xFF3B82F6).withValues(alpha: 0.12)
-                      : (ticket.isConfirmed
-                          ? const Color(0xFF10B981).withValues(alpha: 0.12)
-                          : const Color(0xFFF59E0B).withValues(alpha: 0.12)),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      ticket.isCheckedIn
-                          ? Icons.verified_user_rounded
+              Builder(
+                builder: (context) {
+                  final isCancelled = ticket.status.toUpperCase() == 'CANCELLED';
+                  final Color badgeBg = isCancelled
+                      ? const Color(0xFFEF4444).withValues(alpha: 0.12)
+                      : (ticket.isCheckedIn
+                          ? const Color(0xFF3B82F6).withValues(alpha: 0.12)
                           : (ticket.isConfirmed
-                              ? Icons.check_circle_rounded
-                              : Icons.hourglass_top_rounded),
-                      size: 13,
-                      color: ticket.isCheckedIn
+                              ? const Color(0xFF10B981).withValues(alpha: 0.12)
+                              : const Color(0xFFF59E0B).withValues(alpha: 0.12)));
+                  final Color badgeColor = isCancelled
+                      ? const Color(0xFFEF4444)
+                      : (ticket.isCheckedIn
                           ? const Color(0xFF2563EB)
                           : (ticket.isConfirmed
                               ? const Color(0xFF059669)
-                              : const Color(0xFFD97706)),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      ticket.isCheckedIn
+                              : const Color(0xFFD97706)));
+                  final IconData badgeIcon = isCancelled
+                      ? Icons.cancel_outlined
+                      : (ticket.isCheckedIn
+                          ? Icons.verified_user_rounded
+                          : (ticket.isConfirmed
+                              ? Icons.check_circle_rounded
+                              : Icons.hourglass_top_rounded));
+                  final String badgeText = isCancelled
+                      ? 'CANCELLED'
+                      : (ticket.isCheckedIn
                           ? 'CHECKED IN'
-                          : (ticket.isConfirmed ? 'CONFIRMED PASS' : 'PENDING REVIEW'),
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w800,
-                        color: ticket.isCheckedIn
-                            ? const Color(0xFF2563EB)
-                            : (ticket.isConfirmed
-                                ? const Color(0xFF059669)
-                                : const Color(0xFFD97706)),
-                      ),
+                          : (ticket.isConfirmed ? 'CONFIRMED PASS' : 'PENDING REVIEW'));
+
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: badgeBg,
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                  ],
-                ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          badgeIcon,
+                          size: 13,
+                          color: badgeColor,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          badgeText,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w800,
+                            color: badgeColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -708,7 +668,59 @@ class _TicketPassCard extends StatelessWidget {
           const SizedBox(height: 14),
 
           // Action Buttons
-          if (ticket.isPending) ...[
+          if (ticket.status.toUpperCase() == 'CANCELLED') ...[
+            InkWell(
+              onTap: () => CancellationRefundModal.show(
+                context: context,
+                targetId: ticket.registrationId,
+                targetType: RefundTargetType.REGISTRATION,
+                fallbackTitle: ticket.eventTitle,
+                fallbackPaidPaise: ticket.totalAmountPaise,
+                fallbackDate: ticket.eventDate,
+              ),
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEF4444).withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.2)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.receipt_long_rounded,
+                      size: 14,
+                      color: Color(0xFFEF4444),
+                    ),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        'PASS CANCELLED • VIEW REFUND',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFFEF4444),
+                          letterSpacing: 0.3,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 9,
+                      color: Color(0xFFEF4444),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ] else if (ticket.isPending) ...[
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -731,6 +743,29 @@ class _TicketPassCard extends StatelessWidget {
                     ),
                   ),
                 ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                icon: const Icon(Icons.cancel_outlined, size: 14, color: Color(0xFFEF4444)),
+                label: Text(
+                  'Cancel Registration',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFFEF4444),
+                  ),
+                ),
+                onPressed: () => CancellationRefundModal.show(
+                  context: context,
+                  targetId: ticket.registrationId,
+                  targetType: RefundTargetType.REGISTRATION,
+                  fallbackTitle: ticket.eventTitle,
+                  fallbackPaidPaise: ticket.totalAmountPaise,
+                  fallbackDate: ticket.eventDate,
+                ),
               ),
             ),
           ] else ...[
@@ -766,6 +801,26 @@ class _TicketPassCard extends StatelessWidget {
                       text: 'Show Entry QR Code',
                       icon: Icons.qr_code_2_rounded,
                       onPressed: () => EntryQrDialog.show(context, ticket),
+                    ),
+                  ),
+                ],
+                if (!ticket.isCheckedIn) ...[
+                  const SizedBox(width: 8),
+                  IconButton(
+                    tooltip: 'Cancel Ticket & Refund',
+                    icon: const Icon(Icons.cancel_outlined, size: 20, color: Color(0xFFEF4444)),
+                    style: IconButton.styleFrom(
+                      backgroundColor: const Color(0xFFEF4444).withValues(alpha: 0.08),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.all(10),
+                    ),
+                    onPressed: () => CancellationRefundModal.show(
+                      context: context,
+                      targetId: ticket.registrationId,
+                      targetType: RefundTargetType.REGISTRATION,
+                      fallbackTitle: ticket.eventTitle,
+                      fallbackPaidPaise: ticket.totalAmountPaise,
+                      fallbackDate: ticket.eventDate,
                     ),
                   ),
                 ],

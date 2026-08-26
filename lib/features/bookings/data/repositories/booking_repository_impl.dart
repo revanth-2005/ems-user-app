@@ -28,6 +28,32 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
+  Future<RefundQuote> getRegistrationRefundQuote(String registrationId) async {
+    return _remote.getRegistrationRefundQuote(registrationId);
+  }
+
+  @override
+  Future<CancellationResult> cancelRegistration(
+    String registrationId, {
+    String reason = 'Personal scheduling conflict',
+  }) async {
+    return _remote.cancelRegistration(registrationId, reason: reason);
+  }
+
+  @override
+  Future<RefundQuote> getBookingRefundQuote(String bookingId) async {
+    return _remote.getBookingRefundQuote(bookingId);
+  }
+
+  @override
+  Future<CancellationResult> cancelBookingWithRefund(
+    String bookingId, {
+    String reason = 'Customer request',
+  }) async {
+    return _remote.cancelBookingWithRefund(bookingId, reason: reason);
+  }
+
+  @override
   Future<bool> checkoutCart(CartState cart) async {
     return _remote.checkoutCart(cart);
   }

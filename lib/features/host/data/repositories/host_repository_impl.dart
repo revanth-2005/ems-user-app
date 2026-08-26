@@ -120,5 +120,39 @@ class HostRepositoryImpl implements HostRepository {
   Future<bool> manualCheckIn(String eventId, String attendeeId) async {
     return _remote.manualCheckIn(eventId, attendeeId);
   }
+
+  @override
+  Future<List<EventSubscriptionPlan>> getEventSubscriptionPlans() async {
+    return _remote.getEventSubscriptionPlans();
+  }
+
+  @override
+  Future<UserEventSubscriptionResponse> getCurrentUserEventSubscription() async {
+    return _remote.getCurrentUserEventSubscription();
+  }
+
+  @override
+  Future<SelectPlanResponse> selectEventSubscriptionPlan({
+    required String tier,
+    required String billingCycle,
+  }) async {
+    return _remote.selectEventSubscriptionPlan(
+      tier: tier,
+      billingCycle: billingCycle,
+    );
+  }
+
+  @override
+  Future<Map<String, dynamic>> verifyPayment({
+    required String gatewayOrderId,
+    required String gatewayPaymentId,
+    required String gatewaySignature,
+  }) async {
+    return _remote.verifyPayment(
+      gatewayOrderId: gatewayOrderId,
+      gatewayPaymentId: gatewayPaymentId,
+      gatewaySignature: gatewaySignature,
+    );
+  }
 }
 

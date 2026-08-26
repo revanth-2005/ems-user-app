@@ -115,33 +115,10 @@ class PackageCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Top section: FEATURED badge + Title + Description + Location
+                  // Top section: Title + Description + Location
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // 1. FEATURED badge
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3.5),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF500F14).withValues(alpha: 0.92),
-                          borderRadius: BorderRadius.circular(4),
-                          border: Border.all(
-                            color: const Color(0xFF7A1820),
-                            width: 0.8,
-                          ),
-                        ),
-                        child: Text(
-                          'FEATURED',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.6,
-                            color: const Color(0xFFFF5C5C),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 7),
 
                       // 2. Title
                       ConstrainedBox(
@@ -600,26 +577,15 @@ class OrganizerCard extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              organizer.effectiveName,
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.getTextPrimary(context),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (organizer.kycStatus == 'APPROVED') ...[
-                            const SizedBox(width: 4),
-                            const Icon(Icons.verified_rounded,
-                                size: 15, color: AppColors.primary),
-                          ],
-                        ],
+                      Text(
+                        organizer.effectiveName,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.getTextPrimary(context),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 3),
                       Row(
@@ -779,9 +745,7 @@ class PublicEventCard extends StatelessWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: event.mode == EventMode.ONLINE
-                          ? AppColors.primary
-                          : Colors.black.withValues(alpha: 0.65),
+                      color: Colors.black.withValues(alpha: 0.65),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(

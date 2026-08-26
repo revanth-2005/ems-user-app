@@ -150,13 +150,13 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
                   ),
                 ),
 
-              // ── 4 Core Pillars Navigation (Circular Icons + Label Below) ──
+              // ── 4 Core Pillars Navigation (Single Line Clean Squircle Icons) ──
               SliverToBoxAdapter(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 14),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -180,14 +180,16 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
                       child: Row(
                         children: [
-                          // 1. Packages
-                          _buildPillarCircle(
+                          // 1. Packages (Real-World 3D Gift Box)
+                          _buildPillarItem(
                             context: context,
-                            icon: Icons.inventory_2_rounded,
+                            imageAsset: 'assets/icons/3d_package.png',
+                            fallbackIcon: Icons.inventory_2_rounded,
                             title: 'Packages',
+                            accentColor: const Color(0xFF8B5CF6),
                             onTap: () {
                               ref
                                   .read(activeCatalogTabProvider.notifier)
@@ -196,11 +198,13 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
                             },
                           ),
 
-                          // 2. Services
-                          _buildPillarCircle(
+                          // 2. Services (Real-World 3D Star Wand & Lens)
+                          _buildPillarItem(
                             context: context,
-                            icon: Icons.design_services_rounded,
+                            imageAsset: 'assets/icons/3d_services.png',
+                            fallbackIcon: Icons.auto_awesome_rounded,
                             title: 'Services',
+                            accentColor: const Color(0xFF10B981),
                             onTap: () {
                               ref
                                   .read(activeCatalogTabProvider.notifier)
@@ -209,11 +213,13 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
                             },
                           ),
 
-                          // 3. Organizers
-                          _buildPillarCircle(
+                          // 3. Organizers (Real-World 3D Gold Megaphone)
+                          _buildPillarItem(
                             context: context,
-                            icon: Icons.business_center_rounded,
+                            imageAsset: 'assets/icons/3d_organizers.png',
+                            fallbackIcon: Icons.business_center_rounded,
                             title: 'Organizers',
+                            accentColor: const Color(0xFFF59E0B),
                             onTap: () {
                               ref
                                   .read(activeCatalogTabProvider.notifier)
@@ -222,11 +228,13 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
                             },
                           ),
 
-                          // 4. Live Events
-                          _buildPillarCircle(
+                          // 4. Live Events (Real-World 3D VIP Tickets)
+                          _buildPillarItem(
                             context: context,
-                            icon: Icons.confirmation_number_rounded,
+                            imageAsset: 'assets/icons/3d_events.png',
+                            fallbackIcon: Icons.confirmation_number_rounded,
                             title: 'Events',
+                            accentColor: AppColors.primary,
                             onTap: () {
                               ref
                                   .read(activeCatalogTabProvider.notifier)
@@ -237,6 +245,7 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 8),
                   ],
                 ),
               ),
@@ -505,57 +514,56 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
     );
   }
 
-  Widget _buildPillarCircle({
+  Widget _buildPillarItem({
     required BuildContext context,
-    required IconData icon,
+    required String imageAsset,
+    required IconData fallbackIcon,
     required String title,
+    required Color accentColor,
     required VoidCallback onTap,
   }) {
-    final isDark = AppColors.isDark(context);
-
     return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.07)
-                    : AppColors.whiteCardAlt,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.12)
-                      : AppColors.whiteBorder,
-                  width: 1,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          splashColor: accentColor.withValues(alpha: 0.15),
+          highlightColor: accentColor.withValues(alpha: 0.08),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset(
+                  imageAsset,
+                  width: 46,
+                  height: 46,
+                  cacheWidth: 120,
+                  cacheHeight: 120,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => Icon(
+                    fallbackIcon,
+                    size: 32,
+                    color: accentColor,
+                  ),
                 ),
-              ),
-              child: Center(
-                child: Icon(
-                  icon,
-                  size: 22,
-                  color: isDark ? Colors.white : AppColors.getTextPrimary(context),
+                const SizedBox(height: 6),
+                Text(
+                  title,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.getTextPrimary(context),
+                    letterSpacing: -0.2,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
                 ),
-              ),
+              ],
             ),
-            const SizedBox(height: 7),
-            Text(
-              title,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: AppColors.getTextPrimary(context),
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -763,9 +771,7 @@ class _NetflixEventHeroState extends ConsumerState<_NetflixEventHero> {
                                       padding: const EdgeInsets.symmetric(
                                           horizontal: 8, vertical: 3),
                                       decoration: BoxDecoration(
-                                        color: isOnline
-                                            ? AppColors.primary
-                                            : Colors.white.withValues(alpha: 0.18),
+                                        color: Colors.white.withValues(alpha: 0.18),
                                         borderRadius: BorderRadius.circular(6),
                                         border: Border.all(
                                           color: Colors.white.withValues(alpha: 0.18),
@@ -1065,33 +1071,85 @@ class _NetflixEventHeroState extends ConsumerState<_NetflixEventHero> {
           ),
         ),
 
-        // Pagination dots with ValueListenableBuilder (zero full-widget rebuilds on swipe)
+        // Pagination dots with ValueListenableBuilder (compact 4-dot sliding window, perfectly centered)
         Padding(
           padding: const EdgeInsets.only(top: 14, bottom: 6),
-          child: ValueListenableBuilder<int>(
-            valueListenable: _currentPageNotifier,
-            builder: (context, currentPage, _) {
-              return Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(events.length, (i) {
-                  final active = i == currentPage;
-                  return AnimatedContainer(
-                    duration: const Duration(milliseconds: 250),
-                    curve: Curves.easeInOut,
-                    margin: const EdgeInsets.symmetric(horizontal: 3),
-                    width: active ? 22 : 6,
-                    height: 6,
-                    decoration: BoxDecoration(
-                      color: active ? AppColors.primary : Colors.white24,
-                      borderRadius: BorderRadius.circular(3),
-                    ),
+          child: SizedBox(
+            width: double.infinity,
+            child: Center(
+              child: ValueListenableBuilder<int>(
+                valueListenable: _currentPageNotifier,
+                builder: (context, currentPage, _) {
+                  return _buildScrollingPageIndicator(
+                    totalCount: events.length,
+                    currentPage: currentPage,
                   );
-                }),
-              );
-            },
+                },
+              ),
+            ),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildScrollingPageIndicator({
+    required int totalCount,
+    required int currentPage,
+  }) {
+    if (totalCount <= 1) return const SizedBox.shrink();
+
+    const maxVisible = 4;
+    final visibleCount = totalCount < maxVisible ? totalCount : maxVisible;
+
+    // Sliding window offset with safe bounds clamping
+    int startIndex = 0;
+    if (totalCount > maxVisible) {
+      if (currentPage <= 1) {
+        startIndex = 0;
+      } else if (currentPage >= totalCount - 2) {
+        startIndex = totalCount - maxVisible;
+      } else {
+        startIndex = currentPage - 1;
+      }
+    }
+    startIndex = startIndex.clamp(0, (totalCount - visibleCount).clamp(0, totalCount));
+
+    return Center(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: List.generate(visibleCount, (index) {
+          final actualIndex = startIndex + index;
+          final isActive = actualIndex == currentPage;
+
+          final isLeadingEdge = index == 0 && startIndex > 0;
+          final isTrailingEdge =
+              index == visibleCount - 1 && (startIndex + visibleCount) < totalCount;
+          final isEdgeWithMore = !isActive && (isLeadingEdge || isTrailingEdge);
+
+          final double dotWidth = isActive ? 22.0 : (isEdgeWithMore ? 4.5 : 6.0);
+          final double dotHeight = isActive ? 6.0 : (isEdgeWithMore ? 4.5 : 6.0);
+          final Color dotColor = isActive
+              ? AppColors.primary
+              : (isEdgeWithMore
+                  ? Colors.white.withValues(alpha: 0.18)
+                  : Colors.white.withValues(alpha: 0.35));
+
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeInOut,
+            margin: const EdgeInsets.symmetric(horizontal: 3),
+            width: dotWidth,
+            height: dotHeight,
+            decoration: BoxDecoration(
+              color: dotColor,
+              borderRadius: BorderRadius.circular(3),
+            ),
+          );
+        }),
+      ),
     );
   }
 

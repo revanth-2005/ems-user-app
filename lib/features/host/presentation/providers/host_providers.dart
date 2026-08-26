@@ -109,6 +109,62 @@ final hostGateStatsProvider =
   return repo.getCheckInStats(eventId);
 });
 
+// ── Event Hosting Subscription Plans & Usage Providers ───────────────────
+
+/// Public hosting subscription plans (Basic, Medium, Advanced)
+final eventSubscriptionPlansProvider =
+    FutureProvider.autoDispose<List<EventSubscriptionPlan>>((ref) async {
+  final repo = ref.watch(hostRepositoryProvider);
+  return repo.getEventSubscriptionPlans();
+});
+
+/// Current user's active event hosting subscription and live event usage meter
+final userEventSubscriptionProvider = AsyncNotifierProvider<
+    UserEventSubscriptionNotifier, UserEventSubscriptionResponse?>(
+  UserEventSubscriptionNotifier.new,
+);
+
+class UserEventSubscriptionNotifier
+    extends AsyncNotifier<UserEventSubscriptionResponse?> {
+  @override
+  Future<UserEventSubscriptionResponse?> build() async {
+    final repo = ref.watch(hostRepositoryProvider);
+    try {
+      return await repo.getCurrentUserEventSubscription();
+    } catch (_) {
+      // Fallback default response if endpoint fails / new user
+      return const UserEventSubscriptionResponse(
+        hasSubscription: false,
+        usage: SubscriptionUsage(activeEvents: 0, maxActiveEvents: 5),
+      );
+    }
+  }
+
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(
+      () => ref.read(hostRepositoryProvider).getCurrentUserEventSubscription(),
+    );
+  }
+
+  /// Selects or upgrades a subscription plan.
+  Future<SelectPlanResponse> selectPlan({
+    required String tier,
+    required String billingCycle,
+  }) async {
+    final repo = ref.read(hostRepositoryProvider);
+    final res = await repo.selectEventSubscriptionPlan(
+      tier: tier,
+      billingCycle: billingCycle,
+    );
+    // If free or instantly activated, refresh state
+    if (!res.requiresPayment) {
+      await refresh();
+    }
+    return res;
+  }
+}
+
 // ── Legacy Provider for backward compatibility ────────────────────────────
 
 final attendeesQueueProvider =

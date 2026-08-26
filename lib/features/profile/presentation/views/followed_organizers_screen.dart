@@ -278,26 +278,15 @@ class _FollowedOrganizerCard extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          organizer.effectiveName,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.getTextPrimary(context),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (organizer.kycStatus == 'APPROVED') ...[
-                        const SizedBox(width: 4),
-                        const Icon(Icons.verified_rounded,
-                            size: 14, color: AppColors.primary),
-                      ],
-                    ],
+                  Text(
+                    organizer.effectiveName,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.getTextPrimary(context),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 3),
                   Row(

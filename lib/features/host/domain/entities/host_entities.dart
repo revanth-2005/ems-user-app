@@ -1,4 +1,5 @@
 import '../../../home/domain/entities/catalog_entities.dart';
+export 'host_subscription_entities.dart';
 
 // ── Host Event Lifecycle Status ───────────────────────────────────────────────
 
@@ -624,11 +625,12 @@ class CheckInResponse {
   final String message;
   final DateTime? checkedInAt;
   final String? ticketId;
-  final int? ticketNumber;
+  final String? ticketNumber;
   final String? registrationId;
   final CheckInAttendeeInfo? attendee;
   final CheckInTicketTypeInfo? ticketType;
   final CheckInGroupSummary? groupSummary;
+  final int headcountAdmitted;
 
   const CheckInResponse({
     required this.success,
@@ -641,6 +643,7 @@ class CheckInResponse {
     this.attendee,
     this.ticketType,
     this.groupSummary,
+    this.headcountAdmitted = 1,
   });
 
   CheckInResultStatus get status {
@@ -655,15 +658,17 @@ class CheckInResponse {
   String? get ticketTypeName => ticketType?.name;
 
   factory CheckInResponse.fromJson(Map<String, dynamic> json) {
-    final isDup = json['isDuplicate'] == true || json['is_duplicate'] == true;
-    final isSucc = json['success'] == true;
+    final isDup = json['isDuplicate'] == true ||
+        json['is_duplicate'] == true ||
+        (json['message']?.toString() ?? '').toLowerCase().contains('duplicate scan');
+    final isSucc = json['success'] == true && !isDup;
 
     CheckInAttendeeInfo? attendeeObj;
     if (json['attendee'] is Map<String, dynamic>) {
       attendeeObj = CheckInAttendeeInfo.fromJson(json['attendee'] as Map<String, dynamic>);
     } else if (json['attendeeName'] != null) {
       attendeeObj = CheckInAttendeeInfo(
-        id: json['attendeeId']?.toString() ?? '',
+        id: json['attendeeId']?.toString() ?? json['id']?.toString() ?? '',
         name: json['attendeeName']?.toString() ?? 'Attendee',
         email: json['attendeeEmail']?.toString() ?? '',
         phone: json['attendeePhone']?.toString(),
@@ -688,12 +693,13 @@ class CheckInResponse {
               ? '✅ ENTRY VERIFIED & CHECKED IN'
               : (isDup ? '⚠️ DUPLICATE SCAN ATTEMPT!' : 'Invalid QR token')),
       checkedInAt: json['checkedInAt'] != null ? DateTime.tryParse(json['checkedInAt'].toString()) : null,
-      ticketId: json['ticketId']?.toString(),
-      ticketNumber: (json['ticketNumber'] as num?)?.toInt(),
+      ticketId: json['ticketId']?.toString() ?? json['id']?.toString(),
+      ticketNumber: json['ticketNumber']?.toString(),
       registrationId: json['registrationId']?.toString(),
       attendee: attendeeObj,
       ticketType: ticketTypeObj,
       groupSummary: groupObj,
+      headcountAdmitted: (json['headcountAdmitted'] as num?)?.toInt() ?? 1,
     );
   }
 }
@@ -728,20 +734,22 @@ class BulkCheckInResponse {
 
     return BulkCheckInResponse(
       success: json['success'] == true,
-      message: json['message']?.toString() ?? 'Bulk check-in completed',
+      message: json['message']?.toString() ?? 'Bulk check-in processed',
       countCheckedIn: (json['countCheckedIn'] as num?)?.toInt() ??
-          (json['count_checked_in'] as num?)?.toInt() ??
+          (json['count'] as num?)?.toInt() ??
           0,
       groupSummary: groupObj,
       attendee: attObj,
-      ticketType: json['ticketType']?.toString(),
+      ticketType: json['ticketType'] is Map
+          ? json['ticketType']['name']?.toString()
+          : json['ticketType']?.toString(),
     );
   }
 }
 
 class RecentCheckInItem {
   final String ticketId;
-  final int ticketNumber;
+  final String ticketNumber;
   final DateTime? checkedInAt;
   final String attendeeName;
   final String attendeeEmail;
@@ -758,14 +766,16 @@ class RecentCheckInItem {
 
   factory RecentCheckInItem.fromJson(Map<String, dynamic> json) {
     return RecentCheckInItem(
-      ticketId: json['ticketId']?.toString() ?? '',
-      ticketNumber: (json['ticketNumber'] as num?)?.toInt() ?? 1,
+      ticketId: json['ticketId']?.toString() ?? json['id']?.toString() ?? '',
+      ticketNumber: json['ticketNumber']?.toString() ?? '1',
       checkedInAt: json['checkedInAt'] != null
           ? DateTime.tryParse(json['checkedInAt'].toString())
           : null,
       attendeeName: json['attendeeName']?.toString() ?? 'Attendee',
       attendeeEmail: json['attendeeEmail']?.toString() ?? '',
-      ticketType: json['ticketType']?.toString() ?? 'General Pass',
+      ticketType: json['ticketTypeName']?.toString() ??
+          json['ticketType']?.toString() ??
+          'General Pass',
     );
   }
 }
@@ -805,7 +815,9 @@ class GateCheckInStats {
       totalCheckedIn: (json['totalCheckedIn'] as num?)?.toInt() ?? 0,
       remainingAttendees: (json['remainingAttendees'] as num?)?.toInt() ?? 0,
       checkInPercentage: (json['checkInPercentage'] as num?)?.toDouble() ?? 0.0,
-      duplicateAttempts: (json['duplicateAttempts'] as num?)?.toInt() ?? 0,
+      duplicateAttempts: (json['duplicateAttempts'] as num?)?.toInt() ??
+          (json['duplicateAttemptsDetected'] as num?)?.toInt() ??
+          0,
       recentCheckIns: recents,
     );
   }

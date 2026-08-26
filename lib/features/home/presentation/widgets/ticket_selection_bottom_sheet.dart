@@ -127,7 +127,8 @@ class TicketSelectionBottomSheet extends HookConsumerWidget {
               'status': 'CONFIRMED',
               'event': event.toJson(),
               'ticketType': currentTier.toJson(),
-              'qrCodeData': res['qrCodeToken'] ?? 'EMS-PASS-${event.id}',
+              'qrCodeData': res['qrCodeToken'] ?? res['registrationId'] ?? res['id'] ?? event.id,
+              'qrCodeToken': res['qrCodeToken'],
               'accessLink': res['accessLink'] ?? event.meetingUrl,
             });
 

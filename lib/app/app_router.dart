@@ -27,6 +27,7 @@ import '../features/host/presentation/views/create_event_screen.dart';
 import '../features/host/presentation/views/event_management_hub_screen.dart';
 import '../features/host/presentation/views/attendee_queue_screen.dart';
 import '../features/host/presentation/views/qr_scanner_screen.dart';
+import '../features/host/presentation/views/event_hosting_subscription_screen.dart';
 import '../features/profile/presentation/views/customer_profile_screen.dart';
 import '../features/profile/presentation/views/followed_organizers_screen.dart';
 import 'app_shell.dart';
@@ -58,6 +59,7 @@ abstract class AppRoutes {
 
   // Host
   static const hostDashboard = '/host';
+  static const hostSubscription = '/host/subscription';
   static const createEvent = '/host/create-event';
   static const hostCreateEvent = '/host/create-event';
   static const hostManagementHub = '/host/manage/:id';
@@ -186,6 +188,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       // ── Host ──────────────────────────────────────────────────────────────
       GoRoute(path: AppRoutes.hostDashboard, builder: (_, __) => const HostDashboardScreen()),
+      GoRoute(path: AppRoutes.hostSubscription, builder: (_, __) => const EventHostingSubscriptionScreen()),
       GoRoute(path: AppRoutes.createEvent, builder: (_, __) => const CreateEventScreen()),
       GoRoute(
         path: AppRoutes.hostManagementHub,

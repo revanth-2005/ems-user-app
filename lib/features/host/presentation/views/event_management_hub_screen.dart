@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../app/app_router.dart';
 import '../../../../core/common_widgets/app_button.dart';
 import '../../../../core/common_widgets/app_error_view.dart';
 import '../../../../core/common_widgets/app_loader.dart';
@@ -16,6 +17,7 @@ import '../../../../core/utils/currency_formatter.dart';
 import '../../../home/domain/entities/catalog_entities.dart';
 import '../../domain/entities/host_entities.dart';
 import '../providers/host_providers.dart';
+import '../widgets/quota_limit_dialog.dart';
 
 class EventManagementHubScreen extends HookConsumerWidget {
   final String eventId;
@@ -1035,10 +1037,37 @@ class _SettingsTab extends HookConsumerWidget {
               text: '🚀 Launch & Publish Event Now',
               backgroundColor: AppColors.primary,
               onPressed: () async {
-                await ref.read(hostedEventsProvider.notifier).publishEvent(event.id);
-                if (context.mounted) {
-                  AppSnackbar.show(context, message: 'Event published and live!', type: SnackbarType.success);
-                  ref.invalidate(hostEventDetailProvider(event.id));
+                // 1. Proactive Quota Check
+                final userSub = ref.read(userEventSubscriptionProvider).valueOrNull;
+                if (userSub != null && userSub.usage.isLimitReached) {
+                  await showQuotaLimitDialog(
+                    context,
+                    currentPlanName: userSub.subscription?.plan?.name ?? 'Basic Event Host',
+                    maxAllowed: userSub.usage.maxActiveEvents ?? 5,
+                  );
+                  return;
+                }
+
+                try {
+                  await ref.read(hostedEventsProvider.notifier).publishEvent(event.id);
+                  if (context.mounted) {
+                    AppSnackbar.show(context, message: 'Event published and live!', type: SnackbarType.success);
+                    ref.invalidate(hostEventDetailProvider(event.id));
+                    ref.read(userEventSubscriptionProvider.notifier).refresh();
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    if (isSubscriptionQuotaError(e)) {
+                      showQuotaLimitDialog(
+                        context,
+                        message: e.toString(),
+                        currentPlanName: userSub?.subscription?.plan?.name ?? 'Basic Event Host',
+                        maxAllowed: userSub?.usage.maxActiveEvents ?? 5,
+                      );
+                    } else {
+                      AppSnackbar.show(context, message: 'Failed to publish event: ${e.toString().replaceAll('Exception: ', '').replaceAll('NetworkException: ', '')}', type: SnackbarType.error);
+                    }
+                  }
                 }
               },
             ),

@@ -51,9 +51,85 @@ class BookingRemoteDataSource {
     }
   }
 
+  // ── 💸 Ticket & Booking Cancellation & Refund Engine ───────────────────────
+
+  Future<RefundQuote> getRegistrationRefundQuote(String registrationId) async {
+    try {
+      final res = await _dio.get('/registrations/$registrationId/refund-quote');
+      if (res.statusCode == 200 && res.data is Map<String, dynamic>) {
+        return RefundQuote.fromJson(
+          res.data as Map<String, dynamic>,
+          type: RefundTargetType.REGISTRATION,
+        );
+      }
+      throw Exception('Failed to fetch refund quote: ${res.statusCode}');
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  Future<CancellationResult> cancelRegistration(
+    String registrationId, {
+    String reason = 'Personal scheduling conflict',
+  }) async {
+    try {
+      final res = await _dio.post(
+        '/registrations/$registrationId/cancel',
+        data: {'reason': reason},
+      );
+      if ((res.statusCode == 200 || res.statusCode == 201) && res.data is Map<String, dynamic>) {
+        return CancellationResult.fromJson(res.data as Map<String, dynamic>);
+      }
+      return CancellationResult(
+        success: res.statusCode == 200,
+        message: 'Registration cancellation processed',
+        id: registrationId,
+      );
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  Future<RefundQuote> getBookingRefundQuote(String bookingId) async {
+    try {
+      final res = await _dio.get('/bookings/$bookingId/refund-quote');
+      if (res.statusCode == 200 && res.data is Map<String, dynamic>) {
+        return RefundQuote.fromJson(
+          res.data as Map<String, dynamic>,
+          type: RefundTargetType.BOOKING,
+        );
+      }
+      throw Exception('Failed to fetch refund quote: ${res.statusCode}');
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  Future<CancellationResult> cancelBookingWithRefund(
+    String bookingId, {
+    String reason = 'Customer request',
+  }) async {
+    try {
+      final res = await _dio.post(
+        '/bookings/$bookingId/cancel',
+        data: {'reason': reason},
+      );
+      if ((res.statusCode == 200 || res.statusCode == 201) && res.data is Map<String, dynamic>) {
+        return CancellationResult.fromJson(res.data as Map<String, dynamic>);
+      }
+      return CancellationResult(
+        success: res.statusCode == 200,
+        message: 'Booking cancelled successfully.',
+        id: bookingId,
+      );
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
   Future<bool> cancelBooking(String bookingId, {String reason = 'Customer request'}) async {
     try {
-      final res = await _dio.patch(
+      final res = await _dio.post(
         '/bookings/$bookingId/cancel',
         data: {'reason': reason},
       );

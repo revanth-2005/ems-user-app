@@ -18,6 +18,12 @@ abstract class HostRepository {
   Future<GateCheckInStats> getCheckInStats(String eventId);
   Future<Map<String, dynamic>> getCalendarLinks(String eventId);
 
+  // Subscriptions & Quota
+  Future<List<EventSubscriptionPlan>> getEventSubscriptionPlans();
+  Future<UserEventSubscriptionResponse> getCurrentUserEventSubscription();
+  Future<SelectPlanResponse> selectEventSubscriptionPlan({required String tier, required String billingCycle});
+  Future<Map<String, dynamic>> verifyPayment({required String gatewayOrderId, required String gatewayPaymentId, required String gatewaySignature});
+
   // Legacy signatures
   Future<List<AttendeeRecord>> getAttendees(String eventId);
   Future<QrCheckInResult> scanQrCode(String eventId, String qrData);

@@ -5,6 +5,10 @@ abstract class BookingRepository {
   Future<List<EventTicketPass>> getMyTickets();
   Future<bool> acceptReschedule(String bookingId);
   Future<bool> cancelBooking(String bookingId);
+  Future<RefundQuote> getRegistrationRefundQuote(String registrationId);
+  Future<CancellationResult> cancelRegistration(String registrationId, {String reason = 'Personal scheduling conflict'});
+  Future<RefundQuote> getBookingRefundQuote(String bookingId);
+  Future<CancellationResult> cancelBookingWithRefund(String bookingId, {String reason = 'Customer request'});
   Future<bool> checkoutCart(CartState cart);
   Future<Map<String, dynamic>?> addToCartRemote({
     String? packageId,

@@ -10,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../app/app_providers.dart';
+import '../../../../app/app_router.dart';
 import '../../../../core/common_widgets/app_button.dart';
 import '../../../../core/common_widgets/app_network_image.dart';
 import '../../../../core/common_widgets/app_snackbar.dart';
@@ -20,6 +21,7 @@ import '../../../home/domain/entities/catalog_entities.dart';
 import '../../../home/presentation/providers/catalog_providers.dart';
 import '../../domain/entities/host_entities.dart';
 import '../providers/host_providers.dart';
+import '../widgets/quota_limit_dialog.dart';
 
 class CreateEventScreen extends HookConsumerWidget {
   const CreateEventScreen({super.key});
@@ -329,6 +331,17 @@ class CreateEventScreen extends HookConsumerWidget {
     }
 
     Future<void> handleSaveOrPublish({required bool shouldPublish}) async {
+      // 1. Proactive Check: Check if hosting quota limit is already reached
+      final userSub = ref.read(userEventSubscriptionProvider).valueOrNull;
+      if (userSub != null && userSub.usage.isLimitReached) {
+        await showQuotaLimitDialog(
+          context,
+          currentPlanName: userSub.subscription?.plan?.name ?? 'Basic Event Host',
+          maxAllowed: userSub.usage.maxActiveEvents ?? 5,
+        );
+        return;
+      }
+
       isSubmitting.value = true;
       try {
         final coverImg = customCoverController.text.trim().isNotEmpty
@@ -393,11 +406,20 @@ class CreateEventScreen extends HookConsumerWidget {
         }
       } catch (e) {
         if (context.mounted) {
-          AppSnackbar.show(
-            context,
-            message: 'Failed to save event: ${e.toString()}',
-            type: SnackbarType.error,
-          );
+          if (isSubscriptionQuotaError(e)) {
+            showQuotaLimitDialog(
+              context,
+              message: e.toString(),
+              currentPlanName: userSub?.subscription?.plan?.name ?? 'Basic Event Host',
+              maxAllowed: userSub?.usage.maxActiveEvents ?? 5,
+            );
+          } else {
+            AppSnackbar.show(
+              context,
+              message: 'Failed to save event: ${e.toString().replaceAll('Exception: ', '').replaceAll('NetworkException: ', '')}',
+              type: SnackbarType.error,
+            );
+          }
         }
       } finally {
         isSubmitting.value = false;
@@ -743,7 +765,7 @@ class _StepperBar extends StatelessWidget {
 
 // ── Step 1: Basics & Visuals ──────────────────────────────────────────────────
 
-class _Step1Basics extends StatelessWidget {
+class _Step1Basics extends ConsumerWidget {
   final TextEditingController titleController;
   final TextEditingController descriptionController;
   final ValueNotifier<EventCategory?> selectedCategory;
@@ -775,12 +797,65 @@ class _Step1Basics extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final dateFormat = DateFormat('EEE, d MMM yyyy • hh:mm a');
+    final userSub = ref.watch(userEventSubscriptionProvider).valueOrNull;
+    final isLimitReached = userSub?.usage.isLimitReached ?? false;
+    final maxEvents = userSub?.usage.maxActiveEvents ?? 5;
+    final activeEvents = userSub?.usage.activeEvents ?? 0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (isLimitReached)
+          Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.redAccent.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 22),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Active Hosting Limit Reached ($activeEvents/$maxEvents)',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12.5,
+                          color: Colors.redAccent,
+                        ),
+                      ),
+                      Text(
+                        'Upgrade your plan to publish more live events without restrictions.',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 11,
+                          color: AppColors.getTextSecondary(context),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => context.push(AppRoutes.hostSubscription),
+                  child: Text(
+                    'UPGRADE',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         _SectionHeading(
           icon: Icons.edit_note_rounded,
           title: '1. Basics & Visuals',

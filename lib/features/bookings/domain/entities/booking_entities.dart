@@ -207,8 +207,10 @@ class EventTicketPass {
 
   String get qrCodeData {
     if (qrCodeToken != null && qrCodeToken!.isNotEmpty) return qrCodeToken!;
-    if (tickets.isNotEmpty && tickets.first.qrCode != null) return tickets.first.qrCode!;
-    return 'EMS-PASS-$registrationId';
+    if (tickets.isNotEmpty && tickets.first.qrCode != null && tickets.first.qrCode!.isNotEmpty) {
+      return tickets.first.qrCode!;
+    }
+    return registrationId;
   }
 
   factory EventTicketPass.fromJson(Map<String, dynamic> json) {
@@ -402,3 +404,108 @@ class CartState {
     );
   }
 }
+
+// ── 💸 Refund & Cancellation Entities ────────────────────────────────────────
+
+enum RefundTargetType { REGISTRATION, BOOKING }
+
+class RefundQuote {
+  final String targetId;
+  final RefundTargetType targetType;
+  final String itemName;
+  final DateTime? targetDate;
+  final double? hoursRemaining;
+  final int? daysRemaining;
+  final int totalPaidInPaise;
+  final int eligibleRefundPct;
+  final int refundAmountInPaise;
+  final int cancellationFeeInPaise;
+  final String policyDescription;
+  final String? policyTier; // FLEXIBLE | MODERATE | STRICT
+  final bool isEligibleForRefund;
+
+  const RefundQuote({
+    required this.targetId,
+    required this.targetType,
+    required this.itemName,
+    this.targetDate,
+    this.hoursRemaining,
+    this.daysRemaining,
+    required this.totalPaidInPaise,
+    required this.eligibleRefundPct,
+    required this.refundAmountInPaise,
+    required this.cancellationFeeInPaise,
+    required this.policyDescription,
+    this.policyTier,
+    this.isEligibleForRefund = true,
+  });
+
+  factory RefundQuote.fromJson(Map<String, dynamic> json, {required RefundTargetType type}) {
+    DateTime? parsedDate;
+    final dateStr = json['eventStartDate'] ?? json['serviceDate'] ?? json['date'];
+    if (dateStr != null) {
+      parsedDate = DateTime.tryParse(dateStr.toString());
+    }
+
+    double? hours;
+    if (json['hoursRemaining'] != null) {
+      hours = (json['hoursRemaining'] as num).toDouble();
+    }
+
+    int? days;
+    if (json['daysRemaining'] != null) {
+      days = (json['daysRemaining'] as num).toInt();
+    }
+
+    return RefundQuote(
+      targetId: (json['registrationId'] ?? json['bookingId'] ?? json['id'] ?? '').toString(),
+      targetType: type,
+      itemName: json['eventName'] ?? json['itemName'] ?? json['title'] ?? 'Pass / Booking',
+      targetDate: parsedDate,
+      hoursRemaining: hours,
+      daysRemaining: days,
+      totalPaidInPaise: (json['totalPaidInPaise'] ?? json['paidAmountInPaise'] ?? 0) as int,
+      eligibleRefundPct: (json['eligibleRefundPct'] ?? json['refundPct'] ?? 0) as int,
+      refundAmountInPaise: (json['refundAmountInPaise'] ?? json['refundAmount'] ?? 0) as int,
+      cancellationFeeInPaise: (json['cancellationFeeInPaise'] ?? json['cancellationFee'] ?? 0) as int,
+      policyDescription: json['policyDescription']?.toString() ?? 'Standard Cancellation Policy',
+      policyTier: json['policyTier']?.toString(),
+      isEligibleForRefund: json['isEligibleForRefund'] == true || (json['refundAmountInPaise'] ?? 0) > 0,
+    );
+  }
+}
+
+class CancellationResult {
+  final bool success;
+  final String message;
+  final String id;
+  final String status;
+  final int refundAmountInPaise;
+  final int cancellationFeeInPaise;
+  final String? razorpayRefundId;
+
+  const CancellationResult({
+    required this.success,
+    required this.message,
+    required this.id,
+    this.status = 'CANCELLED',
+    this.refundAmountInPaise = 0,
+    this.cancellationFeeInPaise = 0,
+    this.razorpayRefundId,
+  });
+
+  factory CancellationResult.fromJson(Map<String, dynamic> json) {
+    final refundDetails = json['refundDetails'] as Map<String, dynamic>? ?? {};
+
+    return CancellationResult(
+      success: json['success'] == true,
+      message: json['message']?.toString() ?? 'Cancellation processed.',
+      id: (json['registrationId'] ?? json['bookingId'] ?? json['id'] ?? '').toString(),
+      status: json['status']?.toString() ?? 'CANCELLED',
+      refundAmountInPaise: (refundDetails['refundAmountInPaise'] ?? json['refundAmountInPaise'] ?? 0) as int,
+      cancellationFeeInPaise: (refundDetails['cancellationFeeInPaise'] ?? json['cancellationFeeInPaise'] ?? 0) as int,
+      razorpayRefundId: refundDetails['razorpayRefundId']?.toString() ?? json['razorpayRefundId']?.toString(),
+    );
+  }
+}
+

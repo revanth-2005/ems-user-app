@@ -16,6 +16,7 @@ import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../domain/entities/host_entities.dart';
 import '../providers/host_providers.dart';
+import '../widgets/quota_limit_dialog.dart';
 
 class HostDashboardScreen extends HookConsumerWidget {
   const HostDashboardScreen({super.key});
@@ -55,6 +56,11 @@ class HostDashboardScreen extends HookConsumerWidget {
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.workspace_premium_rounded, color: AppColors.primary),
+            tooltip: 'Hosting Plans & Quota',
+            onPressed: () => context.push(AppRoutes.hostSubscription),
+          ),
           TextButton.icon(
             style: TextButton.styleFrom(
               foregroundColor: AppColors.primary,
@@ -86,7 +92,18 @@ class HostDashboardScreen extends HookConsumerWidget {
             color: Colors.white,
           ),
         ),
-        onPressed: () => context.push(AppRoutes.hostCreateEvent),
+        onPressed: () {
+          final userSub = ref.read(userEventSubscriptionProvider).valueOrNull;
+          if (userSub != null && userSub.usage.isLimitReached) {
+            showQuotaLimitDialog(
+              context,
+              currentPlanName: userSub.subscription?.plan?.name ?? 'Basic Event Host',
+              maxAllowed: userSub.usage.maxActiveEvents ?? 5,
+            );
+            return;
+          }
+          context.push(AppRoutes.hostCreateEvent);
+        },
       ),
       body: eventsAsync.when(
         loading: () => const Center(child: AppLoader()),
@@ -112,14 +129,133 @@ class HostDashboardScreen extends HookConsumerWidget {
             _ => events,
           };
 
+          final userSubAsync = ref.watch(userEventSubscriptionProvider);
+
           return RefreshIndicator(
-            onRefresh: () async => ref.refresh(hostedEventsProvider),
+            onRefresh: () async {
+              ref.refresh(hostedEventsProvider);
+              ref.read(userEventSubscriptionProvider.notifier).refresh();
+            },
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 90),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // ── Hosting Subscription & Quota Card ─────────────────────
+                  userSubAsync.when(
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, __) => const SizedBox.shrink(),
+                    data: (userSub) {
+                      final planName = userSub?.subscription?.plan?.name ?? 'Basic Event Host';
+                      final activeCount = userSub?.usage.activeEvents ?? totalEvents;
+                      final maxEvents = userSub?.usage.maxActiveEvents ?? 5;
+                      final isUnlimited = userSub?.usage.isUnlimited ?? false;
+                      final isLimitReached = userSub?.usage.isLimitReached ?? false;
+                      final ratio = userSub?.usage.usageRatio ??
+                          (isUnlimited ? 0.0 : (activeCount / maxEvents).clamp(0.0, 1.0));
+
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 18),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.getSurface(context),
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                            color: isLimitReached
+                                ? Colors.redAccent.withValues(alpha: 0.5)
+                                : AppColors.primary.withValues(alpha: 0.25),
+                            width: 1.5,
+                          ),
+                          boxShadow: AppColors.getCardShadow(context),
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: (isLimitReached ? Colors.redAccent : AppColors.primary)
+                                        .withValues(alpha: 0.12),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.workspace_premium_rounded,
+                                    color: isLimitReached ? Colors.redAccent : AppColors.primary,
+                                    size: 18,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        planName,
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 13,
+                                          color: AppColors.getTextPrimary(context),
+                                        ),
+                                      ),
+                                      Text(
+                                        isUnlimited
+                                            ? '$activeCount Active Events (Unlimited Capacity)'
+                                            : '$activeCount of $maxEvents Active Event Slots Used',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 11,
+                                          color: isLimitReached
+                                              ? Colors.redAccent
+                                              : AppColors.getTextSecondary(context),
+                                          fontWeight: isLimitReached
+                                              ? FontWeight.w700
+                                              : FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () => context.push(AppRoutes.hostSubscription),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      'UPGRADE',
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w800,
+                                        color: Colors.white,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: isUnlimited ? 0.25 : ratio,
+                                minHeight: 6,
+                                backgroundColor: AppColors.getBorder(context),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  isLimitReached ? Colors.redAccent : AppColors.primary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+
                   // ── 4-Card Summary Analytics Grid ─────────────────────────
                   Row(
                     children: [
