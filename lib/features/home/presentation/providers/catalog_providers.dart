@@ -342,16 +342,27 @@ class OrganizerFollowArgs {
 class OrganizerFollowNotifier extends StateNotifier<OrganizerFollowState> {
   final CatalogRepository _repo;
   final String _organizerId;
+  final Ref _ref;
 
   OrganizerFollowNotifier(
     this._repo,
-    this._organizerId, {
+    this._organizerId,
+    this._ref, {
     required bool initialFollow,
     required int initialFollowerCount,
   }) : super(OrganizerFollowState(
           isFollowed: initialFollow,
           followerCount: initialFollowerCount,
         ));
+
+  void syncState(bool isFollowed, int followerCount) {
+    if (!state.isLoading && state.isFollowed != isFollowed) {
+      state = state.copyWith(
+        isFollowed: isFollowed,
+        followerCount: followerCount > 0 ? followerCount : state.followerCount,
+      );
+    }
+  }
 
   Future<void> toggleFollow({
     void Function(String message, {bool isError})? onMessage,
@@ -363,12 +374,18 @@ class OrganizerFollowNotifier extends StateNotifier<OrganizerFollowState> {
         ? (prev.followerCount + 1)
         : (prev.followerCount > 0 ? prev.followerCount - 1 : 0);
 
-    // 1. Immediate optimistic UI state update
+    // 1. Immediate optimistic UI state update locally & globally (0ms instant transition)
     state = state.copyWith(
       isFollowed: nextFollow,
       followerCount: nextCount,
       isLoading: true,
     );
+
+    if (nextFollow) {
+      _ref.read(followedOrganizerIdsProvider.notifier).add(_organizerId);
+    } else {
+      _ref.read(followedOrganizerIdsProvider.notifier).remove(_organizerId);
+    }
 
     // Provide immediate optimistic SnackBar feedback
     if (onMessage != null) {
@@ -385,12 +402,28 @@ class OrganizerFollowNotifier extends StateNotifier<OrganizerFollowState> {
         followerCount: res.followerCount >= 0 ? res.followerCount : nextCount,
         isLoading: false,
       );
+
+      if (res.isFollowed) {
+        _ref.read(followedOrganizerIdsProvider.notifier).add(_organizerId);
+      } else {
+        _ref.read(followedOrganizerIdsProvider.notifier).remove(_organizerId);
+      }
+
+      // Immediately invalidate followed list so all screens show updated data
+      _ref.invalidate(followedOrganizersProvider);
+
       if (onMessage != null && res.message != null && res.message!.isNotEmpty) {
         onMessage(res.message!, isError: false);
       }
     } catch (e) {
       // Revert optimistic change on network failure
       state = prev;
+      if (prev.isFollowed) {
+        _ref.read(followedOrganizerIdsProvider.notifier).add(_organizerId);
+      } else {
+        _ref.read(followedOrganizerIdsProvider.notifier).remove(_organizerId);
+      }
+
       String errorMsg = 'Failed to update follow status';
       final errStr = e.toString();
       if (errStr.contains('401') || errStr.toLowerCase().contains('unauthorized')) {
@@ -405,22 +438,57 @@ class OrganizerFollowNotifier extends StateNotifier<OrganizerFollowState> {
   }
 }
 
-final organizerFollowProvider =
-    StateNotifierProvider.family<OrganizerFollowNotifier, OrganizerFollowState, OrganizerFollowArgs>(
+final organizerFollowProvider = StateNotifierProvider.autoDispose
+    .family<OrganizerFollowNotifier, OrganizerFollowState, OrganizerFollowArgs>(
   (ref, args) {
     final repo = ref.watch(catalogRepositoryProvider);
     return OrganizerFollowNotifier(
       repo,
       args.id,
+      ref,
       initialFollow: args.initialFollow,
       initialFollowerCount: args.initialFollowerCount,
     );
   },
 );
 
-final followedOrganizersProvider = FutureProvider<List<OrganizerSummary>>((ref) async {
+final followedOrganizersProvider =
+    FutureProvider<List<OrganizerSummary>>((ref) async {
   final repo = ref.watch(catalogRepositoryProvider);
   return repo.getFollowedOrganizers();
+});
+
+class FollowedOrganizerIdsNotifier extends StateNotifier<Set<String>> {
+  FollowedOrganizerIdsNotifier() : super(const <String>{});
+
+  void setIds(Set<String> ids) {
+    state = ids;
+  }
+
+  void add(String id) {
+    state = {...state, id};
+  }
+
+  void remove(String id) {
+    state = state.where((item) => item != id).toSet();
+  }
+}
+
+final followedOrganizerIdsProvider =
+    StateNotifierProvider<FollowedOrganizerIdsNotifier, Set<String>>((ref) {
+  final notifier = FollowedOrganizerIdsNotifier();
+
+  ref.listen<AsyncValue<List<OrganizerSummary>>>(
+    followedOrganizersProvider,
+    (prev, next) {
+      next.whenData((list) {
+        notifier.setIds(list.map((o) => o.id).toSet());
+      });
+    },
+    fireImmediately: true,
+  );
+
+  return notifier;
 });
 
 // ── Home Feed State ───────────────────────────────────────────────────────

@@ -66,10 +66,11 @@ class LoginScreen extends HookConsumerWidget {
       }
     }
 
+    final isDark = AppColors.isDark(context);
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.getBg(context),
       body: Stack(
         children: [
           // ── Background image ────────────────────────────────────────
@@ -81,26 +82,28 @@ class LoginScreen extends HookConsumerWidget {
             ),
           ),
 
-          // ── Dark tint overlay (makes text readable) ─────────────────
+          // ── Tint overlay (makes text readable) ─────────────────
           Positioned.fill(
             child: Container(
-              color: Colors.black.withValues(alpha: 0.55),
+              color: isDark
+                  ? Colors.black.withValues(alpha: 0.55)
+                  : Colors.black.withValues(alpha: 0.35),
             ),
           ),
 
-          // ── Bottom fade-to-black (blends into the panel) ────────────
+          // ── Bottom fade (blends into the panel) ────────────
           Positioned.fill(
             child: Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
                     Colors.transparent,
                     Colors.transparent,
-                    Color(0xFF141414),
+                    isDark ? const Color(0xFF141414) : AppColors.whiteSurface,
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  stops: [0.0, 0.50, 0.78],
+                  stops: const [0.0, 0.48, 0.78],
                 ),
               ),
             ),
@@ -144,12 +147,21 @@ class LoginScreen extends HookConsumerWidget {
                 // ── Bottom sheet panel ─────────────────────────────────
                 Expanded(
                   child: Container(
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF141414),
-                      borderRadius: BorderRadius.only(
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF141414) : AppColors.whiteSurface,
+                      borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(32),
                         topRight: Radius.circular(32),
                       ),
+                      boxShadow: isDark
+                          ? null
+                          : [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.08),
+                                blurRadius: 24,
+                                offset: const Offset(0, -4),
+                              ),
+                            ],
                     ),
                     child: SingleChildScrollView(
                       physics: const ClampingScrollPhysics(),
@@ -165,7 +177,9 @@ class LoginScreen extends HookConsumerWidget {
                                 width: 36,
                                 height: 4,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF444444),
+                                  color: isDark
+                                      ? const Color(0xFF444444)
+                                      : const Color(0xFFE5E7EB),
                                   borderRadius: BorderRadius.circular(2),
                                 ),
                               ),
@@ -186,7 +200,7 @@ class LoginScreen extends HookConsumerWidget {
                                     style: GoogleFonts.plusJakartaSans(
                                       fontSize: 28,
                                       fontWeight: FontWeight.w800,
-                                      color: Colors.white,
+                                      color: AppColors.getTextPrimary(context),
                                     ),
                                   ),
                                   const SizedBox(height: 6),
@@ -194,7 +208,7 @@ class LoginScreen extends HookConsumerWidget {
                                     'Sign in to continue',
                                     style: GoogleFonts.plusJakartaSans(
                                       fontSize: 14,
-                                      color: const Color(0xFFABABAB),
+                                      color: AppColors.getTextSecondary(context),
                                     ),
                                   ),
                                   const SizedBox(height: 24),
@@ -244,14 +258,18 @@ class LoginScreen extends HookConsumerWidget {
                                                 border: Border.all(
                                                   color: rememberMe.value
                                                       ? AppColors.primary
-                                                      : const Color(0xFF737373),
+                                                      : (isDark
+                                                          ? const Color(0xFF737373)
+                                                          : const Color(0xFFD1D5DB)),
                                                   width: 1.5,
                                                 ),
                                                 borderRadius:
-                                                    BorderRadius.circular(3),
+                                                    BorderRadius.circular(4),
                                                 color: rememberMe.value
                                                     ? AppColors.primary
-                                                    : Colors.transparent,
+                                                    : (isDark
+                                                        ? Colors.transparent
+                                                        : Colors.white),
                                               ),
                                               child: rememberMe.value
                                                   ? const Icon(Icons.check,
@@ -264,7 +282,7 @@ class LoginScreen extends HookConsumerWidget {
                                               'Remember me',
                                               style: GoogleFonts.plusJakartaSans(
                                                 fontSize: 13,
-                                                color: const Color(0xFFABABAB),
+                                                color: AppColors.getTextSecondary(context),
                                               ),
                                             ),
                                           ],
@@ -284,7 +302,8 @@ class LoginScreen extends HookConsumerWidget {
                                           'Need help?',
                                           style: GoogleFonts.plusJakartaSans(
                                             fontSize: 13,
-                                            color: const Color(0xFFABABAB),
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.getTextSecondary(context),
                                           ),
                                         ),
                                       ),
@@ -300,7 +319,7 @@ class LoginScreen extends HookConsumerWidget {
                                       decoration: BoxDecoration(
                                         color: AppColors.primary
                                             .withValues(alpha: 0.12),
-                                        borderRadius: BorderRadius.circular(6),
+                                        borderRadius: BorderRadius.circular(8),
                                         border: Border.all(
                                           color: AppColors.primary
                                               .withValues(alpha: 0.4),
@@ -321,6 +340,7 @@ class LoginScreen extends HookConsumerWidget {
                                                   GoogleFonts.plusJakartaSans(
                                                 fontSize: 13,
                                                 color: AppColors.primary,
+                                                fontWeight: FontWeight.w600,
                                               ),
                                             ),
                                           ),
@@ -348,7 +368,7 @@ class LoginScreen extends HookConsumerWidget {
                                       boxShadow: [
                                         BoxShadow(
                                           color: const Color(0xFFE50914)
-                                              .withValues(alpha: 0.35),
+                                              .withValues(alpha: isDark ? 0.35 : 0.25),
                                           blurRadius: 18,
                                           offset: const Offset(0, 5),
                                         ),
@@ -393,13 +413,18 @@ class LoginScreen extends HookConsumerWidget {
                                       onPressed: () => context.push(
                                           '${AppRoutes.otp}?phone=+919876543210'),
                                       style: OutlinedButton.styleFrom(
-                                        foregroundColor: Colors.white,
-                                        side: const BorderSide(
-                                            color: Color(0xFF444444),
+                                        foregroundColor: AppColors.getTextPrimary(context),
+                                        backgroundColor: isDark
+                                            ? Colors.transparent
+                                            : AppColors.whiteCardAlt,
+                                        side: BorderSide(
+                                            color: isDark
+                                                ? const Color(0xFF444444)
+                                                : const Color(0xFFE5E7EB),
                                             width: 1),
                                         shape: RoundedRectangleBorder(
                                           borderRadius:
-                                              BorderRadius.circular(6),
+                                              BorderRadius.circular(10),
                                         ),
                                       ),
                                       child: Text(
@@ -407,75 +432,88 @@ class LoginScreen extends HookConsumerWidget {
                                         style: GoogleFonts.plusJakartaSans(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w600,
-                                          color: const Color(0xFFABABAB),
+                                          color: AppColors.getTextPrimary(context),
                                         ),
                                       ),
                                     ),
                                   ),
-                                   const SizedBox(height: 16),
+                                  const SizedBox(height: 16),
 
-                                   // ── OR divider ───────────────────────────
-                                   Row(
-                                     children: [
-                                       const Expanded(
-                                           child: Divider(
-                                               color: Color(0xFF333333),
-                                               thickness: 1)),
-                                       Padding(
-                                         padding: const EdgeInsets.symmetric(
-                                             horizontal: 12),
-                                         child: Text('OR',
-                                             style: GoogleFonts.plusJakartaSans(
-                                               fontSize: 12,
-                                               color: const Color(0xFF666666),
-                                               fontWeight: FontWeight.w600,
-                                             )),
-                                       ),
-                                       const Expanded(
-                                           child: Divider(
-                                               color: Color(0xFF333333),
-                                               thickness: 1)),
-                                     ],
-                                   ),
-                                   const SizedBox(height: 16),
+                                  // ── OR divider ───────────────────────────
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                          child: Divider(
+                                              color: isDark
+                                                  ? const Color(0xFF333333)
+                                                  : const Color(0xFFE5E7EB),
+                                              thickness: 1)),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 12),
+                                        child: Text('OR',
+                                            style: GoogleFonts.plusJakartaSans(
+                                              fontSize: 12,
+                                              color: AppColors.getTextMuted(context),
+                                              fontWeight: FontWeight.w600,
+                                            )),
+                                      ),
+                                      Expanded(
+                                          child: Divider(
+                                              color: isDark
+                                                  ? const Color(0xFF333333)
+                                                  : const Color(0xFFE5E7EB),
+                                              thickness: 1)),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
 
-                                   // ── Google Sign-In button ─────────────────
-                                   SizedBox(
-                                     width: double.infinity,
-                                     height: 50,
-                                     child: OutlinedButton(
-                                       onPressed:
-                                           isLoading ? null : handleGoogleLogin,
-                                       style: OutlinedButton.styleFrom(
-                                         backgroundColor:
-                                             const Color(0xFF1E1E1E),
-                                         side: const BorderSide(
-                                             color: Color(0xFF3A3A3A),
-                                             width: 1),
-                                         shape: RoundedRectangleBorder(
-                                           borderRadius:
-                                               BorderRadius.circular(10),
-                                         ),
-                                       ),
-                                       child: Row(
-                                         mainAxisAlignment:
-                                             MainAxisAlignment.center,
-                                         children: [
-                                           const _GoogleIcon(),
-                                           const SizedBox(width: 12),
-                                           Text(
-                                             'Continue with Google',
-                                             style: GoogleFonts.plusJakartaSans(
-                                               fontSize: 14,
-                                               fontWeight: FontWeight.w600,
-                                               color: Colors.white,
-                                             ),
-                                           ),
-                                         ],
-                                       ),
-                                     ),
-                                   ),
-                                   const SizedBox(height: 24),
+                                  // ── Google Sign-In button ─────────────────
+                                  SizedBox(
+                                    width: double.infinity,
+                                    height: 50,
+                                    child: OutlinedButton(
+                                      onPressed:
+                                          isLoading ? null : handleGoogleLogin,
+                                      style: OutlinedButton.styleFrom(
+                                        backgroundColor: isDark
+                                            ? const Color(0xFF1E1E1E)
+                                            : Colors.white,
+                                        side: BorderSide(
+                                            color: isDark
+                                                ? const Color(0xFF3A3A3A)
+                                                : const Color(0xFFE5E7EB),
+                                            width: 1),
+                                        elevation: isDark ? 0 : 1,
+                                        shadowColor: Colors.black.withValues(alpha: 0.08),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          _GoogleIcon(
+                                            backgroundColor: isDark
+                                                ? const Color(0xFF1E1E1E)
+                                                : Colors.white,
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Text(
+                                            'Continue with Google',
+                                            style: GoogleFonts.plusJakartaSans(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                              color: AppColors.getTextPrimary(context),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 24),
 
                                   // Sign up link
                                   Center(
@@ -486,7 +524,7 @@ class LoginScreen extends HookConsumerWidget {
                                         text: TextSpan(
                                           style: GoogleFonts.plusJakartaSans(
                                             fontSize: 13,
-                                            color: const Color(0xFFABABAB),
+                                            color: AppColors.getTextSecondary(context),
                                           ),
                                           children: [
                                             const TextSpan(
@@ -497,7 +535,7 @@ class LoginScreen extends HookConsumerWidget {
                                                   GoogleFonts.plusJakartaSans(
                                                 fontSize: 13,
                                                 fontWeight: FontWeight.w700,
-                                                color: Colors.white,
+                                                color: AppColors.primary,
                                               ),
                                             ),
                                           ],
@@ -524,7 +562,7 @@ class LoginScreen extends HookConsumerWidget {
   }
 }
 
-// ── Netflix-style dark text field ─────────────────────────────────────────────
+// ── Netflix-style text field ─────────────────────────────────────────────
 class _NetflixTextField extends StatelessWidget {
   final TextEditingController? controller;
   final String hint;
@@ -548,6 +586,8 @@ class _NetflixTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppColors.isDark(context);
+
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
@@ -557,37 +597,41 @@ class _NetflixTextField extends StatelessWidget {
       onFieldSubmitted: onSubmitted,
       style: GoogleFonts.plusJakartaSans(
         fontSize: 14,
-        color: const Color(0xFFCCCCCC),
+        color: AppColors.getTextPrimary(context),
       ),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: GoogleFonts.plusJakartaSans(
           fontSize: 14,
-          color: const Color(0xFF737373),
+          color: AppColors.getTextMuted(context),
         ),
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: const Color(0xFF333333),
+        fillColor: isDark ? const Color(0xFF333333) : const Color(0xFFF3F4F6),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(10),
+          borderSide: isDark
+              ? BorderSide.none
+              : const BorderSide(color: Color(0xFFE5E7EB), width: 1),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(10),
+          borderSide: isDark
+              ? BorderSide.none
+              : const BorderSide(color: Color(0xFFE5E7EB), width: 1),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
-          borderSide: const BorderSide(color: Color(0xFFABABAB), width: 1),
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: Color(0xFFE50914), width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: Color(0xFFE50914), width: 1.5),
         ),
         errorStyle: GoogleFonts.plusJakartaSans(
@@ -631,7 +675,7 @@ class _NetflixPasswordFieldState extends State<_NetflixPasswordField> {
           _obscure
               ? Icons.visibility_off_outlined
               : Icons.visibility_outlined,
-          color: const Color(0xFF737373),
+          color: AppColors.getTextSecondary(context),
           size: 20,
         ),
         onPressed: () => setState(() => _obscure = !_obscure),
@@ -642,18 +686,22 @@ class _NetflixPasswordFieldState extends State<_NetflixPasswordField> {
 
 // ── Google 'G' logo painted widget ───────────────────────────────────────────
 class _GoogleIcon extends StatelessWidget {
-  const _GoogleIcon();
+  final Color backgroundColor;
+  const _GoogleIcon({this.backgroundColor = const Color(0xFF1E1E1E)});
 
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
       size: const Size(22, 22),
-      painter: _GoogleLogoPainter(),
+      painter: _GoogleLogoPainter(backgroundColor: backgroundColor),
     );
   }
 }
 
 class _GoogleLogoPainter extends CustomPainter {
+  final Color backgroundColor;
+  _GoogleLogoPainter({required this.backgroundColor});
+
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
@@ -682,9 +730,9 @@ class _GoogleLogoPainter extends CustomPainter {
       );
     }
 
-    // White cutout rectangle for the horizontal bar of the 'G'
+    // Cutout rectangle for the horizontal bar of the 'G'
     final barPaint = Paint()
-      ..color = const Color(0xFF1E1E1E)
+      ..color = backgroundColor
       ..style = PaintingStyle.fill;
     canvas.drawRect(
       Rect.fromLTWH(
@@ -698,5 +746,6 @@ class _GoogleLogoPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_GoogleLogoPainter oldDelegate) => false;
+  bool shouldRepaint(_GoogleLogoPainter oldDelegate) =>
+      oldDelegate.backgroundColor != backgroundColor;
 }

@@ -252,15 +252,16 @@ class FollowButton extends ConsumerWidget {
     final authState = ref.watch(authStateProvider);
     final isAuthenticated = authState.valueOrNull != null;
 
+    final followedIds = ref.watch(followedOrganizerIdsProvider);
+    final isGloballyFollowed = followedIds.contains(organizerId);
+
     final followArgs = OrganizerFollowArgs(
       id: organizerId,
-      initialFollow: initialIsFollowed,
+      initialFollow: isGloballyFollowed,
       initialFollowerCount: initialFollowerCount,
     );
 
-    final followState = ref.watch(organizerFollowProvider(followArgs));
-
-    final isFollowing = followState.isFollowed;
+    final isFollowing = isGloballyFollowed || (initialIsFollowed && followedIds.isEmpty);
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,

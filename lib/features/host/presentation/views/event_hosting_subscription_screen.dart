@@ -10,7 +10,6 @@ import '../../../../core/common_widgets/app_loader.dart';
 import '../../../../core/common_widgets/app_snackbar.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/services/razorpay_service.dart';
-import '../../../../core/utils/currency_formatter.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../domain/entities/host_subscription_entities.dart';
 import '../providers/host_providers.dart';
@@ -258,45 +257,53 @@ class EventHostingSubscriptionScreen extends HookConsumerWidget {
                     children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary.withValues(alpha: 0.15),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.verified_rounded,
-                                  color: AppColors.primary,
-                                  size: 20,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Active Subscription',
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.getTextSecondary(context),
-                                    ),
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withValues(alpha: 0.15),
+                                    shape: BoxShape.circle,
                                   ),
-                                  Text(
-                                    currentPlanName,
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w800,
-                                      color: AppColors.getTextPrimary(context),
-                                    ),
+                                  child: const Icon(
+                                    Icons.verified_rounded,
+                                    color: AppColors.primary,
+                                    size: 20,
                                   ),
-                                ],
-                              ),
-                            ],
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Active Subscription',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.getTextSecondary(context),
+                                        ),
+                                      ),
+                                      Text(
+                                        currentPlanName,
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w800,
+                                          color: AppColors.getTextPrimary(context),
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
+                          const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
@@ -321,18 +328,24 @@ class EventHostingSubscriptionScreen extends HookConsumerWidget {
                       // Usage Progress Bar
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Text(
-                            'Active Event Hosting Quota',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.getTextPrimary(context),
+                          Expanded(
+                            child: Text(
+                              'Active Hosting Quota',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.getTextPrimary(context),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
+                          const SizedBox(width: 8),
                           Text(
                             isUnlimited
-                                ? '$activeEvents Hosted (Unlimited)'
+                                ? '$activeEvents (Unlimited)'
                                 : '$activeEvents / $maxEvents Events',
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 12,
@@ -414,7 +427,7 @@ class EventHostingSubscriptionScreen extends HookConsumerWidget {
                           child: Text(
                             'Monthly Billing',
                             style: GoogleFonts.plusJakartaSans(
-                              fontSize: 13,
+                              fontSize: 12.5,
                               fontWeight: FontWeight.w700,
                               color: billingCycle.value == 'monthly'
                                   ? Colors.white
@@ -429,7 +442,7 @@ class EventHostingSubscriptionScreen extends HookConsumerWidget {
                     child: GestureDetector(
                       onTap: () => billingCycle.value = 'annual',
                       child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
                         decoration: BoxDecoration(
                           color: billingCycle.value == 'annual'
                               ? AppColors.primary
@@ -438,21 +451,26 @@ class EventHostingSubscriptionScreen extends HookConsumerWidget {
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                              'Annual Billing',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: billingCycle.value == 'annual'
-                                    ? Colors.white
-                                    : AppColors.getTextSecondary(context),
+                            Flexible(
+                              child: Text(
+                                'Annual Billing',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: billingCycle.value == 'annual'
+                                      ? Colors.white
+                                      : AppColors.getTextSecondary(context),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            const SizedBox(width: 6),
+                            const SizedBox(width: 4),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
+                                  horizontal: 5, vertical: 2),
                               decoration: BoxDecoration(
                                 color: billingCycle.value == 'annual'
                                     ? Colors.white.withValues(alpha: 0.25)

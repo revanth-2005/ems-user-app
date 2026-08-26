@@ -28,7 +28,6 @@ class PackageCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cityName =
         package.city?.isNotEmpty == true ? package.city! : 'Coimbatore';
-    const cardBg = Color(0xFF131418);
     final originalPricePaise = (package.priceInPaise * 1.5).round();
     const discountPct = 33;
 
@@ -43,24 +42,18 @@ class PackageCard extends StatelessWidget {
       child: Container(
         height: 195,
         decoration: BoxDecoration(
-          color: cardBg,
+          color: AppColors.getSurface(context),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.12),
+            color: AppColors.getBorder(context),
             width: 1,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.45),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          boxShadow: AppColors.getCardShadow(context),
         ),
         clipBehavior: Clip.antiAlias,
         child: Stack(
           children: [
-            // ── 1. Full-bleed Background Image ──────────────────────────────
+            // ── 1. Full-bleed Clear Background Image ─────────────────────────
             Positioned.fill(
               child: AppNetworkImage(
                 url: package.coverImageUrl,
@@ -70,45 +63,27 @@ class PackageCard extends StatelessWidget {
               ),
             ),
 
-            // ── 2. Horizontal Dark Gradient for Text Contrast ──────────────
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                    stops: const [0.0, 0.42, 0.72, 1.0],
-                    colors: [
-                      const Color(0xFF0C0D12).withValues(alpha: 0.95),
-                      const Color(0xFF0C0D12).withValues(alpha: 0.82),
-                      const Color(0xFF0C0D12).withValues(alpha: 0.35),
-                      const Color(0xFF0C0D12).withValues(alpha: 0.08),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            // ── 3. Vertical Vignette Gradient (Top & Bottom Edge Darkening) ─
-            Positioned.fill(
+            // ── 2. Subtle Bottom Scrim for Price Readability Only ───────────
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: 75,
               child: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    stops: const [0.0, 0.40, 0.70, 1.0],
                     colors: [
-                      Colors.black.withValues(alpha: 0.45),
                       Colors.transparent,
-                      Colors.black.withValues(alpha: 0.35),
-                      Colors.black.withValues(alpha: 0.85),
+                      Colors.black.withValues(alpha: 0.65),
                     ],
                   ),
                 ),
               ),
             ),
 
-            // ── 4. Card Content ─────────────────────────────────────────────
+            // ── 3. Card Content ─────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
               child: Column(
@@ -119,10 +94,9 @@ class PackageCard extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-
-                      // 2. Title
+                      // Title
                       ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 220),
+                        constraints: const BoxConstraints(maxWidth: 240),
                         child: Text(
                           package.name,
                           style: GoogleFonts.plusJakartaSans(
@@ -133,8 +107,9 @@ class PackageCard extends StatelessWidget {
                             height: 1.15,
                             shadows: [
                               Shadow(
-                                color: Colors.black.withValues(alpha: 0.7),
-                                blurRadius: 4,
+                                color: Colors.black.withValues(alpha: 0.85),
+                                blurRadius: 6,
+                                offset: const Offset(0, 1),
                               ),
                             ],
                           ),
@@ -144,20 +119,21 @@ class PackageCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
 
-                      // 3. Subtitle / Description
+                      // Subtitle / Description
                       ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 210),
+                        constraints: const BoxConstraints(maxWidth: 220),
                         child: Text(
                           descriptionText,
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 11,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.white.withValues(alpha: 0.75),
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white,
                             height: 1.25,
                             shadows: [
                               Shadow(
-                                color: Colors.black.withValues(alpha: 0.6),
-                                blurRadius: 3,
+                                color: Colors.black.withValues(alpha: 0.85),
+                                blurRadius: 5,
+                                offset: const Offset(0, 1),
                               ),
                             ],
                           ),
@@ -167,7 +143,7 @@ class PackageCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
 
-                      // 4. Location Badge Capsule
+                      // Location Badge Capsule
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 3.5),
@@ -212,8 +188,14 @@ class PackageCard extends StatelessWidget {
                         'Starts at',
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 10,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white.withValues(alpha: 0.65),
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white.withValues(alpha: 0.85),
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withValues(alpha: 0.85),
+                              blurRadius: 4,
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -230,8 +212,8 @@ class PackageCard extends StatelessWidget {
                               letterSpacing: -0.3,
                               shadows: [
                                 Shadow(
-                                  color: Colors.black.withValues(alpha: 0.7),
-                                  blurRadius: 4,
+                                  color: Colors.black.withValues(alpha: 0.85),
+                                  blurRadius: 6,
                                 ),
                               ],
                             ),
@@ -243,10 +225,16 @@ class PackageCard extends StatelessWidget {
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w500,
-                                color: Colors.white.withValues(alpha: 0.45),
+                                color: Colors.white.withValues(alpha: 0.75),
                                 decoration: TextDecoration.lineThrough,
                                 decorationColor:
-                                    Colors.white.withValues(alpha: 0.45),
+                                    Colors.white.withValues(alpha: 0.75),
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black.withValues(alpha: 0.85),
+                                    blurRadius: 4,
+                                  ),
+                                ],
                               ),
                             ),
                           ],
@@ -326,62 +314,70 @@ class ServiceCard extends StatelessWidget {
                 Positioned(
                   top: 12,
                   left: 12,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.65),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      service.categoryName.toUpperCase(),
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.8,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 12,
                   right: 12,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.65),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.18),
-                        width: 1,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.location_on_rounded,
-                            size: 12, color: Color(0xFFE50914)),
-                        const SizedBox(width: 4),
-                        Text(
-                          cityName.toUpperCase(),
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.6,
-                            color: Colors.white,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.65),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            service.categoryName.toUpperCase(),
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.8,
+                              color: Colors.white,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 9, vertical: 4.5),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.65),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.18),
+                            width: 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.3),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.location_on_rounded,
+                                size: 12, color: Color(0xFFE50914)),
+                            const SizedBox(width: 4),
+                            Text(
+                              cityName.toUpperCase(),
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.6,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -512,10 +508,14 @@ class OrganizerCard extends ConsumerWidget {
         organizer.bio!.trim().toLowerCase() !=
             organizer.effectiveName.trim().toLowerCase();
 
+    final followedIds = ref.watch(followedOrganizerIdsProvider);
+    final isActuallyFollowed =
+        organizer.isFollowed || followedIds.contains(organizer.id);
+
     final followState = ref.watch(
       organizerFollowProvider(OrganizerFollowArgs(
         id: organizer.id,
-        initialFollow: organizer.isFollowed,
+        initialFollow: isActuallyFollowed,
         initialFollowerCount: organizer.followerCount,
       )),
     );
@@ -525,172 +525,134 @@ class OrganizerCard extends ConsumerWidget {
           () => context.push(
               AppRoutes.organizerProfile.replaceAll(':id', organizer.id)),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: AppColors.getSurface(context),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: followState.isFollowed
+            color: (followState.isFollowed || isActuallyFollowed)
                 ? AppColors.primary.withValues(alpha: 0.3)
                 : AppColors.getBorder(context),
           ),
           boxShadow: AppColors.getCardShadow(context),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Row(
-              children: [
-                // Left Image Avatar
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(14),
-                  child: SizedBox(
-                    width: 62,
-                    height: 62,
-                    child: organizer.effectiveAvatar != null
-                        ? AppNetworkImage(
-                            url: organizer.effectiveAvatar,
-                            fit: BoxFit.cover,
-                          )
-                        : Container(
-                            color: AppColors.primary.withValues(alpha: 0.1),
-                            child: Center(
-                              child: Text(
-                                organizer.effectiveName.isNotEmpty
-                                    ? organizer.effectiveName[0].toUpperCase()
-                                    : 'O',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                            ),
-                          ),
-                  ),
-                ),
-                const SizedBox(width: 14),
-
-                // Right Details
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        organizer.effectiveName,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.getTextPrimary(context),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 3),
-                      Row(
-                        children: [
-                          const Icon(Icons.location_on_rounded,
-                              size: 13, color: AppColors.accentRose),
-                          const SizedBox(width: 3),
-                          Flexible(
-                            child: Text(
-                              cityName,
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.getTextSecondary(context),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          const Icon(Icons.star_rounded,
-                              size: 14, color: AppColors.accentAmber),
-                          const SizedBox(width: 2),
-                          Text(
-                            organizer.rating.toStringAsFixed(1),
+            // Left Image Avatar
+            ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: SizedBox(
+                width: 58,
+                height: 58,
+                child: organizer.effectiveAvatar != null
+                    ? AppNetworkImage(
+                        url: organizer.effectiveAvatar,
+                        fit: BoxFit.cover,
+                        titleHint: organizer.effectiveName,
+                      )
+                    : Container(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        child: Center(
+                          child: Text(
+                            organizer.effectiveName.isNotEmpty
+                                ? organizer.effectiveName[0].toUpperCase()
+                                : 'O',
                             style: GoogleFonts.plusJakartaSans(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.getTextPrimary(context),
+                              fontSize: 22,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.primary,
                             ),
                           ),
-                        ],
+                        ),
                       ),
-                      const SizedBox(height: 3),
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              '${followState.followerCount} followers${organizer.distanceKm != null ? " • ${organizer.distanceKm!.toStringAsFixed(1)} km" : ""}',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.getTextMuted(context),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (hasBio) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          organizer.bio!,
+              ),
+            ),
+            const SizedBox(width: 14),
+
+            // Middle Details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    organizer.effectiveName,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.getTextPrimary(context),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 3),
+                  Row(
+                    children: [
+                      const Icon(Icons.location_on_rounded,
+                          size: 13, color: AppColors.accentRose),
+                      const SizedBox(width: 3),
+                      Flexible(
+                        child: Text(
+                          cityName,
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 12,
+                            fontWeight: FontWeight.w600,
                             color: AppColors.getTextSecondary(context),
-                            height: 1.25,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                      ],
-                    ],
-                  ),
-                ),
-
-                // Follow / Unfollow Action Button
-                const SizedBox(width: 8),
-                FollowButton(
-                  organizerId: organizer.id,
-                  organizerName: organizer.effectiveName,
-                  initialIsFollowed: organizer.isFollowed,
-                  initialFollowerCount: organizer.followerCount,
-                  isCompact: true,
-                ),
-              ],
-            ),
-
-            // Portfolio previews if available
-            if (organizer.portfolioItems.isNotEmpty) ...[
-              const SizedBox(height: 10),
-              SizedBox(
-                height: 60,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: organizer.portfolioItems.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 8),
-                  itemBuilder: (context, idx) {
-                    final item = organizer.portfolioItems[idx];
-                    return ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: SizedBox(
-                        width: 60,
-                        height: 60,
-                        child: AppNetworkImage(
-                          url: item.mediaUrl,
-                          fit: BoxFit.cover,
+                      ),
+                      const SizedBox(width: 6),
+                      const Icon(Icons.star_rounded,
+                          size: 14, color: AppColors.accentAmber),
+                      const SizedBox(width: 2),
+                      Text(
+                        organizer.rating.toStringAsFixed(1),
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.getTextPrimary(context),
                         ),
                       ),
-                    );
-                  },
-                ),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    '${followState.followerCount} followers${organizer.packageCount > 0 ? " • ${organizer.packageCount} packages" : (organizer.serviceCount > 0 ? " • ${organizer.serviceCount} services" : (organizer.distanceKm != null ? " • ${organizer.distanceKm!.toStringAsFixed(1)} km" : ""))}',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.getTextMuted(context),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (hasBio) ...[
+                    const SizedBox(height: 3),
+                    Text(
+                      organizer.bio!,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11.5,
+                        color: AppColors.getTextSecondary(context),
+                        height: 1.2,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ],
               ),
-            ],
+            ),
+
+            // Follow / Unfollow Action Button
+            const SizedBox(width: 8),
+            FollowButton(
+              organizerId: organizer.id,
+              organizerName: organizer.effectiveName,
+              initialIsFollowed: isActuallyFollowed,
+              initialFollowerCount: organizer.followerCount,
+              isCompact: true,
+            ),
           ],
         ),
       ),
@@ -741,62 +703,72 @@ class PublicEventCard extends StatelessWidget {
                 Positioned(
                   top: 12,
                   left: 12,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.65),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      event.mode == EventMode.ONLINE ? 'ONLINE EVENT' : 'IN-PERSON',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.8,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 12,
                   right: 12,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.65),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.18),
-                        width: 1,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.location_on_rounded,
-                            size: 12, color: Color(0xFFE50914)),
-                        const SizedBox(width: 4),
-                        Text(
-                          cityName.toUpperCase(),
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.6,
-                            color: Colors.white,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.65),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            event.mode == EventMode.ONLINE
+                                ? 'ONLINE EVENT'
+                                : 'IN-PERSON',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.8,
+                              color: Colors.white,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 9, vertical: 4.5),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.65),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.18),
+                            width: 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.3),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.location_on_rounded,
+                                size: 12, color: Color(0xFFE50914)),
+                            const SizedBox(width: 4),
+                            Text(
+                              cityName.toUpperCase(),
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.6,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],

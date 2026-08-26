@@ -20,14 +20,14 @@ class PayoutLedgerScreen extends HookConsumerWidget {
     final ledgerAsync = ref.watch(payoutLedgerProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.lightBg,
+      backgroundColor: AppColors.getBg(context),
       appBar: AppBar(
-        backgroundColor: AppColors.lightSurface,
+        backgroundColor: AppColors.getSurface(context),
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              color: AppColors.textPrimary, size: 20),
+          icon: Icon(Icons.arrow_back_ios_new_rounded,
+              color: AppColors.getTextPrimary(context), size: 20),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -35,7 +35,7 @@ class PayoutLedgerScreen extends HookConsumerWidget {
           style: GoogleFonts.plusJakartaSans(
             fontSize: 18,
             fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
+            color: AppColors.getTextPrimary(context),
           ),
         ),
         centerTitle: true,
@@ -53,10 +53,10 @@ class PayoutLedgerScreen extends HookConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: AppColors.lightSurface,
+                    color: AppColors.getSurface(context),
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: AppColors.lightBorder),
-                    boxShadow: AppColors.cardShadow,
+                    border: Border.all(color: AppColors.getBorder(context)),
+                    boxShadow: AppColors.getCardShadow(context),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -65,7 +65,7 @@ class PayoutLedgerScreen extends HookConsumerWidget {
                         'Available Balance',
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 12,
-                          color: AppColors.textSecondary,
+                          color: AppColors.getTextSecondary(context),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -90,7 +90,7 @@ class PayoutLedgerScreen extends HookConsumerWidget {
                                   'Total Lifetime Earnings',
                                   style: GoogleFonts.plusJakartaSans(
                                     fontSize: 11,
-                                    color: AppColors.textMuted,
+                                    color: AppColors.getTextMuted(context),
                                   ),
                                 ),
                                 Text(
@@ -99,7 +99,7 @@ class PayoutLedgerScreen extends HookConsumerWidget {
                                   style: GoogleFonts.plusJakartaSans(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w800,
-                                    color: AppColors.textPrimary,
+                                    color: AppColors.getTextPrimary(context),
                                   ),
                                 ),
                               ],
@@ -113,7 +113,7 @@ class PayoutLedgerScreen extends HookConsumerWidget {
                                   'Pending Escrow',
                                   style: GoogleFonts.plusJakartaSans(
                                     fontSize: 11,
-                                    color: AppColors.textMuted,
+                                    color: AppColors.getTextMuted(context),
                                   ),
                                 ),
                                 Text(
@@ -153,7 +153,7 @@ class PayoutLedgerScreen extends HookConsumerWidget {
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
+                    color: AppColors.getTextPrimary(context),
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -163,10 +163,10 @@ class PayoutLedgerScreen extends HookConsumerWidget {
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.lightSurface,
+                      color: AppColors.getSurface(context),
                       borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: AppColors.lightBorder),
-                      boxShadow: AppColors.cardShadow,
+                      border: Border.all(color: AppColors.getBorder(context)),
+                      boxShadow: AppColors.getCardShadow(context),
                     ),
                     child: Row(
                       children: [
@@ -199,7 +199,7 @@ class PayoutLedgerScreen extends HookConsumerWidget {
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary,
+                                  color: AppColors.getTextPrimary(context),
                                 ),
                               ),
                               const SizedBox(height: 2),
@@ -207,7 +207,7 @@ class PayoutLedgerScreen extends HookConsumerWidget {
                                 DateFormatter.formatDate(tx.date),
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 11,
-                                  color: AppColors.textSecondary,
+                                  color: AppColors.getTextSecondary(context),
                                 ),
                               ),
                             ],
@@ -220,7 +220,7 @@ class PayoutLedgerScreen extends HookConsumerWidget {
                             fontWeight: FontWeight.w800,
                             color: tx.isCredit
                                 ? AppColors.statusCompleted
-                                : AppColors.textPrimary,
+                                : AppColors.getTextPrimary(context),
                           ),
                         ),
                       ],

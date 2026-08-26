@@ -743,34 +743,66 @@ class _HostEventCard extends HookConsumerWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: OutlinedButton.icon(
+                        child: OutlinedButton(
                           style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
                             side: BorderSide(color: AppColors.getBorder(context)),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          ),
-                          icon: const Icon(Icons.settings_outlined, size: 16),
-                          label: Text(
-                            'Manage Hub',
-                            style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700),
+                            foregroundColor: AppColors.getTextPrimary(context),
                           ),
                           onPressed: () => context.push('/host/manage/${event.id}'),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.settings_outlined, size: 15, color: AppColors.primary),
+                              const SizedBox(width: 5),
+                              Flexible(
+                                child: Text(
+                                  'Manage Hub',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.getTextPrimary(context),
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: OutlinedButton.icon(
+                        child: OutlinedButton(
                           style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
                             side: BorderSide(color: AppColors.getBorder(context)),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          ),
-                          icon: const Icon(Icons.qr_code_scanner_rounded, size: 16),
-                          label: Text(
-                            'Scanner',
-                            style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700),
+                            foregroundColor: AppColors.getTextPrimary(context),
                           ),
                           onPressed: () => context.push('/host/scanner/${event.id}'),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.qr_code_scanner_rounded, size: 15, color: AppColors.getTextPrimary(context)),
+                              const SizedBox(width: 5),
+                              Flexible(
+                                child: Text(
+                                  'Scanner',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.getTextPrimary(context),
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                       if (event.isDraft) ...[

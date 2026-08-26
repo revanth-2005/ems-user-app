@@ -160,10 +160,10 @@ class AppNetworkImage extends StatelessWidget {
           borderRadius: borderRadius,
         ),
         errorWidget: (context, url, error) =>
-            errorWidget ?? _buildLetterPlaceholder(width, height),
+            errorWidget ?? _buildLetterPlaceholder(context, width, height),
       );
     } else {
-      imageWidget = errorWidget ?? _buildLetterPlaceholder(width, height);
+      imageWidget = errorWidget ?? _buildLetterPlaceholder(context, width, height);
     }
 
     if (borderRadius > 0) {
@@ -175,53 +175,59 @@ class AppNetworkImage extends StatelessWidget {
     return imageWidget;
   }
 
-  Widget _buildLetterPlaceholder(double? w, double? h) {
+  Widget _buildLetterPlaceholder(BuildContext context, double? w, double? h) {
+    final isDark = AppColors.isDark(context);
     final hasTitle = titleHint?.trim().isNotEmpty == true;
-    final initial = hasTitle ? titleHint!.trim()[0].toUpperCase() : '';
+    final words = hasTitle
+        ? titleHint!.trim().split(RegExp(r'\s+')).where((s) => s.isNotEmpty).toList()
+        : <String>[];
+    final initial = words.isNotEmpty
+        ? (words.length == 1
+            ? words[0][0].toUpperCase()
+            : '${words[0][0]}${words[1][0]}'.toUpperCase())
+        : '';
 
     return Container(
       width: w,
       height: h,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.primary.withValues(alpha: 0.12),
-            AppColors.accent.withValues(alpha: 0.08),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: isDark ? const Color(0xFF222222) : const Color(0xFFF3F4F6),
       ),
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (initial.isNotEmpty &&
-                (w == null || w >= 48) &&
-                (h == null || h >= 48)) ...[
+            if (initial.isNotEmpty) ...[
               Container(
-                width: (w != null && w < 80) ? 28 : 36,
-                height: (w != null && w < 80) ? 28 : 36,
+                width: (w != null && w < 65) ? 36 : 44,
+                height: (w != null && w < 65) ? 36 : 44,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.2),
+                  color: isDark ? const Color(0xFF2E2E2E) : const Color(0xFFE5E7EB),
                   shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isDark ? const Color(0xFF404040) : const Color(0xFFD1D5DB),
+                    width: 1,
+                  ),
                 ),
                 alignment: Alignment.center,
                 child: Text(
                   initial,
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: (w != null && w < 80) ? 14 : 16,
+                    fontSize: (w != null && w < 65)
+                        ? (initial.length > 1 ? 12 : 14)
+                        : (initial.length > 1 ? 14 : 16),
                     fontWeight: FontWeight.w800,
-                    color: AppColors.primary,
+                    color: AppColors.getTextPrimary(context),
+                    letterSpacing: -0.2,
                   ),
                 ),
               ),
             ] else ...[
               Icon(
-                Icons.image_outlined,
-                color: AppColors.primary.withValues(alpha: 0.5),
-                size: (w != null && w < 60) ? 20 : 28,
+                Icons.business_rounded,
+                color: AppColors.getTextMuted(context),
+                size: (w != null && w < 60) ? 22 : 28,
               ),
             ],
           ],

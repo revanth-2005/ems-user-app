@@ -1081,6 +1081,7 @@ class _NetflixEventHeroState extends ConsumerState<_NetflixEventHero> {
                 valueListenable: _currentPageNotifier,
                 builder: (context, currentPage, _) {
                   return _buildScrollingPageIndicator(
+                    context: context,
                     totalCount: events.length,
                     currentPage: currentPage,
                   );
@@ -1094,11 +1095,13 @@ class _NetflixEventHeroState extends ConsumerState<_NetflixEventHero> {
   }
 
   Widget _buildScrollingPageIndicator({
+    required BuildContext context,
     required int totalCount,
     required int currentPage,
   }) {
     if (totalCount <= 1) return const SizedBox.shrink();
 
+    final isDark = AppColors.isDark(context);
     const maxVisible = 4;
     final visibleCount = totalCount < maxVisible ? totalCount : maxVisible;
 
@@ -1133,9 +1136,13 @@ class _NetflixEventHeroState extends ConsumerState<_NetflixEventHero> {
           final double dotHeight = isActive ? 6.0 : (isEdgeWithMore ? 4.5 : 6.0);
           final Color dotColor = isActive
               ? AppColors.primary
-              : (isEdgeWithMore
-                  ? Colors.white.withValues(alpha: 0.18)
-                  : Colors.white.withValues(alpha: 0.35));
+              : (isDark
+                  ? (isEdgeWithMore
+                      ? Colors.white.withValues(alpha: 0.18)
+                      : Colors.white.withValues(alpha: 0.38))
+                  : (isEdgeWithMore
+                      ? Colors.black.withValues(alpha: 0.12)
+                      : Colors.black.withValues(alpha: 0.25)));
 
           return AnimatedContainer(
             duration: const Duration(milliseconds: 250),

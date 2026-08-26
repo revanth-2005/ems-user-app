@@ -62,7 +62,7 @@ class MyBookingsTicketsScreen extends HookConsumerWidget {
                 children: [
                   Expanded(
                     child: _TabPill(
-                      label: 'Vendors ($bookingsCount)',
+                      label: 'Bookings ($bookingsCount)',
                       isSelected: activeTab.value == BookingViewTab.BOOKINGS,
                       onTap: () => activeTab.value = BookingViewTab.BOOKINGS,
                     ),
@@ -91,7 +91,7 @@ class MyBookingsTicketsScreen extends HookConsumerWidget {
                 if (bookings.isEmpty) {
                   return const AppEmptyView(
                     icon: Icons.confirmation_number_outlined,
-                    title: 'No Vendor Bookings',
+                    title: 'No Bookings',
                     subtitle:
                         'Explore curated event packages and book your next celebration.',
                   );
@@ -256,7 +256,7 @@ class _VendorBookingCard extends HookConsumerWidget {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.timer_outlined,
+                  const Icon(Icons.timer_rounded,
                       size: 16, color: AppColors.warning),
                   const SizedBox(width: 6),
                   Expanded(

@@ -20,6 +20,13 @@ class FollowedOrganizersScreen extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final searchController = useTextEditingController();
     final searchQuery = useState<String>('');
+
+    // Always fetch fresh followed organizers whenever the screen is opened
+    useEffect(() {
+      Future.microtask(() => ref.invalidate(followedOrganizersProvider));
+      return null;
+    }, const []);
+
     final followedAsync = ref.watch(followedOrganizersProvider);
 
     return Scaffold(
@@ -340,7 +347,7 @@ class _FollowedOrganizerCard extends ConsumerWidget {
             FollowButton(
               organizerId: organizer.id,
               organizerName: organizer.effectiveName,
-              initialIsFollowed: organizer.isFollowed,
+              initialIsFollowed: true,
               initialFollowerCount: organizer.followerCount,
               isCompact: true,
               onFollowChanged: (isFollowing) {

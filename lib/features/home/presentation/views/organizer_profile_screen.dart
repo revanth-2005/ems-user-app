@@ -187,10 +187,14 @@ class OrganizerProfileScreen extends HookConsumerWidget {
                             const SizedBox(height: 12),
                             Consumer(
                               builder: (context, ref, _) {
+                                final followedIds = ref.watch(followedOrganizerIdsProvider);
+                                final isActuallyFollowed =
+                                    org.isFollowed || followedIds.contains(org.id);
+
                                 final followState = ref.watch(
                                   organizerFollowProvider(OrganizerFollowArgs(
                                     id: org.id,
-                                    initialFollow: org.isFollowed,
+                                    initialFollow: isActuallyFollowed,
                                     initialFollowerCount: org.followerCount,
                                   )),
                                 );

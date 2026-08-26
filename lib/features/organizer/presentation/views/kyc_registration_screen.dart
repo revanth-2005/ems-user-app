@@ -51,14 +51,14 @@ class KycRegistrationScreen extends HookConsumerWidget {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.lightBg,
+      backgroundColor: AppColors.getBg(context),
       appBar: AppBar(
-        backgroundColor: AppColors.lightSurface,
+        backgroundColor: AppColors.getSurface(context),
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              color: AppColors.textPrimary, size: 20),
+          icon: Icon(Icons.arrow_back_ios_new_rounded,
+              color: AppColors.getTextPrimary(context), size: 20),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -66,7 +66,7 @@ class KycRegistrationScreen extends HookConsumerWidget {
           style: GoogleFonts.plusJakartaSans(
             fontSize: 18,
             fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
+            color: AppColors.getTextPrimary(context),
           ),
         ),
         centerTitle: true,
@@ -81,7 +81,7 @@ class KycRegistrationScreen extends HookConsumerWidget {
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 20,
                 fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
+                color: AppColors.getTextPrimary(context),
               ),
             ),
             const SizedBox(height: 6),
@@ -89,7 +89,7 @@ class KycRegistrationScreen extends HookConsumerWidget {
               'To enable instant advance payouts, verify your GST/PAN and bank payout routing details.',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 13,
-                color: AppColors.textSecondary,
+                color: AppColors.getTextSecondary(context),
                 height: 1.4,
               ),
             ),
@@ -98,10 +98,10 @@ class KycRegistrationScreen extends HookConsumerWidget {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: AppColors.lightSurface,
+                color: AppColors.getSurface(context),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.lightBorder),
-                boxShadow: AppColors.cardShadow,
+                border: Border.all(color: AppColors.getBorder(context)),
+                boxShadow: AppColors.getCardShadow(context),
               ),
               child: Column(
                 children: [
@@ -109,32 +109,32 @@ class KycRegistrationScreen extends HookConsumerWidget {
                     label: 'Registered Business Name',
                     hint: 'e.g. Acme Event Management LLP',
                     controller: businessNameController,
-                    prefixIcon: const Icon(Icons.business_rounded,
-                        color: AppColors.textMuted, size: 20),
+                    prefixIcon: Icon(Icons.business_rounded,
+                        color: AppColors.getTextMuted(context), size: 20),
                   ),
                   const SizedBox(height: 16),
                   AppTextField(
                     label: 'GSTIN / PAN Number',
                     hint: '27AABCU9603R1ZM',
                     controller: panGstController,
-                    prefixIcon: const Icon(Icons.badge_outlined,
-                        color: AppColors.textMuted, size: 20),
+                    prefixIcon: Icon(Icons.badge_outlined,
+                        color: AppColors.getTextMuted(context), size: 20),
                   ),
                   const SizedBox(height: 16),
                   AppTextField(
                     label: 'Bank Account Number',
                     hint: '5020004819281',
                     controller: bankAccountController,
-                    prefixIcon: const Icon(Icons.account_balance_rounded,
-                        color: AppColors.textMuted, size: 20),
+                    prefixIcon: Icon(Icons.account_balance_rounded,
+                        color: AppColors.getTextMuted(context), size: 20),
                   ),
                   const SizedBox(height: 16),
                   AppTextField(
                     label: 'Bank IFSC Code',
                     hint: 'HDFC0000128',
                     controller: ifscController,
-                    prefixIcon: const Icon(Icons.numbers_rounded,
-                        color: AppColors.textMuted, size: 20),
+                    prefixIcon: Icon(Icons.numbers_rounded,
+                        color: AppColors.getTextMuted(context), size: 20),
                   ),
                 ],
               ),
