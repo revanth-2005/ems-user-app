@@ -137,35 +137,28 @@ class CustomerProfileScreen extends HookConsumerWidget {
                     ),
                     child: Column(
                       children: [
-                        // _PortalSwitchTile(
-                        //   title: 'Customer Experience',
-                        //   subtitle: 'Book events, packages, and manage passes',
-                        //   icon: Icons.person_rounded,
-                        //   isSelected:
-                        //       activePortal == ActivePortal.CUSTOMER,
-                        //   onTap: () {
-                        //     ref
-                        //         .read(authStateProvider.notifier)
-                        //         .switchPortal(ActivePortal.CUSTOMER);
-                        //     context.go(AppRoutes.home);
-                        //   },
-                        // ),
-                        // Divider(height: 1, color: AppColors.getBorder(context)),
-                        // _PortalSwitchTile(
-                        //   title: 'Organizer & Vendor Hub',
-                        //   subtitle:
-                        //       'Manage inquiries, catalog, calendar & payouts',
-                        //   icon: Icons.business_center_rounded,
-                        //   isSelected:
-                        //       activePortal == ActivePortal.ORGANIZER,
-                        //   onTap: () {
-                        //     ref
-                        //         .read(authStateProvider.notifier)
-                        //         .switchPortal(ActivePortal.ORGANIZER);
-                        //     context.go(AppRoutes.organizerDashboard);
-                        //   },
-                        // ),
-                        // Divider(height: 1, color: AppColors.getBorder(context)),
+                        // ── Organizer & Vendor Hub ─────────────────────────
+                        _PortalSwitchTile(
+                          title: 'Organizer & Vendor Hub',
+                          subtitle: user?.isOrganizer == true
+                              ? 'Manage catalog, bookings, calendar & payouts'
+                              : 'Apply to become an organizer — complete KYC to unlock',
+                          icon: Icons.business_center_rounded,
+                          isSelected: activePortal == ActivePortal.ORGANIZER,
+                          isLocked: user?.isOrganizer != true,
+                          onTap: () {
+                            if (user?.isOrganizer == true) {
+                              ref
+                                  .read(authStateProvider.notifier)
+                                  .switchPortal(ActivePortal.ORGANIZER);
+                              context.go(AppRoutes.organizerDashboard);
+                            } else {
+                              context.push(AppRoutes.kycRegistration);
+                            }
+                          },
+                        ),
+                        Divider(height: 1, color: AppColors.getBorder(context)),
+                        // ── Host & Ticket Scanner ──────────────────────────
                         _PortalSwitchTile(
                           title: 'Host & Ticket Scanner',
                           subtitle:
@@ -363,6 +356,7 @@ class _PortalSwitchTile extends StatelessWidget {
   final String subtitle;
   final IconData icon;
   final bool isSelected;
+  final bool isLocked;
   final VoidCallback onTap;
 
   const _PortalSwitchTile({
@@ -371,6 +365,7 @@ class _PortalSwitchTile extends StatelessWidget {
     required this.icon,
     required this.isSelected,
     required this.onTap,
+    this.isLocked = false,
   });
 
   @override
@@ -435,8 +430,45 @@ class _PortalSwitchTile extends StatelessWidget {
                 ),
               ),
             )
-          : Icon(Icons.arrow_forward_ios_rounded,
-              size: 14, color: AppColors.getTextMuted(context)),
+          : isLocked
+              ? Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? const Color(0xFF1E1E1E)
+                        : const Color(0xFFFEF3C7),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: isDark
+                          ? const Color(0xFF333333)
+                          : const Color(0xFFFCD34D),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.lock_outline_rounded,
+                          size: 10,
+                          color: isDark
+                              ? const Color(0xFFF59E0B)
+                              : const Color(0xFFD97706)),
+                      const SizedBox(width: 3),
+                      Text(
+                        'Apply',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: isDark
+                              ? const Color(0xFFF59E0B)
+                              : const Color(0xFFD97706),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : Icon(Icons.arrow_forward_ios_rounded,
+                  size: 14, color: AppColors.getTextMuted(context)),
     );
   }
 }
