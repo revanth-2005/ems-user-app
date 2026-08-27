@@ -1,4 +1,6 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -22,6 +24,14 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Silently auto-refresh hero events in the background when home screen opens
+    useEffect(() {
+      Future.microtask(() {
+        ref.invalidate(eventsProvider);
+      });
+      return null;
+    }, const []);
+
     final homeFeedAsync = ref.watch(homeFeedProvider);
     final cartState = ref.watch(cartProvider);
     final cartCount = cartState.items.length;
@@ -711,7 +721,16 @@ class _NetflixEventHeroState extends ConsumerState<_NetflixEventHero> {
   Widget build(BuildContext context) {
     final isDark = AppColors.isDark(context);
     final bgColor = AppColors.getBg(context);
-    final events = widget.events;
+    // Prioritize events with cover images first, latest first
+    final eventsWithImages = widget.events
+        .where((e) => e.coverImageUrl != null && e.coverImageUrl.toString().trim().isNotEmpty)
+        .toList();
+    final otherEvents = widget.events
+        .where((e) => e.coverImageUrl == null || e.coverImageUrl.toString().trim().isEmpty)
+        .toList();
+    final events = eventsWithImages.isNotEmpty
+        ? [...eventsWithImages, ...otherEvents]
+        : widget.events;
     final screenWidth = MediaQuery.of(context).size.width;
     final heroHeight = screenWidth * 1.25;
     final cartState = ref.watch(cartProvider);
@@ -750,6 +769,21 @@ class _NetflixEventHeroState extends ConsumerState<_NetflixEventHero> {
                           fit: BoxFit.cover,
                         ),
 
+                        // Light blur for white theme fading (for white theme alone)
+                        if (!isDark)
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            height: heroHeight * 0.22,
+                            child: ClipRect(
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(sigmaX: 4.0, sigmaY: 4.0),
+                                child: const SizedBox.expand(),
+                              ),
+                            ),
+                          ),
+
                         // Bottom Gradient overlay
                         Positioned.fill(
                           child: DecoratedBox(
@@ -759,7 +793,7 @@ class _NetflixEventHeroState extends ConsumerState<_NetflixEventHero> {
                                 end: Alignment.bottomCenter,
                                 stops: isDark
                                     ? const [0.25, 0.65, 1.0]
-                                    : const [0.50, 0.78, 1.0],
+                                    : const [0.40, 0.70, 1.0],
                                 colors: isDark
                                     ? [
                                         Colors.transparent,
@@ -768,7 +802,7 @@ class _NetflixEventHeroState extends ConsumerState<_NetflixEventHero> {
                                       ]
                                     : [
                                         Colors.transparent,
-                                        bgColor.withValues(alpha: 0.45),
+                                        bgColor.withValues(alpha: 0.55),
                                         bgColor,
                                       ],
                               ),

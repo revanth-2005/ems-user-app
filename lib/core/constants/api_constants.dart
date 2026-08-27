@@ -2,12 +2,13 @@
 /// All API endpoints and backend host URLs are defined here in one single place.
 class ApiConstants {
   // ── 🌐 Centralized Base URL Configuration ──────────────────────────────────
-  static const String serverHost = '192.168.0.151';
-  static const String serverPort = '3001';          // Backend / Proxy Port
-  static const String apiPrefix  = '';              // Live backend routes mount directly at root
+  static const String baseUrl = 'https://emsapi.webnoxdigital.com';
+  static const String serverHost = 'emsapi.webnoxdigital.com';
+  static const String serverPort = '';          // Backend / Proxy Port
+  static const String apiPrefix  = '';          // Live backend routes mount directly at root
 
-  /// Active Base URL: http://192.168.0.151:3001
-  static String get baseUrl => 'http://$serverHost:$serverPort$apiPrefix';
+  /// MinIO Media Storage Base URL (Public Cloudflare cached CDN)
+  static const String mediaBaseUrl = 'https://emsstorage.webnoxdigital.com';
 
   // ── 🔐 Auth Endpoints ──────────────────────────────────────────────────────
   static const String signupEmail   = '/auth/signup/email';

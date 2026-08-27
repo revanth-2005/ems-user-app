@@ -236,9 +236,11 @@ final eventsProvider = FutureProvider<List<PublicEvent>>((ref) async {
     categoryId: categoryId,
     eventMode: mode == 'ALL' ? null : mode,
     sortBy: sortBy,
+    limit: 100,
   );
 
-  return repo.searchEvents(query);
+  final list = await repo.searchEvents(query);
+  return List<PublicEvent>.from(list.reversed);
 });
 
 final eventFeeCalculatorProvider =
@@ -516,12 +518,15 @@ final homeFeedProvider = FutureProvider<HomeFeedState>((ref) async {
   final orgs = await ref.watch(organizersProvider.future);
   final evts = await ref.watch(eventsProvider.future);
 
+  // Place newest events first so freshly created events appear immediately in hero
+  final orderedEvents = List<PublicEvent>.from(evts.reversed);
+
   return HomeFeedState(
     categories: cats,
     packages: pkgs,
     services: srvs,
     organizers: orgs,
-    events: evts,
+    events: orderedEvents,
   );
 });
 

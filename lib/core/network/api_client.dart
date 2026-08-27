@@ -1,12 +1,14 @@
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/api_constants.dart';
+import '../services/secure_storage_service.dart';
 
 class ApiClient {
   static final ApiClient _instance = ApiClient._internal();
   factory ApiClient() => _instance;
 
   late final Dio dio;
+  final SecureStorageService _secureStorage = SecureStorageService();
   String _currentBaseUrl = ApiConstants.baseUrl;
 
   ApiClient._internal() {
@@ -25,8 +27,11 @@ class ApiClient {
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          final prefs = await SharedPreferences.getInstance();
-          final token = prefs.getString('accessToken');
+          var token = await _secureStorage.getAccessToken();
+          if (token == null || token.isEmpty) {
+            final prefs = await SharedPreferences.getInstance();
+            token = prefs.getString('accessToken');
+          }
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
           }
@@ -34,8 +39,11 @@ class ApiClient {
         },
         onError: (DioException error, handler) async {
           if (error.response?.statusCode == 401) {
-            final prefs = await SharedPreferences.getInstance();
-            final refreshToken = prefs.getString('refreshToken');
+            var refreshToken = await _secureStorage.getRefreshToken();
+            if (refreshToken == null || refreshToken.isEmpty) {
+              final prefs = await SharedPreferences.getInstance();
+              refreshToken = prefs.getString('refreshToken');
+            }
 
             if (refreshToken != null && refreshToken.isNotEmpty) {
               try {
@@ -46,13 +54,13 @@ class ApiClient {
                 );
 
                 if (refreshResponse.statusCode == 200) {
-                  final newAccessToken = refreshResponse.data['accessToken'];
-                  final newRefreshToken = refreshResponse.data['refreshToken'];
+                  final newAccessToken = refreshResponse.data['accessToken'] as String;
+                  final newRefreshToken = refreshResponse.data['refreshToken'] as String?;
 
-                  await prefs.setString('accessToken', newAccessToken);
-                  if (newRefreshToken != null) {
-                    await prefs.setString('refreshToken', newRefreshToken);
-                  }
+                  await _secureStorage.saveTokens(
+                    accessToken: newAccessToken,
+                    refreshToken: newRefreshToken,
+                  );
 
                   // Retry the original request
                   final reqOptions = error.requestOptions;
@@ -62,8 +70,7 @@ class ApiClient {
                 }
               } catch (_) {
                 // Clear session on failed refresh
-                await prefs.remove('accessToken');
-                await prefs.remove('refreshToken');
+                await _secureStorage.clearAll();
               }
             }
           }

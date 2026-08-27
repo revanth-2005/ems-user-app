@@ -14,6 +14,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../home/presentation/providers/catalog_providers.dart';
 import '../../domain/entities/host_entities.dart';
 import '../providers/host_providers.dart';
 import '../widgets/quota_limit_dialog.dart';
@@ -74,6 +75,8 @@ class HostDashboardScreen extends HookConsumerWidget {
               ),
             ),
             onPressed: () {
+              ref.invalidate(homeFeedProvider);
+              ref.invalidate(eventsProvider);
               ref
                   .read(authStateProvider.notifier)
                   .switchPortal(ActivePortal.CUSTOMER);
@@ -133,8 +136,8 @@ class HostDashboardScreen extends HookConsumerWidget {
 
           return RefreshIndicator(
             onRefresh: () async {
-              ref.refresh(hostedEventsProvider);
-              ref.read(userEventSubscriptionProvider.notifier).refresh();
+              await ref.read(hostedEventsProvider.notifier).refresh();
+              await ref.read(userEventSubscriptionProvider.notifier).refresh();
             },
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),

@@ -38,29 +38,40 @@ class AppNetworkImage extends StatelessWidget {
   static const String _cacheV = 'v=6';
 
   /// Normalizes any backend-provided media URL.
-  /// For MinIO URLs (port 6006 or /ems-media/ paths), strips stale query params
-  /// and appends [_cacheV] so stale disk-cached images are never served.
-  /// The MinIO host from the API response is preserved as-is — do NOT rewrite
-  /// it, as the API's MinIO host is the authoritative source of media files.
+  /// Converts old local IP URLs (192.168.x.x:6006) and relative media paths
+  /// to point to the production CDN storage (emsstorage.webnoxdigital.com)
+  /// and appends [_cacheV] so stale disk-cached images are refreshed.
   static String? normalizeUrl(String? rawUrl) {
     if (rawUrl == null || rawUrl.trim().isEmpty) return null;
     final trimmed = rawUrl.trim();
 
-    // MinIO endpoint — strip old query params and append fresh cache-bust version
-    if (trimmed.contains(':6006') || trimmed.contains('/ems-media/')) {
-      final cleanPath = trimmed.split('?').first;
-      return '$cleanPath?$_cacheV';
+    // 1. Rewrite any port 6006 local IPs (e.g. http://192.168.0.36:6006/ems-media/...)
+    if (trimmed.contains(':6006')) {
+      final match = RegExp(r'https?://[^/]+(?::6006)?(/.*)').firstMatch(trimmed);
+      if (match != null) {
+        final path = match.group(1)!.split('?').first;
+        return '${ApiConstants.mediaBaseUrl}$path?$_cacheV';
+      }
     }
 
-    // Relative /ems-media/ paths — prepend active MinIO host
+    // 2. If already using emsstorage domain, normalize to HTTPS and clean query params
+    if (trimmed.contains('emsstorage.webnoxdigital.com')) {
+      final clean = trimmed.split('?').first;
+      final secure = clean.replaceFirst('http://', 'https://');
+      return '$secure?$_cacheV';
+    }
+
+    // 3. Relative /ems-media/ paths — prepend active mediaBaseUrl
     if (trimmed.startsWith('/ems-media/')) {
       final path = trimmed.split('?').first;
-      return 'http://${ApiConstants.serverHost}:6006$path?$_cacheV';
+      return '${ApiConstants.mediaBaseUrl}$path?$_cacheV';
     }
     if (trimmed.startsWith('ems-media/')) {
       final path = trimmed.split('?').first;
-      return 'http://${ApiConstants.serverHost}:6006/$path?$_cacheV';
+      return '${ApiConstants.mediaBaseUrl}/$path?$_cacheV';
     }
+
+    // 4. Subdirectory paths without ems-media prefix
     if (trimmed.startsWith('packages/') ||
         trimmed.startsWith('services/') ||
         trimmed.startsWith('events/') ||
@@ -68,7 +79,7 @@ class AppNetworkImage extends StatelessWidget {
         trimmed.startsWith('organizers/') ||
         trimmed.startsWith('users/')) {
       final path = trimmed.split('?').first;
-      return 'http://${ApiConstants.serverHost}:6006/ems-media/$path?$_cacheV';
+      return '${ApiConstants.mediaBaseUrl}/ems-media/$path?$_cacheV';
     }
     if (trimmed.startsWith('/packages/') ||
         trimmed.startsWith('/services/') ||
@@ -77,10 +88,10 @@ class AppNetworkImage extends StatelessWidget {
         trimmed.startsWith('/organizers/') ||
         trimmed.startsWith('/users/')) {
       final path = trimmed.split('?').first;
-      return 'http://${ApiConstants.serverHost}:6006/ems-media$path?$_cacheV';
+      return '${ApiConstants.mediaBaseUrl}/ems-media$path?$_cacheV';
     }
 
-    // Pass all other absolute URLs through unchanged
+    // 5. Pass external absolute URLs (e.g. Google profile photos) through unchanged
     return trimmed;
   }
 

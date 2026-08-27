@@ -6,7 +6,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../app/app_router.dart';
 import '../../../../core/common_widgets/app_button.dart';
 import '../../../../core/common_widgets/app_error_view.dart';
 import '../../../../core/common_widgets/app_loader.dart';

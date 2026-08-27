@@ -10,6 +10,7 @@ import '../../../../core/utils/currency_formatter.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../bookings/domain/entities/booking_entities.dart';
+import '../../../home/presentation/providers/catalog_providers.dart';
 import '../providers/organizer_providers.dart';
 
 class OrganizerDashboardScreen extends HookConsumerWidget {
@@ -64,6 +65,8 @@ class OrganizerDashboardScreen extends HookConsumerWidget {
               ),
             ),
             onPressed: () {
+              ref.invalidate(homeFeedProvider);
+              ref.invalidate(eventsProvider);
               ref
                   .read(authStateProvider.notifier)
                   .switchPortal(ActivePortal.CUSTOMER);

@@ -394,6 +394,10 @@ class CreateEventScreen extends HookConsumerWidget {
           await ref.read(hostedEventsProvider.notifier).publishEvent(createdEvent.id);
         }
 
+        // Invalidate customer discovery feeds immediately so fresh events are fetched
+        ref.invalidate(eventsProvider);
+        ref.invalidate(homeFeedProvider);
+
         if (context.mounted) {
           AppSnackbar.show(
             context,

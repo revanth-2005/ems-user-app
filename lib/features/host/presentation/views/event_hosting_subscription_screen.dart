@@ -204,7 +204,7 @@ class EventHostingSubscriptionScreen extends HookConsumerWidget {
           IconButton(
             icon: const Icon(Icons.refresh_rounded, size: 20),
             onPressed: () {
-              ref.refresh(eventSubscriptionPlansProvider);
+              ref.invalidate(eventSubscriptionPlansProvider);
               ref.read(userEventSubscriptionProvider.notifier).refresh();
             },
           ),

@@ -1,5 +1,6 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/network/dio_client.dart';
+import '../../../home/presentation/providers/catalog_providers.dart';
 import '../../data/datasources/host_remote_datasource.dart';
 import '../../data/repositories/host_repository_impl.dart';
 import '../../domain/entities/host_entities.dart';
@@ -39,6 +40,8 @@ class HostedEventsNotifier extends AsyncNotifier<List<HostEventItem>> {
     // Refresh events list
     final updated = await repo.getHostedEvents();
     state = AsyncData(updated);
+    ref.invalidate(eventsProvider);
+    ref.invalidate(homeFeedProvider);
     return created;
   }
 
@@ -47,6 +50,8 @@ class HostedEventsNotifier extends AsyncNotifier<List<HostEventItem>> {
     await repo.publishEvent(id);
     final updated = await repo.getHostedEvents();
     state = AsyncData(updated);
+    ref.invalidate(eventsProvider);
+    ref.invalidate(homeFeedProvider);
   }
 
   Future<void> updateEvent(String id, Map<String, dynamic> data) async {
@@ -54,6 +59,8 @@ class HostedEventsNotifier extends AsyncNotifier<List<HostEventItem>> {
     await repo.updateEvent(id, data);
     final updated = await repo.getHostedEvents();
     state = AsyncData(updated);
+    ref.invalidate(eventsProvider);
+    ref.invalidate(homeFeedProvider);
   }
 }
 

@@ -2,6 +2,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../app/app_providers.dart';
 import '../../../../core/services/local_storage_service.dart';
+import '../../../../core/services/notification_service.dart';
 import '../../data/datasources/auth_local_datasource.dart';
 import '../../data/datasources/auth_remote_datasource.dart';
 import '../../data/repositories/auth_repository_impl.dart';
@@ -56,6 +57,8 @@ class AuthNotifier extends AsyncNotifier<UserEntity?> {
       final repo = await ref.read(authRepositoryProvider.future);
       final user = await repo.loginWithEmail(email: email, password: password);
       state = AsyncData(user);
+      // Register FCM token with backend now that user is authenticated
+      NotificationService().getOrFetchToken();
       return null;
     } catch (e, st) {
       state = AsyncError(e, st);
@@ -97,6 +100,8 @@ class AuthNotifier extends AsyncNotifier<UserEntity?> {
       final repo = await ref.read(authRepositoryProvider.future);
       final user = await repo.verifyOtp(target: target, otp: otp);
       state = AsyncData(user);
+      // Register FCM token with backend now that user is authenticated
+      NotificationService().getOrFetchToken();
       return null;
     } catch (e, st) {
       state = AsyncError(e, st);
@@ -117,6 +122,7 @@ class AuthNotifier extends AsyncNotifier<UserEntity?> {
 
   Future<void> logout() async {
     final repo = await ref.read(authRepositoryProvider.future);
+    await NotificationService().unregisterDeviceToken();
     await repo.logout();
     state = const AsyncData(null);
   }
@@ -129,6 +135,8 @@ class AuthNotifier extends AsyncNotifier<UserEntity?> {
       final repo = await ref.read(authRepositoryProvider.future);
       final user = await repo.signInWithGoogle();
       state = AsyncData(user);
+      // Register FCM token with backend now that user is authenticated
+      NotificationService().getOrFetchToken();
       return null;
     } catch (e, st) {
       state = AsyncError(e, st);

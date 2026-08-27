@@ -67,7 +67,6 @@ class LoginScreen extends HookConsumerWidget {
     }
 
     final isDark = AppColors.isDark(context);
-    final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       backgroundColor: AppColors.getBg(context),
@@ -103,7 +102,7 @@ class LoginScreen extends HookConsumerWidget {
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  stops: const [0.0, 0.48, 0.78],
+                  stops: const [0.0, 0.40, 0.70],
                 ),
               ),
             ),
@@ -113,17 +112,16 @@ class LoginScreen extends HookConsumerWidget {
           SafeArea(
             child: Column(
               children: [
-                // Logo section
-                SizedBox(
-                  height: screenHeight * 0.33,
+                // Top Banner section (fills upper space, logo at top position)
+                Expanded(
                   child: Column(
                     children: [
-                      // Back button if can pop
+                      // Top navigation row
                       if (context.canPop())
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Padding(
-                            padding: const EdgeInsets.only(left: 20),
+                            padding: const EdgeInsets.only(left: 12, top: 4),
                             child: IconButton(
                               onPressed: () => context.pop(),
                               icon: const Icon(Icons.arrow_back_ios_new_rounded,
@@ -133,7 +131,7 @@ class LoginScreen extends HookConsumerWidget {
                         )
                       else
                         const SizedBox(height: 16),
-                      // EVENTSPHERE logo — background removed PNG
+                      // EVENTSPHERE logo
                       Image.asset(
                         'assets/images/eventsphere_logo.png',
                         width: 140,
@@ -144,35 +142,38 @@ class LoginScreen extends HookConsumerWidget {
                   ),
                 ),
 
-                // ── Bottom sheet panel ─────────────────────────────────
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF141414) : AppColors.whiteSurface,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(32),
-                        topRight: Radius.circular(32),
-                      ),
-                      boxShadow: isDark
-                          ? null
-                          : [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.08),
-                                blurRadius: 24,
-                                offset: const Offset(0, -4),
-                              ),
-                            ],
+                // ── Bottom sheet panel (snugly hugs content at bottom) ─────────
+                Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF141414) : AppColors.whiteSurface,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(32),
+                      topRight: Radius.circular(32),
                     ),
-                    child: SingleChildScrollView(
-                      physics: const ClampingScrollPhysics(),
+                    boxShadow: isDark
+                        ? null
+                        : [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.08),
+                              blurRadius: 24,
+                              offset: const Offset(0, -4),
+                            ),
+                          ],
+                  ),
+                  child: SingleChildScrollView(
+                    physics: const ClampingScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
+                    child: Form(
+                      key: formKey,
                       child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // Drag handle
                           Center(
                             child: Padding(
-                              padding:
-                                  const EdgeInsets.only(top: 10, bottom: 20),
+                              padding: const EdgeInsets.only(top: 4, bottom: 12),
                               child: Container(
                                 width: 36,
                                 height: 4,
@@ -186,365 +187,353 @@ class LoginScreen extends HookConsumerWidget {
                             ),
                           ),
 
-                          Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 24),
-                            child: Form(
-                              key: formKey,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                          // Title & Subtitle
+                          Text(
+                            'Welcome back',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.getTextPrimary(context),
+                              letterSpacing: -0.4,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Sign in to continue',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 13,
+                              color: AppColors.getTextSecondary(context),
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+
+                          // Email field
+                          _NetflixTextField(
+                            controller: emailController,
+                            hint: 'Email or phone number',
+                            keyboardType: TextInputType.emailAddress,
+                            textInputAction: TextInputAction.next,
+                            validator: (val) {
+                              if (val == null || val.isEmpty) {
+                                return 'Please enter your email';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 8),
+
+                          // Password field
+                          _NetflixPasswordField(
+                            controller: passwordController,
+                            validator: (val) {
+                              if (val == null || val.isEmpty) {
+                                return 'Please enter your password';
+                              }
+                              return null;
+                            },
+                            onSubmitted: (_) => handleLogin(),
+                          ),
+                          const SizedBox(height: 10),
+
+                          // Remember me + Need help?
+                          Row(
+                            children: [
+                              GestureDetector(
+                                onTap: () => rememberMe.value =
+                                    !rememberMe.value,
+                                child: Row(
+                                  children: [
+                                    AnimatedContainer(
+                                      duration: const Duration(
+                                          milliseconds: 150),
+                                      width: 17,
+                                      height: 17,
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                          color: rememberMe.value
+                                              ? AppColors.primary
+                                              : (isDark
+                                                  ? const Color(0xFF737373)
+                                                  : const Color(0xFFD1D5DB)),
+                                          width: 1.5,
+                                        ),
+                                        borderRadius:
+                                            BorderRadius.circular(4),
+                                        color: rememberMe.value
+                                            ? AppColors.primary
+                                            : (isDark
+                                                ? Colors.transparent
+                                                : Colors.white),
+                                      ),
+                                      child: rememberMe.value
+                                          ? const Icon(Icons.check,
+                                              size: 11,
+                                              color: Colors.white)
+                                          : null,
+                                    ),
+                                    const SizedBox(width: 7),
+                                    Text(
+                                      'Remember me',
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 12.5,
+                                        color: AppColors.getTextSecondary(context),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Spacer(),
+                              GestureDetector(
+                                onTap: () {
+                                  AppSnackbar.show(
+                                    context,
+                                    message:
+                                        'Password reset link sent to email',
+                                    type: SnackbarType.info,
+                                  );
+                                },
+                                child: Text(
+                                  'Need help?',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.getTextSecondary(context),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 14),
+
+                          // Error banner
+                          if (loginError.value != null) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary
+                                    .withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: AppColors.primary
+                                      .withValues(alpha: 0.4),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
                                 children: [
-                                  // Title
-                                  Text(
-                                    'Welcome back',
+                                  const Icon(
+                                      Icons.error_outline_rounded,
+                                      color: AppColors.primary,
+                                      size: 16),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      loginError.value!,
+                                      style:
+                                          GoogleFonts.plusJakartaSans(
+                                        fontSize: 12,
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                          ],
+
+                          // Sign in button with smooth red gradient & ambient glow
+                          Container(
+                            width: double.infinity,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color(0xFFE50914), // bright Netflix red top
+                                  Color(0xFFB8070F), // rich crimson middle
+                                  Color(0xFF90040A), // deep dark red bottom
+                                ],
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFE50914)
+                                      .withValues(alpha: isDark ? 0.35 : 0.25),
+                                  blurRadius: 14,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(12),
+                                onTap: isLoading ? null : handleLogin,
+                                child: Center(
+                                  child: isLoading
+                                      ? const SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child:
+                                              CircularProgressIndicator(
+                                            strokeWidth: 2.2,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : Text(
+                                          'Sign in',
+                                          style: GoogleFonts
+                                              .plusJakartaSans(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w700,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+
+                          // OTP login (secondary)
+                          SizedBox(
+                            width: double.infinity,
+                            height: 44,
+                            child: OutlinedButton(
+                              onPressed: () => context.push(
+                                  '${AppRoutes.otp}?phone=+919876543210'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.getTextPrimary(context),
+                                backgroundColor: isDark
+                                    ? Colors.transparent
+                                    : AppColors.whiteCardAlt,
+                                side: BorderSide(
+                                    color: isDark
+                                        ? const Color(0xFF444444)
+                                        : const Color(0xFFE5E7EB),
+                                    width: 1),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(10),
+                                ),
+                              ),
+                              child: Text(
+                                'Login with OTP',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.getTextPrimary(context),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+
+                          // ── OR divider ───────────────────────────
+                          Row(
+                            children: [
+                              Expanded(
+                                  child: Divider(
+                                      color: isDark
+                                          ? const Color(0xFF333333)
+                                          : const Color(0xFFE5E7EB),
+                                      thickness: 1)),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10),
+                                child: Text('OR',
                                     style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.w800,
+                                      fontSize: 11,
+                                      color: AppColors.getTextMuted(context),
+                                      fontWeight: FontWeight.w600,
+                                    )),
+                              ),
+                              Expanded(
+                                  child: Divider(
+                                      color: isDark
+                                          ? const Color(0xFF333333)
+                                          : const Color(0xFFE5E7EB),
+                                      thickness: 1)),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+
+                          // ── Google Sign-In button ─────────────────
+                          SizedBox(
+                            width: double.infinity,
+                            height: 44,
+                            child: OutlinedButton(
+                              onPressed:
+                                  isLoading ? null : handleGoogleLogin,
+                              style: OutlinedButton.styleFrom(
+                                backgroundColor: isDark
+                                    ? const Color(0xFF1E1E1E)
+                                    : Colors.white,
+                                side: BorderSide(
+                                    color: isDark
+                                        ? const Color(0xFF3A3A3A)
+                                        : const Color(0xFFE5E7EB),
+                                    width: 1),
+                                elevation: isDark ? 0 : 1,
+                                shadowColor: Colors.black.withValues(alpha: 0.08),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(10),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.center,
+                                children: [
+                                  _GoogleIcon(
+                                    backgroundColor: isDark
+                                        ? const Color(0xFF1E1E1E)
+                                        : Colors.white,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    'Continue with Google',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
                                       color: AppColors.getTextPrimary(context),
                                     ),
                                   ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    'Sign in to continue',
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 14,
-                                      color: AppColors.getTextSecondary(context),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 24),
-
-                                  // Email field
-                                  _NetflixTextField(
-                                    controller: emailController,
-                                    hint: 'Email or phone number',
-                                    keyboardType: TextInputType.emailAddress,
-                                    textInputAction: TextInputAction.next,
-                                    validator: (val) {
-                                      if (val == null || val.isEmpty) {
-                                        return 'Please enter your email';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  const SizedBox(height: 10),
-
-                                  // Password field
-                                  _NetflixPasswordField(
-                                    controller: passwordController,
-                                    validator: (val) {
-                                      if (val == null || val.isEmpty) {
-                                        return 'Please enter your password';
-                                      }
-                                      return null;
-                                    },
-                                    onSubmitted: (_) => handleLogin(),
-                                  ),
-                                  const SizedBox(height: 16),
-
-                                  // Remember me + Need help?
-                                  Row(
-                                    children: [
-                                      GestureDetector(
-                                        onTap: () => rememberMe.value =
-                                            !rememberMe.value,
-                                        child: Row(
-                                          children: [
-                                            AnimatedContainer(
-                                              duration: const Duration(
-                                                  milliseconds: 150),
-                                              width: 18,
-                                              height: 18,
-                                              decoration: BoxDecoration(
-                                                border: Border.all(
-                                                  color: rememberMe.value
-                                                      ? AppColors.primary
-                                                      : (isDark
-                                                          ? const Color(0xFF737373)
-                                                          : const Color(0xFFD1D5DB)),
-                                                  width: 1.5,
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(4),
-                                                color: rememberMe.value
-                                                    ? AppColors.primary
-                                                    : (isDark
-                                                        ? Colors.transparent
-                                                        : Colors.white),
-                                              ),
-                                              child: rememberMe.value
-                                                  ? const Icon(Icons.check,
-                                                      size: 12,
-                                                      color: Colors.white)
-                                                  : null,
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              'Remember me',
-                                              style: GoogleFonts.plusJakartaSans(
-                                                fontSize: 13,
-                                                color: AppColors.getTextSecondary(context),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const Spacer(),
-                                      GestureDetector(
-                                        onTap: () {
-                                          AppSnackbar.show(
-                                            context,
-                                            message:
-                                                'Password reset link sent to email',
-                                            type: SnackbarType.info,
-                                          );
-                                        },
-                                        child: Text(
-                                          'Need help?',
-                                          style: GoogleFonts.plusJakartaSans(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w600,
-                                            color: AppColors.getTextSecondary(context),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 22),
-
-                                  // Error banner
-                                  if (loginError.value != null) ...[
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 14, vertical: 12),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.primary
-                                            .withValues(alpha: 0.12),
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(
-                                          color: AppColors.primary
-                                              .withValues(alpha: 0.4),
-                                          width: 1,
-                                        ),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          const Icon(
-                                              Icons.error_outline_rounded,
-                                              color: AppColors.primary,
-                                              size: 18),
-                                          const SizedBox(width: 10),
-                                          Expanded(
-                                            child: Text(
-                                              loginError.value!,
-                                              style:
-                                                  GoogleFonts.plusJakartaSans(
-                                                fontSize: 13,
-                                                color: AppColors.primary,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                  ],
-
-                                  // Sign in button with smooth red gradient & ambient glow
-                                  Container(
-                                    width: double.infinity,
-                                    height: 52,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(16),
-                                      gradient: const LinearGradient(
-                                        colors: [
-                                          Color(0xFFE50914), // bright Netflix red top
-                                          Color(0xFFB8070F), // rich crimson middle
-                                          Color(0xFF90040A), // deep dark red bottom
-                                        ],
-                                        begin: Alignment.topCenter,
-                                        end: Alignment.bottomCenter,
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: const Color(0xFFE50914)
-                                              .withValues(alpha: isDark ? 0.35 : 0.25),
-                                          blurRadius: 18,
-                                          offset: const Offset(0, 5),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Material(
-                                      color: Colors.transparent,
-                                      child: InkWell(
-                                        borderRadius: BorderRadius.circular(16),
-                                        onTap: isLoading ? null : handleLogin,
-                                        child: Center(
-                                          child: isLoading
-                                              ? const SizedBox(
-                                                  width: 22,
-                                                  height: 22,
-                                                  child:
-                                                      CircularProgressIndicator(
-                                                    strokeWidth: 2.5,
-                                                    color: Colors.white,
-                                                  ),
-                                                )
-                                              : Text(
-                                                  'Sign in',
-                                                  style: GoogleFonts
-                                                      .plusJakartaSans(
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.w700,
-                                                    color: Colors.white,
-                                                  ),
-                                                ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 20),
-
-                                  // OTP login (secondary)
-                                  SizedBox(
-                                    width: double.infinity,
-                                    height: 48,
-                                    child: OutlinedButton(
-                                      onPressed: () => context.push(
-                                          '${AppRoutes.otp}?phone=+919876543210'),
-                                      style: OutlinedButton.styleFrom(
-                                        foregroundColor: AppColors.getTextPrimary(context),
-                                        backgroundColor: isDark
-                                            ? Colors.transparent
-                                            : AppColors.whiteCardAlt,
-                                        side: BorderSide(
-                                            color: isDark
-                                                ? const Color(0xFF444444)
-                                                : const Color(0xFFE5E7EB),
-                                            width: 1),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                        ),
-                                      ),
-                                      child: Text(
-                                        'Login with OTP',
-                                        style: GoogleFonts.plusJakartaSans(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                          color: AppColors.getTextPrimary(context),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-
-                                  // ── OR divider ───────────────────────────
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                          child: Divider(
-                                              color: isDark
-                                                  ? const Color(0xFF333333)
-                                                  : const Color(0xFFE5E7EB),
-                                              thickness: 1)),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 12),
-                                        child: Text('OR',
-                                            style: GoogleFonts.plusJakartaSans(
-                                              fontSize: 12,
-                                              color: AppColors.getTextMuted(context),
-                                              fontWeight: FontWeight.w600,
-                                            )),
-                                      ),
-                                      Expanded(
-                                          child: Divider(
-                                              color: isDark
-                                                  ? const Color(0xFF333333)
-                                                  : const Color(0xFFE5E7EB),
-                                              thickness: 1)),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 16),
-
-                                  // ── Google Sign-In button ─────────────────
-                                  SizedBox(
-                                    width: double.infinity,
-                                    height: 50,
-                                    child: OutlinedButton(
-                                      onPressed:
-                                          isLoading ? null : handleGoogleLogin,
-                                      style: OutlinedButton.styleFrom(
-                                        backgroundColor: isDark
-                                            ? const Color(0xFF1E1E1E)
-                                            : Colors.white,
-                                        side: BorderSide(
-                                            color: isDark
-                                                ? const Color(0xFF3A3A3A)
-                                                : const Color(0xFFE5E7EB),
-                                            width: 1),
-                                        elevation: isDark ? 0 : 1,
-                                        shadowColor: Colors.black.withValues(alpha: 0.08),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                        ),
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          _GoogleIcon(
-                                            backgroundColor: isDark
-                                                ? const Color(0xFF1E1E1E)
-                                                : Colors.white,
-                                          ),
-                                          const SizedBox(width: 12),
-                                          Text(
-                                            'Continue with Google',
-                                            style: GoogleFonts.plusJakartaSans(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w600,
-                                              color: AppColors.getTextPrimary(context),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 24),
-
-                                  // Sign up link
-                                  Center(
-                                    child: GestureDetector(
-                                      onTap: () =>
-                                          context.push(AppRoutes.signup),
-                                      child: RichText(
-                                        text: TextSpan(
-                                          style: GoogleFonts.plusJakartaSans(
-                                            fontSize: 13,
-                                            color: AppColors.getTextSecondary(context),
-                                          ),
-                                          children: [
-                                            const TextSpan(
-                                                text: 'First time here? '),
-                                            TextSpan(
-                                              text: 'Sign up',
-                                              style:
-                                                  GoogleFonts.plusJakartaSans(
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w700,
-                                                color: AppColors.primary,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 36),
                                 ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+
+                          // Sign up link (directly below Google Sign-In with standard 14px gap - NO EMPTY GAP!)
+                          Center(
+                            child: GestureDetector(
+                              onTap: () =>
+                                  context.push(AppRoutes.signup),
+                              child: RichText(
+                                text: TextSpan(
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 13,
+                                    color: AppColors.getTextSecondary(context),
+                                  ),
+                                  children: [
+                                    const TextSpan(
+                                        text: 'First time here? '),
+                                    TextSpan(
+                                      text: 'Sign up',
+                                      style:
+                                          GoogleFonts.plusJakartaSans(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.primary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
@@ -596,46 +585,47 @@ class _NetflixTextField extends StatelessWidget {
       validator: validator,
       onFieldSubmitted: onSubmitted,
       style: GoogleFonts.plusJakartaSans(
-        fontSize: 14,
+        fontSize: 13.5,
         color: AppColors.getTextPrimary(context),
       ),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: GoogleFonts.plusJakartaSans(
-          fontSize: 14,
+          fontSize: 13.5,
           color: AppColors.getTextMuted(context),
         ),
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: isDark ? const Color(0xFF333333) : const Color(0xFFF3F4F6),
+        fillColor: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF3F4F6),
         contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
+        isDense: true,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(11),
           borderSide: isDark
               ? BorderSide.none
               : const BorderSide(color: Color(0xFFE5E7EB), width: 1),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(11),
           borderSide: isDark
               ? BorderSide.none
               : const BorderSide(color: Color(0xFFE5E7EB), width: 1),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(11),
           borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(11),
           borderSide: const BorderSide(color: Color(0xFFE50914), width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(11),
           borderSide: const BorderSide(color: Color(0xFFE50914), width: 1.5),
         ),
         errorStyle: GoogleFonts.plusJakartaSans(
-          fontSize: 12,
+          fontSize: 11.5,
           color: const Color(0xFFE50914),
         ),
       ),
@@ -671,12 +661,14 @@ class _NetflixPasswordFieldState extends State<_NetflixPasswordField> {
       validator: widget.validator,
       onSubmitted: widget.onSubmitted,
       suffixIcon: IconButton(
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints(),
         icon: Icon(
           _obscure
               ? Icons.visibility_off_outlined
               : Icons.visibility_outlined,
           color: AppColors.getTextSecondary(context),
-          size: 20,
+          size: 19,
         ),
         onPressed: () => setState(() => _obscure = !_obscure),
       ),
@@ -692,7 +684,7 @@ class _GoogleIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-      size: const Size(22, 22),
+      size: const Size(20, 20),
       painter: _GoogleLogoPainter(backgroundColor: backgroundColor),
     );
   }

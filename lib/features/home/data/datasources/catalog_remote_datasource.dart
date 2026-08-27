@@ -268,7 +268,7 @@ class CatalogRemoteDataSource {
     String? categoryId,
     String? mode,
     int page = 1,
-    int limit = 20,
+    int limit = 100,
   }) async {
     try {
       final params = <String, dynamic>{

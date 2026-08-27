@@ -16,7 +16,7 @@
         <!-- Default Notification Channel for FCM -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="eventsphere_high_importance" />
+            android:value="ems_default_channel" />
         <!--
           Disable Flutter's Impeller (Vulkan) renderer.
           Impeller has a known bug with SurfaceTexture external textures
