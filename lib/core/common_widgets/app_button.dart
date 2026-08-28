@@ -105,6 +105,8 @@ class AppSecondaryButton extends StatelessWidget {
   final IconData? icon;
   final bool isLoading;
   final double? width;
+  final double? height;
+  final double? fontSize;
 
   const AppSecondaryButton({
     super.key,
@@ -113,13 +115,15 @@ class AppSecondaryButton extends StatelessWidget {
     this.icon,
     this.isLoading = false,
     this.width,
+    this.height,
+    this.fontSize,
   });
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: width ?? double.infinity,
-      height: 52,
+      height: height ?? 52,
       child: OutlinedButton(
         onPressed: (isLoading || onPressed == null) ? null : onPressed,
         style: OutlinedButton.styleFrom(
@@ -145,7 +149,7 @@ class AppSecondaryButton extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (icon != null) ...[
-                    Icon(icon, size: 18),
+                    Icon(icon, size: (fontSize != null ? fontSize! + 2 : 18)),
                     const SizedBox(width: 8),
                   ],
                   Flexible(
@@ -154,7 +158,7 @@ class AppSecondaryButton extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.plusJakartaSans(
-                        fontSize: 15,
+                        fontSize: fontSize ?? 15,
                         fontWeight: FontWeight.w700,
                       ),
                     ),

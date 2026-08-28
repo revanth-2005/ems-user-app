@@ -241,7 +241,7 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Row(
                         children: [
                           // 1. Packages (Real-World 3D Gift Box)
@@ -258,6 +258,7 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
                               context.go(AppRoutes.search);
                             },
                           ),
+                          const SizedBox(width: 8),
 
                           // 2. Services (Real-World 3D Star Wand & Lens)
                           _buildPillarItem(
@@ -273,6 +274,7 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
                               context.go(AppRoutes.search);
                             },
                           ),
+                          const SizedBox(width: 8),
 
                           // 3. Organizers (Real-World 3D Gold Megaphone)
                           _buildPillarItem(
@@ -288,6 +290,7 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
                               context.go(AppRoutes.search);
                             },
                           ),
+                          const SizedBox(width: 8),
 
                           // 4. Live Events (Real-World 3D VIP Tickets)
                           _buildPillarItem(
@@ -584,45 +587,52 @@ class HomeDiscoveryScreen extends HookConsumerWidget {
     required VoidCallback onTap,
   }) {
     return Expanded(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
-          splashColor: accentColor.withValues(alpha: 0.15),
-          highlightColor: accentColor.withValues(alpha: 0.08),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Image.asset(
-                  imageAsset,
-                  width: 46,
-                  height: 46,
-                  cacheWidth: 120,
-                  cacheHeight: 120,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) => Icon(
-                    fallbackIcon,
-                    size: 32,
-                    color: accentColor,
+      child: Container(
+        decoration: AppColors.getCardDecoration(
+          context,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(16),
+            splashColor: accentColor.withValues(alpha: 0.15),
+            highlightColor: accentColor.withValues(alpha: 0.08),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset(
+                    imageAsset,
+                    width: 42,
+                    height: 42,
+                    cacheWidth: 120,
+                    cacheHeight: 120,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) => Icon(
+                      fallbackIcon,
+                      size: 30,
+                      color: accentColor,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  title,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.getTextPrimary(context),
-                    letterSpacing: -0.2,
+                  const SizedBox(height: 8),
+                  Text(
+                    title,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.getTextPrimary(context),
+                      letterSpacing: -0.2,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -846,20 +856,15 @@ class _NetflixEventHeroState extends ConsumerState<_NetflixEventHero> {
                                   style: GoogleFonts.plusJakartaSans(
                                     fontSize: 25,
                                     fontWeight: FontWeight.w900,
-                                    color: isDark
-                                        ? Colors.white
-                                        : const Color(0xFF111827),
+                                    color: Colors.white,
                                     height: 1.15,
                                     letterSpacing: -0.3,
-                                    shadows: isDark
-                                        ? [
-                                            Shadow(
-                                              color: Colors.black
-                                                  .withValues(alpha: 0.8),
-                                              blurRadius: 12,
-                                            ),
-                                          ]
-                                        : null,
+                                    shadows: [
+                                      Shadow(
+                                        color: Colors.black.withValues(alpha: 0.8),
+                                        blurRadius: 12,
+                                      ),
+                                    ],
                                   ),
                                 ),
 
