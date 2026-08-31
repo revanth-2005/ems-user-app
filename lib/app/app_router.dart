@@ -31,6 +31,7 @@ import '../features/host/presentation/views/event_hosting_subscription_screen.da
 import '../features/profile/presentation/views/customer_profile_screen.dart';
 import '../features/profile/presentation/views/followed_organizers_screen.dart';
 import '../features/notifications/presentation/views/notifications_screen.dart';
+import '../features/chatbot/presentation/views/ai_chatbot_screen.dart';
 import 'app_shell.dart';
 
 // ── Named Route Paths ──────────────────────────────────────────────────────
@@ -40,6 +41,9 @@ abstract class AppRoutes {
   static const login = '/auth/login';
   static const signup = '/auth/signup';
   static const otp = '/auth/otp';
+
+  // AI Chatbot
+  static const chatbot = '/chatbot';
 
   // Main shell tabs
   static const home = '/';
@@ -189,6 +193,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.notifications,
         builder: (_, __) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.chatbot,
+        builder: (_, __) => const AiChatbotScreen(),
       ),
 
       // ── Cart ──────────────────────────────────────────────────────────────

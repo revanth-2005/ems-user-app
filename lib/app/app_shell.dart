@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/constants/app_colors.dart';
+import '../features/chatbot/presentation/widgets/floating_ai_assistant_button.dart';
 import 'app_router.dart';
 
 /// Persistent bottom navigation shell driven by GoRouter's [ShellRoute].
@@ -54,6 +55,8 @@ class AppShell extends HookConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.getBg(context),
       body: child,
+      floatingActionButton: const FloatingAiAssistantButton(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: _BottomNavBar(
         currentIndex: currentIndex,
         tabs: _tabs,
