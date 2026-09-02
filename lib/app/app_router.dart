@@ -15,9 +15,16 @@ import '../features/home/presentation/views/service_detail_screen.dart';
 import '../features/home/presentation/views/organizer_profile_screen.dart';
 import '../features/bookings/presentation/views/my_bookings_tickets_screen.dart';
 import '../features/bookings/presentation/views/cart_checkout_screen.dart';
-import '../features/organizer/presentation/views/organizer_dashboard_screen.dart';
+import '../features/organizer/presentation/views/organizer_hub_screen.dart';
+import '../features/organizer/presentation/views/organizer_become_screen.dart';
+import '../features/organizer/presentation/views/kyc_pending_screen.dart';
+import '../features/organizer/presentation/views/kyc_resubmit_screen.dart';
+import '../features/organizer/presentation/views/organizer_packages_screen.dart';
+import '../features/organizer/presentation/views/organizer_services_screen.dart';
+import '../features/organizer/presentation/views/organizer_portfolio_screen.dart';
+import '../features/organizer/presentation/views/organizer_subscription_screen.dart';
+import '../features/organizer/presentation/views/organizer_suspended_screen.dart';
 import '../features/organizer/presentation/views/booking_inbox_screen.dart';
-import '../features/organizer/presentation/views/catalog_manager_screen.dart';
 import '../features/organizer/presentation/views/availability_calendar_screen.dart';
 import '../features/organizer/presentation/views/payout_ledger_screen.dart';
 import '../features/organizer/presentation/views/kyc_registration_screen.dart';
@@ -74,7 +81,22 @@ abstract class AppRoutes {
   static const attendeeQueue = '/host/attendees/:id';
   static const qrScanner = '/host/scanner/:id';
 
-  // Organizer
+  // ── Organizer Profile Hub & Management Flow ───────────────────────────────
+  static const organizerBecome = '/profile/organizer/become';
+  static const organizerKycPending = '/profile/organizer/kyc-pending';
+  static const organizerKycResubmit = '/profile/organizer/kyc-resubmit';
+  static const organizerSetupWizard = '/profile/organizer/setup-wizard';
+  static const organizerHub = '/profile/organizer/hub';
+  static const organizerPackages = '/profile/organizer/packages';
+  static const organizerServices = '/profile/organizer/services';
+  static const organizerBookings = '/profile/organizer/bookings';
+  static const organizerCalendar = '/profile/organizer/calendar';
+  static const organizerEarnings = '/profile/organizer/earnings';
+  static const organizerPortfolio = '/profile/organizer/portfolio';
+  static const organizerSubscription = '/profile/organizer/subscription';
+  static const organizerSuspended = '/profile/organizer/suspended';
+
+  // Legacy Aliases
   static const organizerDashboard = '/organizer';
   static const bookingInbox = '/organizer/inbox';
   static const catalogManager = '/organizer/catalog';
@@ -222,10 +244,25 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             QrScannerScreen(eventId: state.pathParameters['id']!),
       ),
 
-      // ── Organizer ─────────────────────────────────────────────────────────
-      GoRoute(path: AppRoutes.organizerDashboard, builder: (_, __) => const OrganizerDashboardScreen()),
+      // ── Organizer Profile Flow (Specification Routes) ─────────────────────
+      GoRoute(path: AppRoutes.organizerBecome, builder: (_, __) => const OrganizerBecomeScreen()),
+      GoRoute(path: AppRoutes.organizerKycPending, builder: (_, __) => const KycPendingScreen()),
+      GoRoute(path: AppRoutes.organizerKycResubmit, builder: (_, __) => const KycResubmitScreen()),
+      GoRoute(path: AppRoutes.organizerSetupWizard, builder: (_, __) => const OnboardingWizardScreen()),
+      GoRoute(path: AppRoutes.organizerHub, builder: (_, __) => const OrganizerHubScreen()),
+      GoRoute(path: AppRoutes.organizerPackages, builder: (_, __) => const OrganizerPackagesScreen()),
+      GoRoute(path: AppRoutes.organizerServices, builder: (_, __) => const OrganizerServicesScreen()),
+      GoRoute(path: AppRoutes.organizerBookings, builder: (_, __) => const BookingInboxScreen()),
+      GoRoute(path: AppRoutes.organizerCalendar, builder: (_, __) => const AvailabilityCalendarScreen()),
+      GoRoute(path: AppRoutes.organizerEarnings, builder: (_, __) => const PayoutLedgerScreen()),
+      GoRoute(path: AppRoutes.organizerPortfolio, builder: (_, __) => const OrganizerPortfolioScreen()),
+      GoRoute(path: AppRoutes.organizerSubscription, builder: (_, __) => const OrganizerSubscriptionScreen()),
+      GoRoute(path: AppRoutes.organizerSuspended, builder: (_, __) => const OrganizerSuspendedScreen()),
+
+      // ── Legacy Aliases (Backwards Compatibility) ──────────────────────────
+      GoRoute(path: AppRoutes.organizerDashboard, builder: (_, __) => const OrganizerHubScreen()),
       GoRoute(path: AppRoutes.bookingInbox, builder: (_, __) => const BookingInboxScreen()),
-      GoRoute(path: AppRoutes.catalogManager, builder: (_, __) => const CatalogManagerScreen()),
+      GoRoute(path: AppRoutes.catalogManager, builder: (_, __) => const OrganizerPackagesScreen()),
       GoRoute(path: AppRoutes.availabilityCalendar, builder: (_, __) => const AvailabilityCalendarScreen()),
       GoRoute(path: AppRoutes.payoutLedger, builder: (_, __) => const PayoutLedgerScreen()),
       GoRoute(path: AppRoutes.kycRegistration, builder: (_, __) => const KycRegistrationScreen()),

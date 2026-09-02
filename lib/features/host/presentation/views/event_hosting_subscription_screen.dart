@@ -104,12 +104,12 @@ class EventHostingSubscriptionScreen extends HookConsumerWidget {
           userName: currentUser?.name,
           eventTitle: 'Subscription: ${plan.name} (${billingCycle.value.toUpperCase()})',
           onSuccess: (data) async {
-            if (context.mounted) {
               await ref.read(userEventSubscriptionProvider.notifier).refresh();
               await ref.read(hostedEventsProvider.notifier).refresh();
 
-              showDialog(
-                context: context,
+              if (context.mounted) {
+                showDialog(
+                  context: context,
                 builder: (ctx) => AlertDialog(
                   backgroundColor: AppColors.getSurface(ctx),
                   shape: RoundedRectangleBorder(

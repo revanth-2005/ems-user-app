@@ -1,5 +1,6 @@
 /// Domain entities for User Event Hosting Subscriptions, plan tiers,
 /// usage tracking, and Razorpay payment order payloads.
+library;
 
 class EventSubscriptionPlan {
   final String id;

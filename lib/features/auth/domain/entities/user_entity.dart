@@ -2,7 +2,28 @@
 // Hand-written (no code-gen) for immediate compilation.
 // Migrate to @freezed in Phase 5 when build_runner is run.
 
-enum KycStatus { PENDING, UNDER_REVIEW, APPROVED, REJECTED }
+enum KycStatus {
+  none,
+  pending,
+  underReview,
+  approved,
+  rejected,
+  suspended;
+
+  // Uppercase backwards-compatibility constants
+  static const NONE = KycStatus.none;
+  static const PENDING = KycStatus.pending;
+  static const UNDER_REVIEW = KycStatus.underReview;
+  static const APPROVED = KycStatus.approved;
+  static const REJECTED = KycStatus.rejected;
+  static const SUSPENDED = KycStatus.suspended;
+
+  bool get isNone => this == KycStatus.none;
+  bool get isPending => this == KycStatus.pending || this == KycStatus.underReview;
+  bool get isApproved => this == KycStatus.approved;
+  bool get isRejected => this == KycStatus.rejected;
+  bool get isSuspended => this == KycStatus.suspended;
+}
 enum ActivePortal { CUSTOMER, ORGANIZER, HOST }
 
 class UserEntity {
