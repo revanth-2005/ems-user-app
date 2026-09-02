@@ -15,8 +15,8 @@ class LoginScreen extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final emailController =
-        useTextEditingController(text: 'revanthwebnox@gmail.com');
-    final passwordController = useTextEditingController(text: '12345678');
+        useTextEditingController(text: 'user@ems.platform');
+    final passwordController = useTextEditingController(text: 'Password123!');
     final formKey = useMemoized(() => GlobalKey<FormState>());
     final loginError = useState<String?>(null);
     final rememberMe = useState(false);

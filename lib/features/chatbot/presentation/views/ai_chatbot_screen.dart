@@ -156,43 +156,43 @@ class _AiChatbotScreenState extends ConsumerState<AiChatbotScreen> {
           ),
         ],
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Chat Message List
-            Expanded(
-              child: ListView.builder(
-                controller: _scrollController,
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-                itemCount: chatState.messages.length + (chatState.isTyping ? 1 : 0),
-                itemBuilder: (context, index) {
-                  if (index < chatState.messages.length) {
-                    final msg = chatState.messages[index];
-                    return ChatBubble(
-                      message: msg,
-                      onSuggestedActionTapped: (reply) {
-                        ref.read(chatProvider.notifier).sendMessage(reply);
-                        _scrollToBottom();
-                      },
-                    );
-                  } else {
-                    return _buildTypingIndicator(isDark);
-                  }
-                },
+      body: Column(
+        children: [
+          // Chat Message List
+          Expanded(
+            child: ListView.builder(
+              controller: _scrollController,
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+              itemCount: chatState.messages.length + (chatState.isTyping ? 1 : 0),
+              itemBuilder: (context, index) {
+                if (index < chatState.messages.length) {
+                  final msg = chatState.messages[index];
+                  return ChatBubble(
+                    message: msg,
+                    onSuggestedActionTapped: (reply) {
+                      ref.read(chatProvider.notifier).sendMessage(reply);
+                      _scrollToBottom();
+                    },
+                  );
+                } else {
+                  return _buildTypingIndicator(isDark);
+                }
+              },
+            ),
+          ),
+
+          // Message Input Bar
+          Container(
+            decoration: BoxDecoration(
+              color: inputBg,
+              border: Border(
+                top: BorderSide(color: borderColor, width: 1),
               ),
             ),
-
-            // Message Input Bar
-            SafeArea(
+            child: SafeArea(
               top: false,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: inputBg,
-                  border: Border(
-                    top: BorderSide(color: borderColor, width: 1),
-                  ),
-                ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 8, 14, 10),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -201,9 +201,10 @@ class _AiChatbotScreenState extends ConsumerState<AiChatbotScreen> {
                         constraints: const BoxConstraints(maxHeight: 110),
                         decoration: BoxDecoration(
                           color: isDark ? const Color(0xFF1E1E24) : const Color(0xFFF3F4F6),
-                          borderRadius: BorderRadius.circular(22),
+                          borderRadius: BorderRadius.circular(24),
                           border: Border.all(
                             color: isDark ? const Color(0xFF2E2E38) : const Color(0xFFE5E7EB),
+                            width: 1,
                           ),
                         ),
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
@@ -221,9 +222,16 @@ class _AiChatbotScreenState extends ConsumerState<AiChatbotScreen> {
                             hintText: "Ask about events, packages...",
                             hintStyle: GoogleFonts.plusJakartaSans(
                               fontSize: 13,
-                              color: isDark ? const Color(0xFF8E8E98) : const Color(0xFF9CA3AF),
+                              color: isDark ? const Color(0xFF71717A) : const Color(0xFF9CA3AF),
                             ),
+                            filled: false,
+                            fillColor: Colors.transparent,
                             border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            errorBorder: InputBorder.none,
+                            focusedErrorBorder: InputBorder.none,
+                            disabledBorder: InputBorder.none,
                             isDense: true,
                             contentPadding: const EdgeInsets.symmetric(vertical: 10),
                           ),
@@ -234,37 +242,59 @@ class _AiChatbotScreenState extends ConsumerState<AiChatbotScreen> {
                     const SizedBox(width: 8),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 1),
-                      child: InkWell(
-                        onTap: _handleSend,
-                        borderRadius: BorderRadius.circular(22),
-                        child: Container(
-                          width: 42,
-                          height: 42,
-                          decoration: BoxDecoration(
-                            gradient: AppColors.primaryGradient,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.primary.withValues(alpha: 0.35),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
+                      child: ValueListenableBuilder<TextEditingValue>(
+                        valueListenable: _textController,
+                        builder: (context, value, _) {
+                          final hasText = value.text.trim().isNotEmpty;
+                          return Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: _handleSend,
+                              borderRadius: BorderRadius.circular(22),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 180),
+                                width: 42,
+                                height: 42,
+                                decoration: BoxDecoration(
+                                  gradient: hasText ? AppColors.primaryGradient : null,
+                                  color: hasText
+                                      ? null
+                                      : (isDark
+                                          ? const Color(0xFF26262C)
+                                          : const Color(0xFFE2E8F0)),
+                                  shape: BoxShape.circle,
+                                  boxShadow: hasText
+                                      ? [
+                                          BoxShadow(
+                                            color: AppColors.primary
+                                                .withValues(alpha: 0.38),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ]
+                                      : null,
+                                ),
+                                child: Icon(
+                                  Icons.send_rounded,
+                                  color: hasText
+                                      ? Colors.white
+                                      : (isDark
+                                          ? const Color(0xFF52525B)
+                                          : const Color(0xFF94A3B8)),
+                                  size: 19,
+                                ),
                               ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.send_rounded,
-                            color: Colors.white,
-                            size: 19,
-                          ),
-                        ),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
