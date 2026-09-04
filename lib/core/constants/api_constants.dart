@@ -2,15 +2,15 @@
 /// All API endpoints and backend host URLs are defined here in one single place.
 class ApiConstants {
   // ── 🌐 Centralized Base URL Configuration ──────────────────────────────────
-  static const String baseUrl = 'http://localhost:3001';
-  static const String serverHost = 'localhost';
+  static const String baseUrl = 'http://192.168.0.190:3001';
+  static const String serverHost = '192.168.0.190';
   static const String serverPort = '3001';          // Backend / Proxy Port
   static const String apiPrefix  = '';          // Live backend routes mount directly at root
   static const String chatEndpoint = '$baseUrl/chat';
   static const String chat = '/chat';
 
   /// MinIO Media Storage Base URL (Local MinIO on port 6006)
-  static const String mediaBaseUrl = 'http://localhost:6006';
+  static const String mediaBaseUrl = 'http://192.168.0.190:6006';
 
   // ── 🔐 Auth Endpoints ──────────────────────────────────────────────────────
   static const String signupEmail   = '/auth/signup/email';
