@@ -99,11 +99,11 @@ enum ServicePricingUnit {
   String get label {
     switch (this) {
       case ServicePricingUnit.FIXED:
-        return 'Flat Fee (Fixed)';
+        return 'Flat Fee';
       case ServicePricingUnit.PER_HEAD:
-        return 'Per Guest (Per Head)';
+        return 'Per Guest';
       case ServicePricingUnit.PER_HOUR:
-        return 'Hourly Rate';
+        return 'Hourly';
     }
   }
 

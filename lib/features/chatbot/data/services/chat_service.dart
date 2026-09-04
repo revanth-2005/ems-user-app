@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../../../../core/constants/api_constants.dart';
+import '../../../../core/services/secure_storage_service.dart';
 import '../../domain/models/chat_message_model.dart';
 
 /// HTTP service for the AI Chatbot — talks to POST /chat on the EMS backend.
@@ -15,10 +17,15 @@ class ChatService {
     String? jwtToken,
     String? sessionId,
   }) async {
+    String? token = jwtToken;
+    if (token == null || token.isEmpty) {
+      token = await SecureStorageService().getAccessToken();
+    }
+
     final headers = <String, String>{
       'Content-Type': 'application/json',
-      if (jwtToken != null && jwtToken.isNotEmpty)
-        'Authorization': 'Bearer $jwtToken',
+      if (token != null && token.isNotEmpty)
+        'Authorization': 'Bearer $token',
     };
 
     final body = <String, dynamic>{
@@ -86,8 +93,8 @@ class ChatService {
         cards: cards.isNotEmpty ? cards : null,
         suggestedActions: suggested.isNotEmpty ? suggested : null,
       );
-    } catch (_) {
-      // Graceful fallback to demo mode so the UI and card rendering can always be tested
+    } catch (e) {
+      debugPrint('⚠️ Chat API call failed: $e. Falling back to rich simulation.');
       return _generateSimulatedResponse(message);
     }
   }
@@ -95,6 +102,297 @@ class ChatService {
   /// Provides rich demo responses with real cards when the backend /chat is offline or 404.
   ChatMessage _generateSimulatedResponse(String message) {
     final q = message.toLowerCase();
+
+    // ── Organizer & Vendor Search ────────────────────────────────────────────
+    if (q.contains('organizer') ||
+        q.contains('vendor') ||
+        q.contains('planner') ||
+        q.contains('caterer') ||
+        q.contains('photographer')) {
+      final isDelhi = q.contains('delhi');
+      final cityLabel = isDelhi ? ' in Delhi' : ' in Mumbai';
+
+      return ChatMessage(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        text:
+            'Here are top-rated verified event organizers & vendors$cityLabel:',
+        type: ChatMessageType.bot,
+        timestamp: DateTime.now(),
+        cards: [
+          ChatCard(
+            type: 'ORGANIZER_CARD',
+            data: {
+              'id': 'org_mumbai_01',
+              'businessName': isDelhi
+                  ? 'Delhi Royal Events & Decor'
+                  : 'Mumbai Live Concerts & Sound',
+              'displayName': isDelhi
+                  ? 'Delhi Royal Events'
+                  : 'Mumbai Live Concerts',
+              'city': isDelhi ? 'Delhi' : 'Mumbai',
+              'totalPackages': 4,
+              'totalServices': 6,
+              'rating': 4.9,
+              'ratingCount': 24,
+              'logoUrl':
+                  'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=300',
+            },
+          ),
+          ChatCard(
+            type: 'ORGANIZER_CARD',
+            data: {
+              'id': 'org_royal_02',
+              'businessName': 'Royal Feast Hospitality & Events',
+              'displayName': 'Royal Feast Hospitality',
+              'city': isDelhi ? 'Delhi' : 'Mumbai',
+              'totalPackages': 3,
+              'totalServices': 5,
+              'rating': 4.8,
+              'ratingCount': 18,
+              'logoUrl':
+                  'https://images.unsplash.com/photo-1519741497674-611481863552?w=300',
+            },
+          ),
+        ],
+        suggestedActions: [
+          'View Packages',
+          'Contact Organizer',
+          'Explore Events',
+        ],
+      );
+    }
+
+    // ── Organizer AI Copilot: organizer_create_event_draft Tool Execution ───
+    if (message.contains('organizer_create_event_draft') ||
+        (q.contains('create') && q.contains('event')) ||
+        (q.contains('draft') && q.contains('event')) ||
+        q.contains('mumbai tech meetup') ||
+        q.contains('tech leaders') ||
+        q.contains('comedy show')) {
+      String title = 'Mumbai Tech Meetup';
+      String city = 'Mumbai';
+      String venue = 'Bandra Kurla Complex, Mumbai';
+      int capacity = 50;
+
+      // Extract details if JSON is present in the message
+      if (message.contains('{') && message.contains('}')) {
+        try {
+          final jsonStart = message.indexOf('{');
+          final jsonEnd = message.lastIndexOf('}') + 1;
+          final jsonStr = message.substring(jsonStart, jsonEnd);
+          final dynamic parsed = jsonDecode(jsonStr);
+          if (parsed is Map<String, dynamic>) {
+            final args = parsed['arguments'] as Map<String, dynamic>? ?? parsed;
+            if (args['title'] != null) title = args['title'].toString();
+            if (args['city'] != null) city = args['city'].toString();
+            if (args['location'] != null) venue = args['location'].toString();
+            if (args['capacity'] != null) {
+              capacity = (args['capacity'] as num).toInt();
+            }
+          }
+        } catch (_) {}
+      } else {
+        // Dynamic extraction from prompt (e.g. "Create event salem tech meetup")
+        final cleanPrompt = message
+            .replaceFirst(
+              RegExp(
+                r'^(please\s+)?(create|draft|make|start|plan)\s+(an?\s+)?(new\s+)?event\s*(called|named|for|:)?\s*',
+                caseSensitive: false,
+              ),
+              '',
+            )
+            .trim();
+
+        if (cleanPrompt.isNotEmpty && cleanPrompt.length > 2) {
+          title = cleanPrompt
+              .split(' ')
+              .map((w) =>
+                  w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '')
+              .join(' ');
+        }
+
+        const knownCities = [
+          'Salem',
+          'Mumbai',
+          'Bangalore',
+          'Delhi',
+          'Chennai',
+          'Hyderabad',
+          'Goa',
+          'Pune',
+          'Kolkata',
+          'Coimbatore',
+          'Udaipur',
+          'Ahmedabad',
+          'Kochi'
+        ];
+        for (final c in knownCities) {
+          if (RegExp('\\b$c\\b', caseSensitive: false).hasMatch(message)) {
+            city = c;
+            venue = '$c Tech Hub, $c';
+            break;
+          }
+        }
+      }
+
+      return ChatMessage(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        text:
+            '⚡ **Tool Executed: `organizer_create_event_draft`**\nI have created your event draft for **$title**! Here are the event details:',
+        type: ChatMessageType.bot,
+        timestamp: DateTime.now(),
+        cards: [
+          ChatCard(
+            type: 'EVENT_DRAFT_CARD',
+            data: {
+              'eventId': 'evt_draft_${DateTime.now().millisecondsSinceEpoch}',
+              'title': title,
+              'city': city,
+              'venue': venue,
+              'status': 'DRAFT',
+              'ticketTiers': [
+                {
+                  'name': 'General Admission RSVP',
+                  'price': 0,
+                  'totalSeats': capacity,
+                },
+                {
+                  'name': 'VIP All-Access',
+                  'price': 1499,
+                  'totalSeats': 15,
+                },
+              ],
+              'createdAt': DateTime.now().toIso8601String(),
+            },
+          ),
+        ],
+        suggestedActions: [
+          '🚀 Publish Now',
+          '✏️ Edit Details',
+          '🏷️ Add Paid Ticket Tier',
+          '📊 Check Projected Revenue',
+        ],
+      );
+    }
+
+    // ── Organizer AI Copilot: Publish Event ──────────────────────────────────
+    if (q.contains('publish')) {
+      return ChatMessage(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        text:
+            '🎉 Event "Tech Leaders Summit 2026" has been published and is now live on the public discovery feed!',
+        type: ChatMessageType.bot,
+        timestamp: DateTime.now(),
+        cards: [
+          const ChatCard(
+            type: 'EVENT_CARD',
+            data: {
+              'id': 'evt_draft_9918',
+              'title': 'Tech Leaders Summit 2026 (Live)',
+              'mode': 'PHYSICAL',
+              'city': 'Bangalore',
+              'startDatetime': '2026-10-15T10:00:00.000Z',
+              'venueName': 'Whitefield Convention Center',
+              'ticketStartingPriceRupees': 799,
+            },
+          ),
+        ],
+        suggestedActions: [
+          'View Organizer Analytics',
+          'Inspect Attendee Check-ins',
+          'Share Event Link',
+        ],
+      );
+    }
+
+    // ── Organizer AI Copilot: Revenue & Analytics ───────────────────────────
+    if (q.contains('revenue') ||
+        q.contains('analytics') ||
+        q.contains('gmv') ||
+        q.contains('sales') ||
+        q.contains('earnings')) {
+      return ChatMessage(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        text:
+            'Here is your real-time revenue and ticket analytics performance for this cycle:',
+        type: ChatMessageType.bot,
+        timestamp: DateTime.now(),
+        cards: [
+          const ChatCard(
+            type: 'ANALYTICS_CARD',
+            data: {
+              'totalGmvRupees': 1850000,
+              'netRevenueRupees': 1850000,
+              'ticketsSold': 428,
+              'activeEventsCount': 3,
+              'pageviews': 12450,
+              'period': 'September 2026',
+            },
+          ),
+        ],
+        suggestedActions: [
+          'View Payouts & Bank Transfers',
+          'Inspect Attendee Check-ins',
+          'Create New Event Draft',
+        ],
+      );
+    }
+
+    // ── Organizer AI Copilot: Attendee Check-ins ─────────────────────────────
+    if (q.contains('attendee') ||
+        q.contains('check-in') ||
+        q.contains('checkin') ||
+        q.contains('guest list')) {
+      return ChatMessage(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        text:
+            'Here is the latest live attendee check-in and QR verification roster:',
+        type: ChatMessageType.bot,
+        timestamp: DateTime.now(),
+        cards: [
+          const ChatCard(
+            type: 'ATTENDEE_CARD',
+            data: {
+              'attendeeId': 'att_101',
+              'name': 'Priya Sharma',
+              'ticketTier': 'VIP Pass',
+              'status': 'CHECKED_IN',
+              'phone': '+91 98765 12345',
+              'qrData': 'EMS-TKT-VIP-9918-01',
+              'checkedInAt': '10:45 AM Today',
+            },
+          ),
+          const ChatCard(
+            type: 'ATTENDEE_CARD',
+            data: {
+              'attendeeId': 'att_102',
+              'name': 'Rahul Verma',
+              'ticketTier': 'General Admission',
+              'status': 'NOT_CHECKED_IN',
+              'phone': '+91 98220 54321',
+              'qrData': 'EMS-TKT-GEN-9918-02',
+            },
+          ),
+          const ChatCard(
+            type: 'ATTENDEE_CARD',
+            data: {
+              'attendeeId': 'att_103',
+              'name': 'Ananya Roy',
+              'ticketTier': 'VIP Pass',
+              'status': 'CHECKED_IN',
+              'phone': '+91 99112 33445',
+              'qrData': 'EMS-TKT-VIP-9918-03',
+              'checkedInAt': '11:10 AM Today',
+            },
+          ),
+        ],
+        suggestedActions: [
+          'Scan Attendee QR Code',
+          'Filter Not Checked In',
+          'Export Attendee CSV',
+        ],
+      );
+    }
 
     if (q.contains('concert') || q.contains('music') || q.contains('event')) {
       return ChatMessage(

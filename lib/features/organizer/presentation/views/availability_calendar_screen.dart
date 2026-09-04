@@ -402,7 +402,7 @@ class AvailabilityCalendarScreen extends HookConsumerWidget {
 
             // ── Legend Bar ─────────────────────────────────────────────────
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
                 color: AppColors.getSurface(context),
                 borderRadius: BorderRadius.circular(16),
@@ -411,9 +411,9 @@ class AvailabilityCalendarScreen extends HookConsumerWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildLegend(Colors.green.shade600, 'Confirmed Event'),
-                  _buildLegend(Colors.amber.shade800, 'Blocked Date'),
-                  _buildLegend(Colors.grey.shade400, 'Available Slot'),
+                  _buildLegend(Colors.green.shade600, 'Confirmed'),
+                  _buildLegend(Colors.amber.shade800, 'Blocked'),
+                  _buildLegend(Colors.grey.shade400, 'Available'),
                 ],
               ),
             ),

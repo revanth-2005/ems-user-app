@@ -35,12 +35,11 @@ class AppNetworkImage extends StatelessWidget {
 
   /// Cache-bust version — increment this whenever MinIO files are re-uploaded
   /// to force CachedNetworkImage to download fresh copies.
-  static const String _cacheV = 'v=6';
+  static const String _cacheV = 'v=7';
 
   /// Normalizes any backend-provided media URL.
-  /// Converts old local IP URLs (192.168.x.x:6006) and relative media paths
-  /// to point to the production CDN storage (emsstorage.webnoxdigital.com)
-  /// and appends [_cacheV] so stale disk-cached images are refreshed.
+  /// Converts local IP URLs, old emsstorage URLs, and relative media paths
+  /// to point to the active mediaBaseUrl and appends [_cacheV].
   static String? normalizeUrl(String? rawUrl) {
     if (rawUrl == null || rawUrl.trim().isEmpty) return null;
     final trimmed = rawUrl.trim();
@@ -54,11 +53,13 @@ class AppNetworkImage extends StatelessWidget {
       }
     }
 
-    // 2. If already using emsstorage domain, normalize to HTTPS and clean query params
+    // 2. If using old emsstorage domain, rewrite to active mediaBaseUrl
     if (trimmed.contains('emsstorage.webnoxdigital.com')) {
-      final clean = trimmed.split('?').first;
-      final secure = clean.replaceFirst('http://', 'https://');
-      return '$secure?$_cacheV';
+      final match = RegExp(r'https?://emsstorage\.webnoxdigital\.com(/.*)').firstMatch(trimmed);
+      if (match != null) {
+        final path = match.group(1)!.split('?').first;
+        return '${ApiConstants.mediaBaseUrl}$path?$_cacheV';
+      }
     }
 
     // 3. Relative /ems-media/ paths — prepend active mediaBaseUrl

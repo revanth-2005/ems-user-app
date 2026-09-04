@@ -66,6 +66,46 @@ class PackageCardData {
   }
 }
 
+class OrganizerCardData {
+  final String id;
+  final String businessName;
+  final String displayName;
+  final String city;
+  final int totalPackages;
+  final int totalServices;
+  final double rating;
+  final int ratingCount;
+  final String? logoUrl;
+
+  const OrganizerCardData({
+    required this.id,
+    required this.businessName,
+    required this.displayName,
+    required this.city,
+    required this.totalPackages,
+    required this.totalServices,
+    required this.rating,
+    required this.ratingCount,
+    this.logoUrl,
+  });
+
+  factory OrganizerCardData.fromMap(Map<String, dynamic> data) {
+    return OrganizerCardData(
+      id: data['id']?.toString() ?? '',
+      businessName: data['businessName']?.toString() ?? '',
+      displayName: data['displayName']?.toString() ??
+          data['businessName']?.toString() ??
+          '',
+      city: data['city']?.toString() ?? '',
+      totalPackages: (data['totalPackages'] as num?)?.toInt() ?? 0,
+      totalServices: (data['totalServices'] as num?)?.toInt() ?? 0,
+      rating: (data['rating'] as num?)?.toDouble() ?? 4.9,
+      ratingCount: (data['ratingCount'] as num?)?.toInt() ?? 0,
+      logoUrl: data['logoUrl']?.toString(),
+    );
+  }
+}
+
 class EventCardData {
   final String id;
   final String title;
@@ -185,6 +225,139 @@ class TicketCardData {
       quantity: (data['quantity'] as num?)?.toInt() ?? 1,
       status: data['status']?.toString() ?? 'CONFIRMED',
       qrData: data['qrData']?.toString() ?? data['ticketNumber']?.toString(),
+    );
+  }
+}
+
+// ── Organizer Copilot Card Types ─────────────────────────────────────────────
+
+class TicketTierData {
+  final String name;
+  final int price;
+  final int totalSeats;
+
+  const TicketTierData({
+    required this.name,
+    required this.price,
+    required this.totalSeats,
+  });
+
+  factory TicketTierData.fromMap(Map<String, dynamic> data) {
+    return TicketTierData(
+      name: data['name']?.toString() ?? 'Standard Pass',
+      price: (data['price'] as num?)?.toInt() ?? 0,
+      totalSeats: (data['totalSeats'] as num?)?.toInt() ?? 0,
+    );
+  }
+}
+
+class EventDraftCardData {
+  final String eventId;
+  final String title;
+  final String city;
+  final String venue;
+  final String status;
+  final List<TicketTierData> ticketTiers;
+  final String? createdAt;
+
+  const EventDraftCardData({
+    required this.eventId,
+    required this.title,
+    required this.city,
+    required this.venue,
+    this.status = 'DRAFT',
+    this.ticketTiers = const [],
+    this.createdAt,
+  });
+
+  factory EventDraftCardData.fromMap(Map<String, dynamic> data) {
+    final rawTiers = data['ticketTiers'] as List? ?? [];
+    return EventDraftCardData(
+      eventId: data['eventId']?.toString() ?? data['id']?.toString() ?? '',
+      title: data['title']?.toString() ?? '',
+      city: data['city']?.toString() ?? '',
+      venue: data['venue']?.toString() ?? data['location']?.toString() ?? '',
+      status: data['status']?.toString() ?? 'DRAFT',
+      ticketTiers: rawTiers
+          .whereType<Map<String, dynamic>>()
+          .map(TicketTierData.fromMap)
+          .toList(),
+      createdAt: data['createdAt']?.toString(),
+    );
+  }
+}
+
+class AnalyticsCardData {
+  final int totalGmvRupees;
+  final int netRevenueRupees;
+  final int ticketsSold;
+  final int activeEventsCount;
+  final int pageviews;
+  final String period;
+
+  const AnalyticsCardData({
+    required this.totalGmvRupees,
+    required this.netRevenueRupees,
+    required this.ticketsSold,
+    required this.activeEventsCount,
+    this.pageviews = 0,
+    this.period = 'This Month',
+  });
+
+  factory AnalyticsCardData.fromMap(Map<String, dynamic> data) {
+    final gmv = data['totalGmvRupees'] ?? data['gmv'] ?? data['totalGmv'] ?? 0;
+    final net = data['netRevenueRupees'] ??
+        data['netRevenue'] ??
+        data['netEarnings'] ??
+        0;
+    final tickets =
+        data['ticketsSold'] ?? data['totalTicketsSold'] ?? data['tickets'] ?? 0;
+    final events =
+        data['activeEventsCount'] ?? data['activeEvents'] ?? data['events'] ?? 0;
+    final views = data['pageviews'] ?? data['views'] ?? 0;
+    final per = data['period']?.toString() ?? 'This Month';
+
+    return AnalyticsCardData(
+      totalGmvRupees: (gmv as num).toInt(),
+      netRevenueRupees: (net as num).toInt(),
+      ticketsSold: (tickets as num).toInt(),
+      activeEventsCount: (events as num).toInt(),
+      pageviews: (views as num).toInt(),
+      period: per,
+    );
+  }
+}
+
+class AttendeeCardData {
+  final String attendeeId;
+  final String name;
+  final String ticketTier;
+  final String status; // 'CHECKED_IN' or 'NOT_CHECKED_IN'
+  final String? qrData;
+  final String? phone;
+  final String? checkedInAt;
+
+  const AttendeeCardData({
+    required this.attendeeId,
+    required this.name,
+    required this.ticketTier,
+    required this.status,
+    this.qrData,
+    this.phone,
+    this.checkedInAt,
+  });
+
+  bool get isCheckedIn => status == 'CHECKED_IN';
+
+  factory AttendeeCardData.fromMap(Map<String, dynamic> data) {
+    return AttendeeCardData(
+      attendeeId: data['attendeeId']?.toString() ?? data['id']?.toString() ?? '',
+      name: data['name']?.toString() ?? '',
+      ticketTier: data['ticketTier']?.toString() ?? 'VIP Pass',
+      status: data['status']?.toString() ?? 'NOT_CHECKED_IN',
+      qrData: data['qrData']?.toString() ?? data['qrCode']?.toString(),
+      phone: data['phone']?.toString(),
+      checkedInAt: data['checkedInAt']?.toString(),
     );
   }
 }

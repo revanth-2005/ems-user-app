@@ -8,6 +8,7 @@ import '../../../../core/common_widgets/app_loader.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../bookings/domain/entities/booking_entities.dart';
+import '../../../chatbot/presentation/widgets/floating_ai_assistant_button.dart';
 import '../providers/organizer_providers.dart';
 
 class OrganizerHubScreen extends HookConsumerWidget {
@@ -23,6 +24,8 @@ class OrganizerHubScreen extends HookConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.getBg(context),
+      floatingActionButton: const FloatingOrganizerCopilotButton(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       appBar: AppBar(
         backgroundColor: AppColors.getSurface(context),
         elevation: 0,
@@ -157,25 +160,33 @@ class OrganizerHubScreen extends HookConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      Row(
+                      Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 8,
+                        runSpacing: 4,
                         children: [
-                          const Icon(Icons.star_rounded,
-                              color: Colors.amber, size: 18),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${profile.rating} (${profile.reviewCount} client reviews)',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.star_rounded,
+                                  color: Colors.amber, size: 18),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${profile.rating} (${profile.reviewCount} reviews)',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 14),
                           Text(
-                            '• 0% Platform Commission',
+                            '• 0% Commission',
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 12,
-                              color: Colors.white.withValues(alpha: 0.8),
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white.withValues(alpha: 0.88),
                             ),
                           ),
                         ],
@@ -190,9 +201,10 @@ class OrganizerHubScreen extends HookConsumerWidget {
                   children: [
                     Expanded(
                       child: _buildMetricTile(
-                        title: 'Total Revenue',
+                        context: context,
+                        title: 'Revenue',
                         value: CurrencyFormatter.formatPaise(
-                            ledger?.totalEarningsPaise ?? 18500000),
+                            ledger?.totalEarningsPaise ?? 0),
                         subtitle: 'This Month',
                         icon: Icons.account_balance_wallet_outlined,
                         iconColor: Colors.green,
@@ -202,11 +214,12 @@ class OrganizerHubScreen extends HookConsumerWidget {
                     const SizedBox(width: 10),
                     Expanded(
                       child: _buildMetricTile(
-                        title: '$pendingBookings Requests',
-                        value: pendingBookings > 0
+                        context: context,
+                        title: pendingBookings > 0
                             ? 'Action Needed'
                             : 'All Handled',
-                        subtitle: '24h SLA Active ⏰',
+                        value: '$pendingBookings Requests',
+                        subtitle: '24h SLA Active',
                         icon: Icons.pending_actions_rounded,
                         iconColor: pendingBookings > 0
                             ? Colors.amber.shade800
@@ -218,10 +231,11 @@ class OrganizerHubScreen extends HookConsumerWidget {
                     const SizedBox(width: 10),
                     Expanded(
                       child: _buildMetricTile(
+                        context: context,
                         title: 'Confirmed',
                         value: '$confirmedBookings Events',
-                        subtitle: 'Upcoming Slot',
-                        icon: Icons.event_available_rounded,
+                        subtitle: 'Upcoming Slots',
+                        icon: Icons.event_available_outlined,
                         iconColor: AppColors.primary,
                         onTap: () => context.push(AppRoutes.organizerCalendar),
                       ),
@@ -322,6 +336,7 @@ class OrganizerHubScreen extends HookConsumerWidget {
   }
 
   Widget _buildMetricTile({
+    required BuildContext context,
     required String title,
     required String value,
     required String subtitle,
@@ -330,23 +345,23 @@ class OrganizerHubScreen extends HookConsumerWidget {
     required VoidCallback onTap,
     bool isAlert = false,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final alertBg = isDark ? const Color(0xFF2E1C00) : Colors.amber.shade50;
+    final alertBorder = isDark ? Colors.amber.shade700 : Colors.amber.shade300;
+    final alertTextColor =
+        isDark ? Colors.amber.shade300 : Colors.amber.shade900;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         decoration: BoxDecoration(
-          color: isAlert ? Colors.amber.shade50 : Colors.white,
+          color: isAlert ? alertBg : AppColors.getSurface(context),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: isAlert ? Colors.amber.shade300 : Colors.grey.shade200,
+            color: isAlert ? alertBorder : AppColors.getBorder(context),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          boxShadow: AppColors.getCardShadow(context),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -360,7 +375,9 @@ class OrganizerHubScreen extends HookConsumerWidget {
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 13,
                 fontWeight: FontWeight.w900,
-                color: isAlert ? Colors.amber.shade900 : Colors.black87,
+                color: isAlert
+                    ? alertTextColor
+                    : AppColors.getTextPrimary(context),
               ),
             ),
             const SizedBox(height: 2),
@@ -371,7 +388,9 @@ class OrganizerHubScreen extends HookConsumerWidget {
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
-                color: Colors.grey.shade700,
+                color: isAlert
+                    ? alertTextColor
+                    : AppColors.getTextSecondary(context),
               ),
             ),
             const SizedBox(height: 1),
@@ -381,7 +400,7 @@ class OrganizerHubScreen extends HookConsumerWidget {
               overflow: TextOverflow.ellipsis,
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 10,
-                color: Colors.grey.shade500,
+                color: AppColors.getTextMuted(context),
               ),
             ),
           ],

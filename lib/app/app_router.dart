@@ -218,7 +218,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.chatbot,
-        builder: (_, __) => const AiChatbotScreen(),
+        builder: (_, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return AiChatbotScreen(
+            isOrganizerMode: extra?['isOrganizerMode'] as bool? ?? false,
+            initialPrompt: extra?['initialPrompt'] as String?,
+          );
+        },
       ),
 
       // ── Cart ──────────────────────────────────────────────────────────────

@@ -2,11 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/chatbot_providers.dart';
 import '../widgets/chat_bubble.dart';
 
 class AiChatbotScreen extends ConsumerStatefulWidget {
-  const AiChatbotScreen({super.key});
+  final bool isOrganizerMode;
+  final String? initialPrompt;
+
+  const AiChatbotScreen({
+    super.key,
+    this.isOrganizerMode = false,
+    this.initialPrompt,
+  });
 
   @override
   ConsumerState<AiChatbotScreen> createState() => _AiChatbotScreenState();
@@ -16,6 +24,16 @@ class _AiChatbotScreenState extends ConsumerState<AiChatbotScreen> {
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final FocusNode _focusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialPrompt != null && widget.initialPrompt!.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(chatProvider.notifier).sendMessage(widget.initialPrompt!);
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -37,18 +55,37 @@ class _AiChatbotScreenState extends ConsumerState<AiChatbotScreen> {
     });
   }
 
-  void _handleSend() {
-    final text = _textController.text.trim();
+  void _handleSend([String? textToSend]) {
+    final text = (textToSend ?? _textController.text).trim();
     if (text.isEmpty) return;
-    _textController.clear();
+    if (textToSend == null) {
+      _textController.clear();
+    }
     ref.read(chatProvider.notifier).sendMessage(text);
     _scrollToBottom();
+  }
+
+  void _showVoiceInputDialog(BuildContext context, bool isDark) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => _VoiceInputModal(
+        onPromptSelected: (prompt) {
+          Navigator.of(ctx).pop();
+          _handleSend(prompt);
+        },
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final chatState = ref.watch(chatProvider);
     final isDark = AppColors.isDark(context);
+    final currentUser = ref.watch(authStateProvider).value;
+    final isOrganizer =
+        widget.isOrganizerMode || (currentUser?.isOrganizer ?? false);
 
     // Auto-scroll when messages change or typing state changes
     ref.listen(chatProvider, (previous, next) {
@@ -61,7 +98,8 @@ class _AiChatbotScreenState extends ConsumerState<AiChatbotScreen> {
     final bgColor = isDark ? const Color(0xFF0A0A0C) : const Color(0xFFF9FAFB);
     final appBarBg = isDark ? const Color(0xFF121215) : Colors.white;
     final inputBg = isDark ? const Color(0xFF18181C) : Colors.white;
-    final borderColor = isDark ? const Color(0xFF282830) : const Color(0xFFE5E7EB);
+    final borderColor =
+        isDark ? const Color(0xFF282830) : const Color(0xFFE5E7EB);
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -85,18 +123,24 @@ class _AiChatbotScreenState extends ConsumerState<AiChatbotScreen> {
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
+                    gradient: isOrganizer
+                        ? const LinearGradient(
+                            colors: [Color(0xFFFF5722), Color(0xFFFF9800)])
+                        : AppColors.primaryGradient,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.35),
+                        color: (isOrganizer ? Colors.orange : AppColors.primary)
+                            .withValues(alpha: 0.35),
                         blurRadius: 10,
                         offset: const Offset(0, 3),
                       ),
                     ],
                   ),
-                  child: const Icon(
-                    Icons.auto_awesome_rounded,
+                  child: Icon(
+                    isOrganizer
+                        ? Icons.bolt_rounded
+                        : Icons.auto_awesome_rounded,
                     color: Colors.white,
                     size: 20,
                   ),
@@ -123,19 +167,48 @@ class _AiChatbotScreenState extends ConsumerState<AiChatbotScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "EMS AI Concierge",
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: isDark ? Colors.white : const Color(0xFF111827),
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      isOrganizer
+                          ? "Organizer AI Copilot"
+                          : "EMS AI Concierge",
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? Colors.white : const Color(0xFF111827),
+                      ),
+                    ),
+                    if (isOrganizer) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 1.5),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                              color: Colors.amber.shade700, width: 0.8),
+                        ),
+                        child: Text(
+                          'COPILOT',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.amber.shade800,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
                 Text(
-                  "Online • Powered by AI",
+                  isOrganizer
+                      ? "MCP Privileges Active ⚡ • Live"
+                      : "Online • Powered by AI",
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 11,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                     color: const Color(0xFF10B981),
                   ),
                 ),
@@ -163,15 +236,15 @@ class _AiChatbotScreenState extends ConsumerState<AiChatbotScreen> {
             child: ListView.builder(
               controller: _scrollController,
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-              itemCount: chatState.messages.length + (chatState.isTyping ? 1 : 0),
+              itemCount:
+                  chatState.messages.length + (chatState.isTyping ? 1 : 0),
               itemBuilder: (context, index) {
                 if (index < chatState.messages.length) {
                   final msg = chatState.messages[index];
                   return ChatBubble(
                     message: msg,
                     onSuggestedActionTapped: (reply) {
-                      ref.read(chatProvider.notifier).sendMessage(reply);
-                      _scrollToBottom();
+                      _handleSend(reply);
                     },
                   );
                 } else {
@@ -180,6 +253,50 @@ class _AiChatbotScreenState extends ConsumerState<AiChatbotScreen> {
               },
             ),
           ),
+
+          // ── Organizer Quick Prompts Bar (When chat is empty) ──────────────
+          if (isOrganizer && chatState.messages.isEmpty)
+            Container(
+              padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _buildPromptChip(
+                      icon: Icons.mic_rounded,
+                      label: "Create Tech Leaders Summit 2026",
+                      onTap: () => _handleSend(
+                          "Create a new draft event titled 'Tech Leaders Summit 2026' in Bangalore at Whitefield Convention Center with VIP tickets at 2999 INR"),
+                      isDark: isDark,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildPromptChip(
+                      icon: Icons.analytics_outlined,
+                      label: "Show My Monthly Revenue",
+                      onTap: () =>
+                          _handleSend("Show my total revenue for this month"),
+                      isDark: isDark,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildPromptChip(
+                      icon: Icons.people_outline_rounded,
+                      label: "Event Attendee Check-ins",
+                      onTap: () =>
+                          _handleSend("Inspect event attendee check-in list"),
+                      isDark: isDark,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildPromptChip(
+                      icon: Icons.rocket_launch_outlined,
+                      label: "Publish Draft Event",
+                      onTap: () =>
+                          _handleSend("Publish event evt_draft_9918"),
+                      isDark: isDark,
+                    ),
+                  ],
+                ),
+              ),
+            ),
 
           // Message Input Bar
           Container(
@@ -192,22 +309,49 @@ class _AiChatbotScreenState extends ConsumerState<AiChatbotScreen> {
             child: SafeArea(
               top: false,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 8, 14, 10),
+                padding: const EdgeInsets.fromLTRB(10, 8, 12, 10),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
+                    // Voice Mic Button
+                    IconButton(
+                      icon: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: (isOrganizer
+                                  ? Colors.orange.shade800
+                                  : AppColors.primary)
+                              .withValues(alpha: 0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.mic_rounded,
+                          color: isOrganizer
+                              ? Colors.orange.shade800
+                              : AppColors.primary,
+                          size: 20,
+                        ),
+                      ),
+                      tooltip: "Voice-to-Event Assistant",
+                      onPressed: () => _showVoiceInputDialog(context, isDark),
+                    ),
                     Expanded(
                       child: Container(
                         constraints: const BoxConstraints(maxHeight: 110),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF1E1E24) : const Color(0xFFF3F4F6),
+                          color: isDark
+                              ? const Color(0xFF1E1E24)
+                              : const Color(0xFFF3F4F6),
                           borderRadius: BorderRadius.circular(24),
                           border: Border.all(
-                            color: isDark ? const Color(0xFF2E2E38) : const Color(0xFFE5E7EB),
+                            color: isDark
+                                ? const Color(0xFF2E2E38)
+                                : const Color(0xFFE5E7EB),
                             width: 1,
                           ),
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 2),
                         child: TextField(
                           controller: _textController,
                           focusNode: _focusNode,
@@ -216,13 +360,18 @@ class _AiChatbotScreenState extends ConsumerState<AiChatbotScreen> {
                           maxLines: 4,
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 14,
-                            color: isDark ? Colors.white : const Color(0xFF111827),
+                            color:
+                                isDark ? Colors.white : const Color(0xFF111827),
                           ),
                           decoration: InputDecoration(
-                            hintText: "Ask about events, packages...",
+                            hintText: isOrganizer
+                                ? "Manage events, revenue, drafts..."
+                                : "Ask about events, packages...",
                             hintStyle: GoogleFonts.plusJakartaSans(
                               fontSize: 13,
-                              color: isDark ? const Color(0xFF71717A) : const Color(0xFF9CA3AF),
+                              color: isDark
+                                  ? const Color(0xFF71717A)
+                                  : const Color(0xFF9CA3AF),
                             ),
                             filled: false,
                             fillColor: Colors.transparent,
@@ -233,7 +382,8 @@ class _AiChatbotScreenState extends ConsumerState<AiChatbotScreen> {
                             focusedErrorBorder: InputBorder.none,
                             disabledBorder: InputBorder.none,
                             isDense: true,
-                            contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                            contentPadding:
+                                const EdgeInsets.symmetric(vertical: 10),
                           ),
                           onSubmitted: (_) => _handleSend(),
                         ),
@@ -295,6 +445,50 @@ class _AiChatbotScreenState extends ConsumerState<AiChatbotScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPromptChip({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    required bool isDark,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1C1E24) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isDark ? const Color(0xFF2C2F3A) : const Color(0xFFE2E8F0),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: Colors.orange.shade800),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.grey.shade200 : const Color(0xFF1E293B),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -398,6 +592,186 @@ class _TypingDotState extends State<_TypingDot> with SingleTickerProviderStateMi
           ),
         );
       },
+    );
+  }
+}
+
+// ── Voice-to-Event Modal ─────────────────────────────────────────────────────
+
+class _VoiceInputModal extends StatefulWidget {
+  final ValueChanged<String> onPromptSelected;
+
+  const _VoiceInputModal({required this.onPromptSelected});
+
+  @override
+  State<_VoiceInputModal> createState() => _VoiceInputModalState();
+}
+
+class _VoiceInputModalState extends State<_VoiceInputModal>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
+
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.25).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = AppColors.isDark(context);
+
+    final samplePrompts = [
+      "Create a comedy show in Mumbai for next Friday with 500 Rs tickets",
+      "Create a new draft event titled 'Tech Leaders Summit 2026' in Bangalore with VIP tickets at 2999 INR",
+      "Show my total revenue for this month",
+      "Inspect event attendee check-in list",
+      "Publish event evt_draft_9918",
+    ];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF14161B) : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle pill
+            Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Pulsing Mic Circle
+            AnimatedBuilder(
+              animation: _pulseAnimation,
+              builder: (context, child) {
+                return Transform.scale(
+                  scale: _pulseAnimation.value,
+                  child: Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFF5722), Color(0xFFFF9800)],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.orange.withValues(alpha: 0.45),
+                          blurRadius: 20 * _pulseAnimation.value,
+                          spreadRadius: 2 * _pulseAnimation.value,
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.mic_rounded,
+                      color: Colors.white,
+                      size: 34,
+                    ),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 20),
+
+            Text(
+              "Listening for Organizer AI Prompt...",
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              "Speak or tap one of the voice workflow commands below:",
+              textAlign: TextAlign.center,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12,
+                color: Colors.grey.shade500,
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Suggested Voice Commands List
+            Flexible(
+              child: ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: samplePrompts.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                itemBuilder: (context, index) {
+                  final prompt = samplePrompts[index];
+                  return InkWell(
+                    onTap: () => widget.onPromptSelected(prompt),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.05)
+                            : Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isDark
+                              ? Colors.grey.shade800
+                              : Colors.grey.shade200,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.mic_none_rounded,
+                              size: 16, color: Colors.orange.shade800),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              '"$prompt"',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: isDark
+                                    ? Colors.grey.shade200
+                                    : Colors.grey.shade800,
+                              ),
+                            ),
+                          ),
+                          Icon(Icons.arrow_forward_ios_rounded,
+                              size: 12, color: Colors.grey.shade500),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

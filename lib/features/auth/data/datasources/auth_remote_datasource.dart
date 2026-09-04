@@ -24,6 +24,11 @@ class AuthRemoteDataSource {
         ApiConstants.loginEmail,
         data: {'email': email, 'password': password},
       );
+      if (response.statusCode != null && response.statusCode! >= 400) {
+        final msg = NetworkException.extractMessage(response.data) ??
+            'Invalid email or password';
+        throw NetworkException(msg, statusCode: response.statusCode);
+      }
       return _parseAuthResponse(response.data);
     } on DioException catch (e) {
       throw NetworkException.fromDioError(e);
@@ -37,10 +42,15 @@ class AuthRemoteDataSource {
     required String city,
   }) async {
     try {
-      await _dio.post(
+      final response = await _dio.post(
         ApiConstants.signupEmail,
         data: {'email': email, 'password': password, 'name': name, 'city': city},
       );
+      if (response.statusCode != null && response.statusCode! >= 400) {
+        final msg = NetworkException.extractMessage(response.data) ??
+            'Failed to create account';
+        throw NetworkException(msg, statusCode: response.statusCode);
+      }
     } on DioException catch (e) {
       throw NetworkException.fromDioError(e);
     }
@@ -48,7 +58,12 @@ class AuthRemoteDataSource {
 
   Future<void> requestPhoneOtp(String phone) async {
     try {
-      await _dio.post(ApiConstants.loginPhone, data: {'phone': phone});
+      final response = await _dio.post(ApiConstants.loginPhone, data: {'phone': phone});
+      if (response.statusCode != null && response.statusCode! >= 400) {
+        final msg = NetworkException.extractMessage(response.data) ??
+            'Failed to send OTP';
+        throw NetworkException(msg, statusCode: response.statusCode);
+      }
     } on DioException catch (e) {
       throw NetworkException.fromDioError(e);
     }
@@ -64,6 +79,11 @@ class AuthRemoteDataSource {
         ApiConstants.verifyOtp,
         data: {'target': target, 'otp': otp},
       );
+      if (response.statusCode != null && response.statusCode! >= 400) {
+        final msg = NetworkException.extractMessage(response.data) ??
+            'Invalid or expired OTP';
+        throw NetworkException(msg, statusCode: response.statusCode);
+      }
       return _parseAuthResponse(response.data);
     } on DioException catch (e) {
       throw NetworkException.fromDioError(e);
@@ -151,11 +171,22 @@ class AuthRemoteDataSource {
 
   ({UserDto user, String accessToken, String? refreshToken}) _parseAuthResponse(
       dynamic data) {
-    final map = data as Map<String, dynamic>;
+    if (data is! Map<String, dynamic>) {
+      throw const NetworkException('Invalid server response');
+    }
+    final userMap = data['user'] as Map<String, dynamic>?;
+    final token = data['accessToken'] as String?;
+
+    if (userMap == null || token == null) {
+      final msg = NetworkException.extractMessage(data) ??
+          'Invalid email or password';
+      throw NetworkException(msg);
+    }
+
     return (
-      user: UserDto.fromJson(map['user'] as Map<String, dynamic>),
-      accessToken: map['accessToken'] as String,
-      refreshToken: map['refreshToken'] as String?,
+      user: UserDto.fromJson(userMap),
+      accessToken: token,
+      refreshToken: data['refreshToken'] as String?,
     );
   }
 }

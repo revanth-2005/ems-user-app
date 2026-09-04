@@ -36,11 +36,11 @@ class NetworkException implements Exception {
 
       case DioExceptionType.badResponse:
         final statusCode = error.response?.statusCode;
-        final serverMsg = _extractMessage(error.response?.data) ?? 'Server error.';
+        final serverMsg = extractMessage(error.response?.data) ?? 'Server error.';
 
         if (statusCode == 401) {
           return NetworkException._(
-            message: serverMsg,
+            message: serverMsg.isNotEmpty ? serverMsg : 'Invalid email or password',
             statusCode: statusCode,
             failure: const AuthFailure('Unauthorized. Please sign in again.'),
           );
@@ -86,7 +86,7 @@ class NetworkException implements Exception {
     }
   }
 
-  static String? _extractMessage(dynamic data) {
+  static String? extractMessage(dynamic data) {
     if (data is Map<String, dynamic>) {
       final msg = data['message'] ?? data['error'] ?? data['detail'];
       if (msg is List) {

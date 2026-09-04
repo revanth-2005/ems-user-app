@@ -9,8 +9,8 @@ class ApiConstants {
   static const String chatEndpoint = '$baseUrl/chat';
   static const String chat = '/chat';
 
-  /// MinIO Media Storage Base URL (Public Cloudflare cached CDN)
-  static const String mediaBaseUrl = 'https://emsstorage.webnoxdigital.com';
+  /// MinIO Media Storage Base URL (Local MinIO on port 6006)
+  static const String mediaBaseUrl = 'http://localhost:6006';
 
   // ── 🔐 Auth Endpoints ──────────────────────────────────────────────────────
   static const String signupEmail   = '/auth/signup/email';

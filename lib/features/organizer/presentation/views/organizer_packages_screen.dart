@@ -689,11 +689,15 @@ class OrganizerPackagesScreen extends HookConsumerWidget {
                             ),
                           ),
                           const SizedBox(width: 6),
-                          Text(
-                            pkg.category,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 11,
-                              color: AppColors.getTextSecondary(context),
+                          Expanded(
+                            child: Text(
+                              pkg.category,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 11,
+                                color: AppColors.getTextSecondary(context),
+                              ),
                             ),
                           ),
                         ],

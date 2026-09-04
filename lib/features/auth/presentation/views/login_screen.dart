@@ -143,27 +143,28 @@ class LoginScreen extends HookConsumerWidget {
                 ),
 
                 // ── Bottom sheet panel (snugly hugs content at bottom) ─────────
-                Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF141414) : AppColors.whiteSurface,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(32),
-                      topRight: Radius.circular(32),
+                Flexible(
+                  child: Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF141414) : AppColors.whiteSurface,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(32),
+                        topRight: Radius.circular(32),
+                      ),
+                      boxShadow: isDark
+                          ? null
+                          : [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.08),
+                                blurRadius: 24,
+                                offset: const Offset(0, -4),
+                              ),
+                            ],
                     ),
-                    boxShadow: isDark
-                        ? null
-                        : [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.08),
-                              blurRadius: 24,
-                              offset: const Offset(0, -4),
-                            ),
-                          ],
-                  ),
-                  child: SingleChildScrollView(
-                    physics: const ClampingScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
+                    child: SingleChildScrollView(
+                      physics: const ClampingScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
                     child: Form(
                       key: formKey,
                       child: Column(
@@ -542,7 +543,8 @@ class LoginScreen extends HookConsumerWidget {
                     ),
                   ),
                 ),
-              ],
+              ),
+            ],
             ),
           ),
         ],
