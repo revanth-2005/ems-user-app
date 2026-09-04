@@ -154,7 +154,7 @@ class SignupScreen extends HookConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Join EventSphere Community 🚀',
+                  'Join TrueGather Community 🚀',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 22,
                     fontWeight: FontWeight.w800,

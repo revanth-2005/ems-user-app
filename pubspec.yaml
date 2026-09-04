@@ -1,5 +1,5 @@
 name: ems_app
-description: "EventSphere — A production-grade Event Management System."
+description: "TrueGather — A production-grade Event Management System."
 publish_to: 'none'
 
 version: 1.0.0+1

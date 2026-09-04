@@ -118,7 +118,7 @@ class RazorpayService {
       final options = <String, dynamic>{
         'key': key.isNotEmpty ? key : 'rzp_test_YourKeyId',
         'amount': amountInPaise,
-        'name': 'EMS Events',
+        'name': 'TrueGather Events',
         'order_id': gatewayOrderId,
         'description': eventTitle != null ? 'Ticket Pass: $eventTitle' : 'Event Ticket Booking',
         'prefill': {

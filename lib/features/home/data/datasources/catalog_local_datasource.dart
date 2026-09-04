@@ -255,7 +255,7 @@ class CatalogLocalDataSource {
         categoryId: 'cat_planner',
         mode: EventMode.ONLINE,
         approvalMode: ApprovalMode.APPROVAL_REQUIRED,
-        meetingUrl: 'https://meet.eventsphere.io/room/design-2026-xyz',
+        meetingUrl: 'https://meet.truegather.io/room/design-2026-xyz',
         startDatetime: now.add(const Duration(days: 12, hours: 10)),
         endDatetime: now.add(const Duration(days: 12, hours: 17)),
         maxCapacity: 1200,

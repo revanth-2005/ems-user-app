@@ -200,7 +200,7 @@ class CustomerProfileScreen extends HookConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            user?.name ?? 'EventSphere User',
+                            user?.name ?? 'TrueGather User',
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
@@ -358,7 +358,7 @@ class CustomerProfileScreen extends HookConsumerWidget {
                     onTap: () {
                       AppSnackbar.show(
                         context,
-                        message: 'EMS 24/7 Support Desk is active.',
+                        message: 'TrueGather 24/7 Support Desk is active.',
                         type: SnackbarType.info,
                       );
                     },

@@ -1,6 +1,6 @@
 {
-    "name": "ems_app",
-    "short_name": "ems_app",
+    "name": "TrueGather",
+    "short_name": "TrueGather",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

@@ -150,7 +150,7 @@ class NotificationService {
       if (notification != null) {
         _localNotifications.show(
           notification.hashCode,
-          notification.title ?? 'EventSphere Update',
+          notification.title ?? 'TrueGather Update',
           notification.body ?? '',
           NotificationDetails(
             android: AndroidNotificationDetails(
@@ -220,7 +220,7 @@ class NotificationService {
   Future<void> showTestNotification() async {
     await _localNotifications.show(
       999,
-      '🎉 EventSphere Notification Test',
+      '🎉 TrueGather Notification Test',
       'Firebase Cloud Messaging & local notifications are working perfectly!',
       const NotificationDetails(
         android: AndroidNotificationDetails(

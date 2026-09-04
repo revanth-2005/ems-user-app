@@ -160,7 +160,7 @@ class BookingRemoteDataSource {
         ApiConstants.checkout,
         data: {
           if (couponCode != null && couponCode.isNotEmpty) 'couponCode': couponCode,
-          'notes': notes ?? 'Booked via EMS Mobile App',
+          'notes': notes ?? 'Booked via TrueGather App',
           if (eventId != null && eventId.isNotEmpty) 'eventId': eventId,
         },
       );

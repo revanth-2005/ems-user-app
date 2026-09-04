@@ -102,7 +102,7 @@ class LoginScreen extends HookConsumerWidget {
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  stops: const [0.0, 0.40, 0.70],
+                  stops: const [0.0, 0.28, 0.48],
                 ),
               ),
             ),
@@ -110,63 +110,83 @@ class LoginScreen extends HookConsumerWidget {
 
           // ── Main Content ───────────────────────────────────────────────
           SafeArea(
-            child: Column(
-              children: [
-                // Top Banner section (fills upper space, logo at top position)
-                Expanded(
-                  child: Column(
-                    children: [
-                      // Top navigation row
-                      if (context.canPop())
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 12, top: 4),
-                            child: IconButton(
-                              onPressed: () => context.pop(),
-                              icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                                  color: Colors.white, size: 20),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final heroHeight = (constraints.maxHeight * 0.38).clamp(130.0, 320.0);
+
+                return SingleChildScrollView(
+                  physics: const ClampingScrollPhysics(),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                    ),
+                    child: IntrinsicHeight(
+                      child: Column(
+                        children: [
+                          // Top Banner section (fills down to marked line)
+                          SizedBox(
+                            height: heroHeight,
+                            child: Column(
+                              children: [
+                                // Top navigation row
+                                if (context.canPop())
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(left: 12, top: 4),
+                                      child: IconButton(
+                                        onPressed: () => context.pop(),
+                                        icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                                            color: Colors.white, size: 20),
+                                      ),
+                                    ),
+                                  )
+                                else
+                                  const SizedBox(height: 16),
+                                // TrueGather logo (nudged lightly left for optical centering)
+                                Transform.translate(
+                                  offset: const Offset(-8, 0),
+                                  child: Image.asset(
+                                    'assets/images/ChatGPT_Image_Sep_4__2026__02_57_18_PM-removebg-preview (1).png',
+                                    width: 195,
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Image.asset(
+                                        'assets/images/truegather_logo.png',
+                                        width: 195,
+                                        fit: BoxFit.contain,
+                                      );
+                                    },
+                                  ),
+                                ),
+                                const Spacer(),
+                              ],
                             ),
                           ),
-                        )
-                      else
-                        const SizedBox(height: 16),
-                      // EVENTSPHERE logo
-                      Image.asset(
-                        'assets/images/eventsphere_logo.png',
-                        width: 140,
-                        fit: BoxFit.contain,
-                      ),
-                      const Spacer(),
-                    ],
-                  ),
-                ),
 
-                // ── Bottom sheet panel (snugly hugs content at bottom) ─────────
-                Flexible(
-                  child: Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF141414) : AppColors.whiteSurface,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(32),
-                        topRight: Radius.circular(32),
-                      ),
-                      boxShadow: isDark
-                          ? null
-                          : [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.08),
-                                blurRadius: 24,
-                                offset: const Offset(0, -4),
+                          // ── Bottom sheet panel (covers marked area down to bottom) ──
+                          Expanded(
+                            child: Container(
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF141414) : AppColors.whiteSurface,
+                                borderRadius: const BorderRadius.only(
+                                  topLeft: Radius.circular(32),
+                                  topRight: Radius.circular(32),
+                                ),
+                                boxShadow: isDark
+                                    ? null
+                                    : [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.08),
+                                          blurRadius: 24,
+                                          offset: const Offset(0, -4),
+                                        ),
+                                      ],
                               ),
-                            ],
-                    ),
-                    child: SingleChildScrollView(
-                      physics: const ClampingScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
-                    child: Form(
-                      key: formKey,
+                              padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
+                              child: Form(
+                                key: formKey,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -174,7 +194,7 @@ class LoginScreen extends HookConsumerWidget {
                           // Drag handle
                           Center(
                             child: Padding(
-                              padding: const EdgeInsets.only(top: 4, bottom: 12),
+                              padding: const EdgeInsets.only(top: 4, bottom: 8),
                               child: Container(
                                 width: 36,
                                 height: 4,
@@ -192,7 +212,7 @@ class LoginScreen extends HookConsumerWidget {
                           Text(
                             'Welcome back',
                             style: GoogleFonts.plusJakartaSans(
-                              fontSize: 24,
+                              fontSize: 22,
                               fontWeight: FontWeight.w800,
                               color: AppColors.getTextPrimary(context),
                               letterSpacing: -0.4,
@@ -202,11 +222,11 @@ class LoginScreen extends HookConsumerWidget {
                           Text(
                             'Sign in to continue',
                             style: GoogleFonts.plusJakartaSans(
-                              fontSize: 13,
+                              fontSize: 12.5,
                               color: AppColors.getTextSecondary(context),
                             ),
                           ),
-                          const SizedBox(height: 14),
+                          const SizedBox(height: 10),
 
                           // Email field
                           _NetflixTextField(
@@ -234,7 +254,7 @@ class LoginScreen extends HookConsumerWidget {
                             },
                             onSubmitted: (_) => handleLogin(),
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 8),
 
                           // Remember me + Need help?
                           Row(
@@ -304,7 +324,7 @@ class LoginScreen extends HookConsumerWidget {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 14),
+                          const SizedBox(height: 10),
 
                           // Error banner
                           if (loginError.value != null) ...[
@@ -348,7 +368,7 @@ class LoginScreen extends HookConsumerWidget {
                           // Sign in button with smooth red gradient & ambient glow
                           Container(
                             width: double.infinity,
-                            height: 48,
+                            height: 46,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(12),
                               gradient: const LinearGradient(
@@ -398,12 +418,12 @@ class LoginScreen extends HookConsumerWidget {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 8),
 
                           // OTP login (secondary)
                           SizedBox(
                             width: double.infinity,
-                            height: 44,
+                            height: 42,
                             child: OutlinedButton(
                               onPressed: () => context.push(
                                   '${AppRoutes.otp}?phone=+919876543210'),
@@ -432,7 +452,7 @@ class LoginScreen extends HookConsumerWidget {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 8),
 
                           // ── OR divider ───────────────────────────
                           Row(
@@ -461,12 +481,12 @@ class LoginScreen extends HookConsumerWidget {
                                       thickness: 1)),
                             ],
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 8),
 
                           // ── Google Sign-In button ─────────────────
                           SizedBox(
                             width: double.infinity,
-                            height: 44,
+                            height: 42,
                             child: OutlinedButton(
                               onPressed:
                                   isLoading ? null : handleGoogleLogin,
@@ -508,7 +528,7 @@ class LoginScreen extends HookConsumerWidget {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 14),
+                          const SizedBox(height: 10),
 
                           // Sign up link (directly below Google Sign-In with standard 14px gap - NO EMPTY GAP!)
                           Center(
@@ -543,13 +563,17 @@ class LoginScreen extends HookConsumerWidget {
                     ),
                   ),
                 ),
+              ],
               ),
-            ],
             ),
           ),
-        ],
-      ),
-    );
+        );
+      },
+    ),
+  ),
+],
+),
+);
   }
 }
 
@@ -600,7 +624,7 @@ class _NetflixTextField extends StatelessWidget {
         filled: true,
         fillColor: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF3F4F6),
         contentPadding:
-            const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
+            const EdgeInsets.symmetric(horizontal: 15, vertical: 11),
         isDense: true,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(11),

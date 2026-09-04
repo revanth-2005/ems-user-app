@@ -28,6 +28,7 @@ class _AiChatbotScreenState extends ConsumerState<AiChatbotScreen> {
   @override
   void initState() {
     super.initState();
+    _focusNode.addListener(_handleFocusChange);
     if (widget.initialPrompt != null && widget.initialPrompt!.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ref.read(chatProvider.notifier).sendMessage(widget.initialPrompt!);
@@ -35,8 +36,18 @@ class _AiChatbotScreenState extends ConsumerState<AiChatbotScreen> {
     }
   }
 
+  void _handleFocusChange() {
+    if (mounted) {
+      setState(() {});
+      if (_focusNode.hasFocus) {
+        _scrollToBottom();
+      }
+    }
+  }
+
   @override
   void dispose() {
+    _focusNode.removeListener(_handleFocusChange);
     _textController.dispose();
     _scrollController.dispose();
     _focusNode.dispose();
@@ -79,6 +90,204 @@ class _AiChatbotScreenState extends ConsumerState<AiChatbotScreen> {
     );
   }
 
+  void _showQuickToolsModal(
+      BuildContext context, bool isOrganizer, bool isDark) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) {
+        final bg = isDark ? const Color(0xFF17171C) : Colors.white;
+        final border =
+            isDark ? const Color(0xFF282832) : const Color(0xFFE5E7EB);
+        final textColor = isDark ? Colors.white : const Color(0xFF111827);
+
+        final tools = isOrganizer
+            ? [
+                {
+                  'icon': Icons.rocket_launch_rounded,
+                  'title': 'Create Event Draft',
+                  'desc': 'Draft a new event with AI & MCP tools',
+                  'prompt':
+                      'Create a new draft event titled "Tech Leaders Summit 2026" in Bangalore at Whitefield Convention Center with VIP tickets at 2999 INR',
+                },
+                {
+                  'icon': Icons.analytics_outlined,
+                  'title': 'Monthly Revenue & GMV',
+                  'desc': 'Inspect your ticket sales & earnings',
+                  'prompt': 'Show my total revenue for this month',
+                },
+                {
+                  'icon': Icons.people_outline_rounded,
+                  'title': 'Attendee Check-in Roster',
+                  'desc': 'Verify attendee passes & QR statuses',
+                  'prompt': 'Inspect event attendee check-in list',
+                },
+                {
+                  'icon': Icons.publish_rounded,
+                  'title': 'Publish Live Event',
+                  'desc': 'Publish draft event to public discovery',
+                  'prompt': 'Publish event',
+                },
+              ]
+            : [
+                {
+                  'icon': Icons.celebration_outlined,
+                  'title': 'Wedding & Luxury Packages',
+                  'desc': 'Find curated packages in your city',
+                  'prompt': 'Find wedding packages in Mumbai',
+                },
+                {
+                  'icon': Icons.music_note_rounded,
+                  'title': 'Live Concerts & Festivals',
+                  'desc': 'Explore trending music events',
+                  'prompt': 'Show upcoming music concerts in Mumbai',
+                },
+                {
+                  'icon': Icons.shopping_bag_outlined,
+                  'title': 'Cart Summary',
+                  'desc': 'Review active packages & deposits',
+                  'prompt': 'Show my cart',
+                },
+                {
+                  'icon': Icons.confirmation_number_outlined,
+                  'title': 'My Event Tickets',
+                  'desc': 'View digital QR passes & registrations',
+                  'prompt': 'Where are my tickets?',
+                },
+              ];
+
+        return Container(
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            border: Border.all(color: border),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 38,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Icon(
+                      isOrganizer
+                          ? Icons.bolt_rounded
+                          : Icons.auto_awesome_rounded,
+                      color: isOrganizer
+                          ? Colors.orange.shade800
+                          : AppColors.primary,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      isOrganizer
+                          ? 'Organizer Copilot Tools'
+                          : 'TrueGather AI Quick Actions',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: textColor,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                ...tools.map((item) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Material(
+                      color: isDark
+                          ? const Color(0xFF202026)
+                          : const Color(0xFFF9FAFB),
+                      borderRadius: BorderRadius.circular(14),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(14),
+                        onTap: () {
+                          Navigator.of(ctx).pop();
+                          _handleSend(item['prompt'] as String);
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 12),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 38,
+                                height: 38,
+                                decoration: BoxDecoration(
+                                  color: (isOrganizer
+                                          ? Colors.orange
+                                          : AppColors.primary)
+                                      .withValues(alpha: 0.12),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  item['icon'] as IconData,
+                                  size: 18,
+                                  color: isOrganizer
+                                      ? Colors.orange.shade800
+                                      : AppColors.primary,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item['title'] as String,
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 13.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: textColor,
+                                      ),
+                                    ),
+                                    Text(
+                                      item['desc'] as String,
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 11,
+                                        color: Colors.grey.shade500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                size: 13,
+                                color: Colors.grey.shade500,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+
+
   @override
   Widget build(BuildContext context) {
     final chatState = ref.watch(chatProvider);
@@ -86,6 +295,23 @@ class _AiChatbotScreenState extends ConsumerState<AiChatbotScreen> {
     final currentUser = ref.watch(authStateProvider).value;
     final isOrganizer =
         widget.isOrganizerMode || (currentUser?.isOrganizer ?? false);
+
+    final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 50;
+    final showSuggestionsAboveInput =
+        isKeyboardOpen && chatState.messages.isEmpty;
+    final suggestions = _getActiveSuggestions(chatState, isOrganizer);
+
+    final rawName = currentUser?.name.trim() ?? '';
+    String greetingName = '';
+    if (rawName.isNotEmpty) {
+      final first = rawName.split(RegExp(r'\s+')).first;
+      if (first.isNotEmpty) {
+        greetingName = '${first[0].toUpperCase()}${first.substring(1)}';
+      }
+    }
+    final centerGreeting = greetingName.isNotEmpty
+        ? 'Glad to see you, $greetingName'
+        : 'Glad to see you';
 
     // Auto-scroll when messages change or typing state changes
     ref.listen(chatProvider, (previous, next) {
@@ -95,291 +321,289 @@ class _AiChatbotScreenState extends ConsumerState<AiChatbotScreen> {
       }
     });
 
-    final bgColor = isDark ? const Color(0xFF0A0A0C) : const Color(0xFFF9FAFB);
-    final appBarBg = isDark ? const Color(0xFF121215) : Colors.white;
-    final inputBg = isDark ? const Color(0xFF18181C) : Colors.white;
-    final borderColor =
-        isDark ? const Color(0xFF282830) : const Color(0xFFE5E7EB);
+    final bgColor = isDark ? const Color(0xFF0F0F12) : const Color(0xFFF9FAFB);
 
     return Scaffold(
       backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: appBarBg,
-        elevation: 0.5,
+        backgroundColor: bgColor,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         titleSpacing: 0,
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back_ios_new_rounded,
-            size: 20,
-            color: isDark ? Colors.white : Colors.black87,
-          ),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Row(
-          children: [
-            Stack(
-              children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    gradient: isOrganizer
-                        ? const LinearGradient(
-                            colors: [Color(0xFFFF5722), Color(0xFFFF9800)])
-                        : AppColors.primaryGradient,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: (isOrganizer ? Colors.orange : AppColors.primary)
-                            .withValues(alpha: 0.35),
-                        blurRadius: 10,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    isOrganizer
-                        ? Icons.bolt_rounded
-                        : Icons.auto_awesome_rounded,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: Container(
-                    width: 10,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF10B981),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: appBarBg,
-                        width: 1.5,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+        leading: Center(
+          child: Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF18181E) : const Color(0xFFF3F4F6),
+              shape: BoxShape.circle,
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          isOrganizer
-                              ? "Organizer AI Copilot"
-                              : "EMS AI Concierge",
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 14.5,
-                            fontWeight: FontWeight.w800,
-                            color:
-                                isDark ? Colors.white : const Color(0xFF111827),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (isOrganizer) ...[
-                        const SizedBox(width: 5),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 5, vertical: 1.5),
-                          decoration: BoxDecoration(
-                            color: Colors.amber.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(
-                                color: Colors.amber.shade700, width: 0.8),
-                          ),
-                          child: Text(
-                            'COPILOT',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 8.5,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.amber.shade800,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
+            child: IconButton(
+              padding: EdgeInsets.zero,
+              icon: Icon(
+                Icons.arrow_back_rounded,
+                size: 20,
+                color: isDark ? Colors.white : const Color(0xFF111827),
+              ),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ),
+        ),
+        title: Text(
+          isOrganizer ? "Organizer Copilot" : "TrueGather AI",
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 17,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.3,
+            color: isDark ? Colors.white : const Color(0xFF111827),
+          ),
+        ),
+        centerTitle: true,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 14),
+            child: Center(
+              child: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? const Color(0xFF18181E)
+                      : const Color(0xFFF3F4F6),
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  icon: Icon(
+                    Icons.add_rounded,
+                    size: 22,
+                    color: isDark ? Colors.white : const Color(0xFF111827),
                   ),
-                  Text(
-                    isOrganizer
-                        ? "MCP Privileges Active ⚡ • Live"
-                        : "Online • Powered by AI",
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF10B981),
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+                  tooltip: "New Chat",
+                  onPressed: () {
+                    ref.read(chatProvider.notifier).clearChat();
+                  },
+                ),
               ),
             ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            tooltip: "Clear Chat",
-            icon: Icon(
-              Icons.refresh_rounded,
-              color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
-            ),
-            onPressed: () {
-              ref.read(chatProvider.notifier).clearChat();
-            },
           ),
         ],
       ),
-      body: Column(
+      body: Stack(
         children: [
-          // Chat Message List
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-              itemCount:
-                  chatState.messages.length + (chatState.isTyping ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (index < chatState.messages.length) {
-                  final msg = chatState.messages[index];
-                  return ChatBubble(
-                    message: msg,
-                    onSuggestedActionTapped: (reply) {
-                      _handleSend(reply);
-                    },
-                  );
-                } else {
-                  return _buildTypingIndicator(isDark);
-                }
-              },
+          // 1. Message List or Center Greeting for New Chat
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: () => FocusScope.of(context).unfocus(),
+              child: chatState.messages.isEmpty
+                  ? LayoutBuilder(
+                      builder: (context, constraints) {
+                        return SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          keyboardDismissBehavior:
+                              ScrollViewKeyboardDismissBehavior.onDrag,
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minHeight: constraints.maxHeight,
+                            ),
+                            child: Center(
+                              child: Padding(
+                                padding: EdgeInsets.only(
+                                  bottom: showSuggestionsAboveInput ? 240 : 60,
+                                  left: 28,
+                                  right: 28,
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      centerGreeting,
+                                      textAlign: TextAlign.center,
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: -0.4,
+                                        color: isDark
+                                            ? Colors.white
+                                            : const Color(0xFF111827),
+                                      ),
+                                    ),
+                                    if (!isKeyboardOpen) ...[
+                                      const SizedBox(height: 10),
+                                      Text(
+                                        isOrganizer
+                                            ? 'Hello! I am your Organizer Copilot. How can I help you manage your events today?'
+                                            : 'Hello! I am your TrueGather AI Assistant. How can I help you plan your event today?',
+                                        textAlign: TextAlign.center,
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 14.5,
+                                          fontWeight: FontWeight.w500,
+                                          color: isDark
+                                              ? const Color(0xFF9CA3AF)
+                                              : const Color(0xFF64748B),
+                                          height: 1.45,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    )
+                  : ListView.builder(
+                      controller: _scrollController,
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      padding: const EdgeInsets.fromLTRB(10, 10, 10, 110),
+                      itemCount: chatState.messages.length +
+                          (chatState.isTyping ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index < chatState.messages.length) {
+                          final msg = chatState.messages[index];
+                          return ChatBubble(
+                            message: msg,
+                            onSuggestedActionTapped: (reply) {
+                              _handleSend(reply);
+                            },
+                          );
+                        } else {
+                          return _buildTypingIndicator(isDark);
+                        }
+                      },
+                    ),
             ),
           ),
 
-          // ── Organizer Quick Prompts Bar (When chat is empty) ──────────────
-          if (isOrganizer && chatState.messages.isEmpty)
-            Container(
-              padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _buildPromptChip(
-                      icon: Icons.mic_rounded,
-                      label: "Create Tech Leaders Summit 2026",
-                      onTap: () => _handleSend(
-                          "Create a new draft event titled 'Tech Leaders Summit 2026' in Bangalore at Whitefield Convention Center with VIP tickets at 2999 INR"),
-                      isDark: isDark,
-                    ),
-                    const SizedBox(width: 8),
-                    _buildPromptChip(
-                      icon: Icons.analytics_outlined,
-                      label: "Show My Monthly Revenue",
-                      onTap: () =>
-                          _handleSend("Show my total revenue for this month"),
-                      isDark: isDark,
-                    ),
-                    const SizedBox(width: 8),
-                    _buildPromptChip(
-                      icon: Icons.people_outline_rounded,
-                      label: "Event Attendee Check-ins",
-                      onTap: () =>
-                          _handleSend("Inspect event attendee check-in list"),
-                      isDark: isDark,
-                    ),
-                    const SizedBox(width: 8),
-                    _buildPromptChip(
-                      icon: Icons.rocket_launch_outlined,
-                      label: "Publish Draft Event",
-                      onTap: () =>
-                          _handleSend("Publish event evt_draft_9918"),
-                      isDark: isDark,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-          // Message Input Bar
-          Container(
-            decoration: BoxDecoration(
-              color: inputBg,
-              border: Border(
-                top: BorderSide(color: borderColor, width: 1),
-              ),
-            ),
+          // 2. Floating Bottom Input Capsule & Active Suggestions
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
             child: SafeArea(
               top: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(10, 8, 12, 10),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    // Voice Mic Button
-                    IconButton(
-                      icon: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: (isOrganizer
-                                  ? Colors.orange.shade800
-                                  : AppColors.primary)
-                              .withValues(alpha: 0.12),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.mic_rounded,
-                          color: isOrganizer
-                              ? Colors.orange.shade800
-                              : AppColors.primary,
-                          size: 20,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Suggestions & Greeting (shown ONLY when keyboard opens)
+                  AnimatedCrossFade(
+                    duration: const Duration(milliseconds: 200),
+                    firstCurve: Curves.easeOutCubic,
+                    secondCurve: Curves.easeInCubic,
+                    crossFadeState: (showSuggestionsAboveInput &&
+                            suggestions.isNotEmpty)
+                        ? CrossFadeState.showFirst
+                        : CrossFadeState.showSecond,
+                      firstChild: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                            child: Text(
+                              isOrganizer
+                                  ? 'Hello! I am your Organizer Copilot. How can I help you manage your events today?'
+                                  : 'Hello! I am your TrueGather AI Assistant. How can I help you plan your event today?',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 14.5,
+                                fontWeight: FontWeight.w500,
+                                color: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF1E293B),
+                                height: 1.45,
+                              ),
+                            ),
+                          ),
+                          _buildActiveSuggestionsList(suggestions, isDark),
+                          const SizedBox(height: 4),
+                        ],
+                      ),
+                    secondChild:
+                        const SizedBox(width: double.infinity, height: 0),
+                  ),
+
+                  // Floating Bottom Input Capsule
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
+                    child: Container(
+                  constraints:
+                      const BoxConstraints(minHeight: 54, maxHeight: 130),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1A1A20) : Colors.white,
+                    borderRadius: BorderRadius.circular(32),
+                    border: Border.all(
+                      color: isDark
+                          ? const Color(0xFF2C2C36)
+                          : const Color(0xFFE5E7EB),
+                      width: 1.2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black
+                            .withValues(alpha: isDark ? 0.35 : 0.08),
+                        blurRadius: 20,
+                        spreadRadius: 0,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // + Button
+                      SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          icon: Icon(
+                            Icons.add_rounded,
+                            color: isDark
+                                ? const Color(0xFF9CA3AF)
+                                : const Color(0xFF374151),
+                            size: 26,
+                          ),
+                          tooltip: "Quick Tools & Prompts",
+                          onPressed: () => _showQuickToolsModal(
+                              context, isOrganizer, isDark),
                         ),
                       ),
-                      tooltip: "Voice-to-Event Assistant",
-                      onPressed: () => _showVoiceInputDialog(context, isDark),
-                    ),
-                    Expanded(
-                      child: Container(
-                        constraints: const BoxConstraints(maxHeight: 110),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? const Color(0xFF1E1E24)
-                              : const Color(0xFFF3F4F6),
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(
-                            color: isDark
-                                ? const Color(0xFF2E2E38)
-                                : const Color(0xFFE5E7EB),
-                            width: 1,
-                          ),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 2),
+                      const SizedBox(width: 6),
+
+                      // Text Field
+                      Expanded(
                         child: TextField(
                           controller: _textController,
                           focusNode: _focusNode,
+                          textAlignVertical: TextAlignVertical.center,
                           textCapitalization: TextCapitalization.sentences,
                           minLines: 1,
-                          maxLines: 4,
+                          maxLines: 5,
+                          cursorColor: isDark
+                              ? Colors.white
+                              : const Color(0xFF111827),
+                          cursorWidth: 2.0,
+                          cursorHeight: 20.0,
                           style: GoogleFonts.plusJakartaSans(
-                            fontSize: 14,
-                            color:
-                                isDark ? Colors.white : const Color(0xFF111827),
+                            fontSize: 15.5,
+                            fontWeight: FontWeight.w400,
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF111827),
                           ),
                           decoration: InputDecoration(
                             hintText: isOrganizer
-                                ? "Manage events, revenue, drafts..."
-                                : "Ask about events, packages...",
+                                ? "Ask Organizer Copilot"
+                                : "Ask TrueGather AI",
                             hintStyle: GoogleFonts.plusJakartaSans(
-                              fontSize: 13,
+                              fontSize: 15.5,
+                              fontWeight: FontWeight.w400,
                               color: isDark
                                   ? const Color(0xFF71717A)
                                   : const Color(0xFF9CA3AF),
@@ -389,161 +613,172 @@ class _AiChatbotScreenState extends ConsumerState<AiChatbotScreen> {
                             border: InputBorder.none,
                             enabledBorder: InputBorder.none,
                             focusedBorder: InputBorder.none,
+                            disabledBorder: InputBorder.none,
                             errorBorder: InputBorder.none,
                             focusedErrorBorder: InputBorder.none,
-                            disabledBorder: InputBorder.none,
                             isDense: true,
                             contentPadding:
-                                const EdgeInsets.symmetric(vertical: 10),
+                                const EdgeInsets.symmetric(vertical: 12),
                           ),
                           onSubmitted: (_) => _handleSend(),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 1),
-                      child: ValueListenableBuilder<TextEditingValue>(
+                      const SizedBox(width: 6),
+
+                      // Voice Mic Button
+                      SizedBox(
+                        width: 38,
+                        height: 38,
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          icon: Icon(
+                            Icons.mic_none_rounded,
+                            color: isDark
+                                ? const Color(0xFF9CA3AF)
+                                : const Color(0xFF374151),
+                            size: 23,
+                          ),
+                          tooltip: "Voice Assistant",
+                          onPressed: () =>
+                              _showVoiceInputDialog(context, isDark),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+
+                      // Send Up-Arrow Circular Button
+                      ValueListenableBuilder<TextEditingValue>(
                         valueListenable: _textController,
                         builder: (context, value, _) {
                           final hasText = value.text.trim().isNotEmpty;
-                          return Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: _handleSend,
-                              borderRadius: BorderRadius.circular(22),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 180),
-                                width: 42,
-                                height: 42,
-                                decoration: BoxDecoration(
-                                  gradient: hasText ? AppColors.primaryGradient : null,
-                                  color: hasText
-                                      ? null
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 180),
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: hasText
+                                  ? (isOrganizer
+                                      ? const Color(0xFFFF5722)
                                       : (isDark
-                                          ? const Color(0xFF26262C)
-                                          : const Color(0xFFE2E8F0)),
-                                  shape: BoxShape.circle,
-                                  boxShadow: hasText
-                                      ? [
-                                          BoxShadow(
-                                            color: AppColors.primary
-                                                .withValues(alpha: 0.38),
-                                            blurRadius: 8,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                        ]
-                                      : null,
-                                ),
-                                child: Icon(
-                                  Icons.send_rounded,
-                                  color: hasText
-                                      ? Colors.white
-                                      : (isDark
-                                          ? const Color(0xFF52525B)
-                                          : const Color(0xFF94A3B8)),
-                                  size: 19,
+                                          ? Colors.white
+                                          : const Color(0xFF111827)))
+                                  : (isDark
+                                      ? const Color(0xFF2A2A34)
+                                      : const Color(0xFFE5E7EB)),
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                customBorder: const CircleBorder(),
+                                onTap: hasText ? _handleSend : null,
+                                child: Center(
+                                  child: Icon(
+                                    Icons.arrow_upward_rounded,
+                                    size: 20,
+                                    color: hasText
+                                        ? (isOrganizer
+                                            ? Colors.white
+                                            : (isDark
+                                                ? Colors.black
+                                                : Colors.white))
+                                        : (isDark
+                                            ? const Color(0xFF555562)
+                                            : const Color(0xFF9CA3AF)),
+                                  ),
                                 ),
                               ),
                             ),
                           );
                         },
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 2),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ],
+  ),
+);
+}
+
+  List<String> _getActiveSuggestions(ChatState chatState, bool isOrganizer) {
+    if (chatState.messages.isNotEmpty) {
+      return const [];
+    }
+    return isOrganizer
+        ? const [
+            '➕ Create Event Draft',
+            '📊 Monthly Revenue',
+            '📋 Attendee Check-ins',
+            '🚀 Publish Event',
+          ]
+        : const [
+            '🎉 Find Wedding Packages',
+            '📍 Catering in Mumbai',
+            '🛒 View My Cart',
+            '🎫 My Event Tickets',
+          ];
+  }
+
+  Widget _buildActiveSuggestionsList(List<String> suggestions, bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: suggestions.map((action) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => _handleSend(action),
+                borderRadius: BorderRadius.circular(6),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          action,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w500,
+                            color: isDark
+                                ? const Color(0xFFE2E8F0)
+                                : const Color(0xFF374151),
+                            height: 1.35,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPromptChip({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-    required bool isDark,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1C1E24) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isDark ? const Color(0xFF2C2F3A) : const Color(0xFFE2E8F0),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 14, color: Colors.orange.shade800),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: isDark ? Colors.grey.shade200 : const Color(0xFF1E293B),
-              ),
-            ),
-          ],
-        ),
+          );
+        }).toList(),
       ),
     );
   }
 
   Widget _buildTypingIndicator(bool isDark) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16, left: 12, right: 36),
+      padding: const EdgeInsets.only(bottom: 20, left: 18, right: 36),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              gradient: AppColors.primaryGradient,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.auto_awesome_rounded,
-              color: Colors.white,
-              size: 16,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF161618) : Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: isDark ? const Color(0xFF28282C) : const Color(0xFFE5E7EB),
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _TypingDot(delay: 0),
-                const SizedBox(width: 4),
-                _TypingDot(delay: 200),
-                const SizedBox(width: 4),
-                _TypingDot(delay: 400),
-              ],
-            ),
-          ),
+          _TypingDot(delay: 0),
+          const SizedBox(width: 5),
+          _TypingDot(delay: 200),
+          const SizedBox(width: 5),
+          _TypingDot(delay: 400),
         ],
       ),
     );

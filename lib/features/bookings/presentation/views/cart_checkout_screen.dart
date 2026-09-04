@@ -41,7 +41,7 @@ class CartCheckoutScreen extends HookConsumerWidget {
         couponCode: cart.appliedCoupon,
         notes: notesController.text.trim().isNotEmpty
             ? notesController.text.trim()
-            : 'Booked via EMS Mobile App',
+            : 'Booked via TrueGather App',
       );
     }
 

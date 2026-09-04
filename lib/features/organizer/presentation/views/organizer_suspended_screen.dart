@@ -74,12 +74,12 @@ class OrganizerSuspendedScreen extends HookConsumerWidget {
             ),
             const SizedBox(height: 32),
             AppPrimaryButton(
-              text: 'Contact EMS Help & Dispute Support',
+              text: 'Contact TrueGather Help & Dispute Support',
               onPressed: () {
                 AppSnackbar.show(
                   context,
                   message:
-                      'Support ticket opened (#TKT-9921). An EMS agent will contact you within 4 hours.',
+                      'Support ticket opened (#TKT-9921). A TrueGather agent will contact you within 4 hours.',
                   type: SnackbarType.info,
                 );
               },

@@ -51,21 +51,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
 
   static ChatState _welcomeState() {
     return ChatState(
-      messages: [
-        ChatMessage(
-          id: _uuid.v4(),
-          text:
-              'Hello! I am your EMS AI Assistant. How can I help you plan your event today?',
-          type: ChatMessageType.bot,
-          timestamp: DateTime.now(),
-          suggestedActions: [
-            '🎉 Find Wedding Packages',
-            '📍 Catering in Mumbai',
-            '🛒 View My Cart',
-            '🎫 My Event Tickets',
-          ],
-        ),
-      ],
+      messages: const [],
       sessionId: _uuid.v4(),
     );
   }

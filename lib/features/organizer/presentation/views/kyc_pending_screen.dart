@@ -99,7 +99,7 @@ class KycPendingScreen extends HookConsumerWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Your business documents & payout bank routing are currently being verified by the EMS Admin team.',
+                        'Your business documents & payout bank routing are currently being verified by the TrueGather Admin team.',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 13,

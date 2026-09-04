@@ -40,7 +40,7 @@ class EventDetailScreen extends HookConsumerWidget {
       'https://calendar.google.com/calendar/render?action=TEMPLATE'
       '&text=${Uri.encodeComponent(event.title)}'
       '&dates=$startTimeStr/$endTimeStr'
-      '&details=${Uri.encodeComponent(event.description ?? "Event on EMS")}'
+      '&details=${Uri.encodeComponent(event.description ?? "Event on TrueGather")}'
       '&location=${Uri.encodeComponent(event.venueAddress ?? event.venueName ?? "Online")}',
     );
 

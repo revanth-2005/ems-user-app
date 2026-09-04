@@ -10,11 +10,13 @@ import '../../domain/models/chat_message_model.dart';
 class ChatBubble extends StatelessWidget {
   final ChatMessage message;
   final ValueChanged<String>? onSuggestedActionTapped;
+  final bool showSuggestedActions;
 
   const ChatBubble({
     super.key,
     required this.message,
     this.onSuggestedActionTapped,
+    this.showSuggestedActions = false,
   });
 
   @override
@@ -31,6 +33,7 @@ class ChatBubble extends StatelessWidget {
       timeStr: timeStr,
       isDark: isDark,
       onSuggestedActionTapped: onSuggestedActionTapped,
+      showSuggestedActions: showSuggestedActions,
     );
   }
 }
@@ -97,125 +100,76 @@ class _BotBubble extends StatelessWidget {
   final String timeStr;
   final bool isDark;
   final ValueChanged<String>? onSuggestedActionTapped;
+  final bool showSuggestedActions;
 
   const _BotBubble({
     required this.message,
     required this.timeStr,
     required this.isDark,
     this.onSuggestedActionTapped,
+    this.showSuggestedActions = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final bubbleBg = isDark ? const Color(0xFF161618) : Colors.white;
-    final borderColor =
-        isDark ? const Color(0xFF28282C) : const Color(0xFFE5E7EB);
-    final textColor =
-        isDark ? Colors.white : const Color(0xFF111827);
+    final textColor = isDark ? Colors.white : const Color(0xFF111827);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16, left: 12, right: 24),
-      child: Row(
+      padding: const EdgeInsets.only(bottom: 20, left: 16, right: 16),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // AI Avatar
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              gradient: AppColors.primaryGradient,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.32),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: const Icon(Icons.auto_awesome_rounded,
-                color: Colors.white, size: 16),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Text bubble
-                Container(
-                  decoration: BoxDecoration(
-                    color: bubbleBg,
-                    border: Border.all(color: borderColor, width: 1),
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(4),
-                      topRight: Radius.circular(18),
-                      bottomLeft: Radius.circular(18),
-                      bottomRight: Radius.circular(18),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black
-                            .withValues(alpha: isDark ? 0.22 : 0.04),
-                        blurRadius: 10,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 13),
-                  child: _buildFormattedText(
-                    message.text,
-                    GoogleFonts.plusJakartaSans(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      color: textColor,
-                      height: 1.45,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  timeStr,
-                  style: GoogleFonts.plusJakartaSans(
-                      fontSize: 10, color: Colors.grey.shade500),
-                ),
-
-                // ── Rich Cards ─────────────────────────────────────────────
-                if (message.cards != null && message.cards!.isNotEmpty) ...[
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    height: 275,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: message.cards!.length,
-                      separatorBuilder: (_, __) =>
-                          const SizedBox(width: 10),
-                      itemBuilder: (ctx, i) =>
-                          _buildCard(ctx, message.cards![i]),
-                    ),
-                  ),
-                ],
-
-                // ── Suggested Actions ─────────────────────────────────────
-                if (message.suggestedActions != null &&
-                    message.suggestedActions!.isNotEmpty) ...[
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: message.suggestedActions!.map((action) {
-                      return _SuggestedChip(
-                        label: action,
-                        isDark: isDark,
-                        onTap: () =>
-                            onSuggestedActionTapped?.call(action),
-                      );
-                    }).toList(),
-                  ),
-                ],
-              ],
+          // Plain Text
+          _buildFormattedText(
+            message.text,
+            GoogleFonts.plusJakartaSans(
+              fontSize: 15,
+              fontWeight: FontWeight.w400,
+              color: textColor,
+              height: 1.5,
             ),
           ),
+          const SizedBox(height: 5),
+          Text(
+            timeStr,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 11,
+              color: Colors.grey.shade500,
+            ),
+          ),
+
+          // ── Rich Cards ─────────────────────────────────────────────
+          if (message.cards != null && message.cards!.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 275,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: message.cards!.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 10),
+                itemBuilder: (ctx, i) =>
+                    _buildCard(ctx, message.cards![i]),
+              ),
+            ),
+          ],
+
+          // ── Suggested Actions ─────────────────────────────────────
+          if (showSuggestedActions &&
+              message.suggestedActions != null &&
+              message.suggestedActions!.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: message.suggestedActions!.map((action) {
+                return _SuggestedChip(
+                  label: action,
+                  isDark: isDark,
+                  onTap: () => onSuggestedActionTapped?.call(action),
+                );
+              }).toList(),
+            ),
+          ],
         ],
       ),
     );

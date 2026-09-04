@@ -102,7 +102,7 @@ class _PaymentGatewayBottomSheet extends HookConsumerWidget {
           userEmail: user?.email,
           userPhone: user?.phone,
           userName: user?.name,
-          description: 'EMS Pre-Booking Deposit',
+          description: 'TrueGather Pre-Booking Deposit',
           onSuccess: (verifyData) {
             isLoading.value = false;
             ref.read(cartProvider.notifier).clearCart();
@@ -463,7 +463,7 @@ void _showPaymentSuccessDialog(
               ),
               const SizedBox(height: 6),
               Text(
-                'Your deposit of ${CurrencyFormatter.formatPaise(amountPaise)} was captured under EMS Escrow Protection.',
+                'Your deposit of ${CurrencyFormatter.formatPaise(amountPaise)} was captured under TrueGather Escrow Protection.',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 12,
